@@ -1,1 +1,2 @@
-npm test
+#!/bin/sh
+./gradlew build
