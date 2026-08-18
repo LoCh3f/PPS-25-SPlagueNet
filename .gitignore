@@ -7,3 +7,6 @@ build
 
 # Ignore Kotlin plugin data
 .kotlin
+
+# node_modules
+node_modules
