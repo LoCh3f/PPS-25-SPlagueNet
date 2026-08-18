@@ -1,16 +1,72 @@
 {"0": {
+    "doc": "Design architetturale",
+    "title": "Design architetturale",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/design_architetturale.html",
+    
+    "relUrl": "/report/design_architetturale.html"
+  },"1": {
+    "doc": "Design di dettaglio",
+    "title": "Design di dettaglio",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/design_di_dettaglio.html",
+    
+    "relUrl": "/report/design_di_dettaglio.html"
+  },"2": {
+    "doc": "Implementazione",
+    "title": "Implementazione",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/implementazione.html",
+    
+    "relUrl": "/report/implementazione.html"
+  },"3": {
     "doc": "Report",
     "title": "Report",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/",
     
     "relUrl": "/"
-  },"1": {
+  },"4": {
     "doc": "Introduzione",
     "title": "Introduzione",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/introduzione.html",
     
     "relUrl": "/report/introduzione.html"
+  },"5": {
+    "doc": "Paradisi Giovanni",
+    "title": "Paradisi Giovanni",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/implementazione/paradisi_giovanni.html",
+    
+    "relUrl": "/report/implementazione/paradisi_giovanni.html"
+  },"6": {
+    "doc": "Processo di Sviluppo",
+    "title": "Processo di Sviluppo",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/processo_di_sviluppo.html",
+    
+    "relUrl": "/report/processo_di_sviluppo.html"
+  },"7": {
+    "doc": "Retrospettiva",
+    "title": "Retrospettiva",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html",
+    
+    "relUrl": "/report/retrospettiva.html"
+  },"8": {
+    "doc": "Specifica dei requisiti",
+    "title": "Specifica dei requisiti",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html",
+    
+    "relUrl": "/report/specifica_dei_requisiti.html"
+  },"9": {
+    "doc": "Testing",
+    "title": "Testing",
+    "content": " ",
+    "url": "/PPS-25-SPlagueNet/report/testing.html",
+    
+    "relUrl": "/report/testing.html"
   }
 }
