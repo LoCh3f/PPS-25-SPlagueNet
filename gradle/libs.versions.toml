@@ -9,6 +9,8 @@ scala-library = "2.13.18"
 scala-xml-v2-v13 = "2.4.0"
 scalatest-v2-v13 = "3.2.19"
 spotbugs = "6.5.10"
+scalafmt = "1.21.5"
+scalastyle = "3.5.0"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -20,3 +22,5 @@ scalatest-v2-v13 = { module = "org.scalatest:scalatest_2.13", version.ref = "sca
 
 [plugins]
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
+scalafmt = { id = "cz.augi.gradle.scalafmt", version.ref = "scalafmt" }
+scalastyle = { id = "com.github.alisiikh.scalastyle", version.ref = "scalastyle" }

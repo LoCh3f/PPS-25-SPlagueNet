@@ -12,7 +12,16 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
     alias(libs.plugins.spotbugs)
+    alias(libs.plugins.scalafmt)
+
+    /*
+    The Scalastyle plugin’s latest published version is 3.5.0, but it still uses the deprecated API.
+    Scalastyle is effectively unmaintained. (https://docs.fukuii.com/reports/STATIC_ANALYSIS_INVENTORY/)
+    */
+    //alias(libs.plugins.scalastyle)
 }
+
+
 
 spotbugs {
     ignoreFailures = false
@@ -24,6 +33,9 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
             required.set(true)
         }
     }
+}
+tasks.named("check") {
+    dependsOn("checkScalafmtAll")
 }
 
 
