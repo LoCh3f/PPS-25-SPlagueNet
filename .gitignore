@@ -10,3 +10,7 @@ build
 
 # node_modules
 node_modules
+
+#docs
+_site/
+Gemfile.lock

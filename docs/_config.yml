@@ -1,0 +1,11 @@
+title: "SPlagueNet"
+description: Documentation for SPlagueNet project
+
+#theme: just-the-docs
+search_enabled: true
+color_scheme: dark
+
+mermaid:
+  # Version of mermaid library
+  # Pick an available version from https://cdn.jsdelivr.net/npm/mermaid/
+  version: "9.1.3"
