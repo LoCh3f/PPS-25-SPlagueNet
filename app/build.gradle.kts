@@ -11,11 +11,27 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+    alias(libs.plugins.spotbugs)
 }
+
+spotbugs {
+    ignoreFailures = false
+}
+
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
+    reports {
+        create("html") {
+            required.set(true)
+        }
+    }
+}
+
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+
+    gradlePluginPortal()
 }
 
 dependencies {
