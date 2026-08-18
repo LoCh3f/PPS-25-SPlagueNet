@@ -7,7 +7,7 @@ on:
       - 'CHANGELOG.md'
       - 'README.md'
       - 'docs/**'
-  workflow-dispatch:
+  workflow_dispatch:
 
 jobs:
   build-and-test:
