@@ -33,10 +33,10 @@ jobs:
       - name: Archive distribution into a zip (if needed) or grab default zip
         run: |
           cd app/build/install
-          zip -r ../../../s-plague-net-distribution.zip app/
+          zip -r ../../../app-distribution.zip app/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/s-plague-net-distribution.zip
+            app-distribution.zip
