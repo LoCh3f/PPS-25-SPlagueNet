@@ -3,10 +3,16 @@ on:
   push:
     branches:
       - main
+      - develop
+      - 'feature/**'
     paths-ignore:
       - 'CHANGELOG.md'
       - 'README.md'
       - 'docs/**'
+  pull_request:
+    branches:
+      - main
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -33,9 +39,6 @@ jobs:
         if: runner.os != 'windows'
         run: chmod +x gradlew
 
-      - name: Run Scalafmt and Spotbugs (Check)
+      - name: Run Quality Checks and Tests
         run: ./gradlew check
-
-      - name: Run Tests
-        run: ./gradlew test
 
