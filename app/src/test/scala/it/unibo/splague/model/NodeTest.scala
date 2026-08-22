@@ -44,6 +44,18 @@ class NodeTest extends AnyFunSuite:
     node.state shouldBe NodeState.Healthy
     node.workload shouldBe 0.5
 
+  test("NodeId.of should succeed with a well formatted node id"):
+    val result = NodeId.of("node-01")
+    result.isRight shouldBe true
+    result.map(_.value) shouldBe Right("node-01")
+
+  test("NodeId.of should fail if the id is empty or blank"):
+    NodeId.of("") shouldBe Left("The ID cannot be empty")
+    NodeId.of("  ") shouldBe Left("The ID cannot be empty")
+
+  test("NodeId.of should fail if it contains whitespace"):
+    NodeId.of("node 01") shouldBe Left("The ID cannot contain white space")
+
   test("Topology should correctly store nodes and handle empty connections"):
     val node1 = Node("node-01", NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5)
     val node2 = Node("node-02", NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1)

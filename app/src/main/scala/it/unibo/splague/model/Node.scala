@@ -42,13 +42,3 @@ case class Topology(
     @transient nodes: Map[String, Node],
     @transient connections: Set[Nothing]
 )
-
-//probabilitaContagio =
-//  clamp(
-//    virus.tratti.infettivita
-//      × collegamento.tipo.fattorePropagazione
-//      × (1 − nodoBersaglio.defenseLevel)
-//      × (1 − nodoBersaglio.patchLevel)
-//      × nodoBersaglio.tipo.vulnerabilitaStrutturale,
-//    0, 1
-//  )
