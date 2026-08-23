@@ -28,8 +28,9 @@ class NodeTest extends AnyFunSuite:
     NodeType.MobileDevice.structuralVulnerability shouldBe 1.3
 
   test("Node instance should be created with correct properties"):
+    val nodeId = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
     val node = Node(
-      "node-01",
+      nodeId,
       NodeType.Router,
       0.2,
       0.5,
@@ -37,7 +38,7 @@ class NodeTest extends AnyFunSuite:
       0.5
     )
 
-    node.nodeId shouldBe "node-01"
+    node.nodeId shouldBe nodeId
     node.nodeType shouldBe NodeType.Router
     node.patchLevel shouldBe 0.2
     node.defenseLevel shouldBe 0.5
@@ -57,8 +58,11 @@ class NodeTest extends AnyFunSuite:
     NodeId.of("node 01") shouldBe Left("The ID cannot contain white space")
 
   test("Topology should correctly store nodes and handle empty connections"):
-    val node1 = Node("node-01", NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5)
-    val node2 = Node("node-02", NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1)
+    val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
+    val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
+
+    val node1 = Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5)
+    val node2 = Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1)
 
     val nodesMap = Map("node-01" -> node1, "node-02" -> node2)
     val topology = Topology(nodes = nodesMap, connections = Set.empty)

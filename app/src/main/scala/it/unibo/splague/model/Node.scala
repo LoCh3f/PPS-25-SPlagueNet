@@ -1,5 +1,7 @@
 package it.unibo.splague.model
 
+import it.unibo.splague.model.NodeId.NodeId
+
 sealed trait NodeType:
   def detectionCoefficient: Double
   def structuralVulnerability: Double
@@ -29,7 +31,7 @@ enum NodeState:
   case Healthy, Infected, Quarantined, Immune, Destroyed
 
 case class Node(
-    nodeId: String,
+    nodeId: NodeId,
     nodeType: NodeType,
     patchLevel: Double,
     defenseLevel: Double,
