@@ -10,7 +10,7 @@ scalaxml = "2.2.0"
 scalatest = "3.2.19"
 scalactic = "3.2.19"
 spotbugs = "6.5.10"
-scalafmt = "1.21.5"
+scalafmt = "1.21.6"
 scalastyle = "3.5.0"
 
 [libraries]
