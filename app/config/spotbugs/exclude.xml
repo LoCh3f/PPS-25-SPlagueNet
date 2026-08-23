@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
-        <Class name="it.unibo.splague.model.Connection$Edge"/>
-        <Field name="channel"/>
         <Bug pattern="SE_BAD_FIELD"/>
     </Match>
 </FindBugsFilter>
