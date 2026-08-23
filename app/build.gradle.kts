@@ -32,6 +32,7 @@ scala {
 
 spotbugs {
     ignoreFailures = false
+    excludeFilter = file("config/spotbugs/exclude.xml")
 }
 
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
