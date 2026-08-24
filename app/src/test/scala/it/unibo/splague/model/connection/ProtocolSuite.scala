@@ -2,7 +2,7 @@ package it.unibo.splague.model.connection
 
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers.{contain, should, shouldBe}
+import org.scalatest.matchers.should.Matchers.shouldBe
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
