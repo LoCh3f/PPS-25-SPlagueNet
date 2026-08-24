@@ -9,13 +9,13 @@ object Connection:
   enum ChannelType:
     case LAN, WAN, VPN
 
-  trait Channel:
-    def channelType: ChannelType
-    def bandwidth: Double
-    def latency: Double
-    def jitter: Double
-    def packetLoss: Probability
-    def reliability: Probability
+  case class Channel(
+      channelType: ChannelType,
+      bandwidth: Double,
+      latency: Double,
+      jitter: Double,
+      packetLoss: Probability
+  )
 
   case class Edge(
       source: Node,
