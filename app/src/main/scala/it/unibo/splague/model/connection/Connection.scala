@@ -10,11 +10,11 @@ object Connection:
     case LAN, WAN, VPN
 
   trait Channel:
-    def kind: ChannelType
+    def channelType: ChannelType
     def bandwidth: Double
     def latency: Double
     def jitter: Double
     def packetLoss: Probability
     def reliability: Probability
 
-  case class Edge(source: Node, target: Node, channel: Channel, protocol: ApplicationProtocol)
+  case class Edge(source: Node, target: Node, channel: Channel, protocol: Option[ApplicationProtocol])
