@@ -17,4 +17,9 @@ object Connection:
     def packetLoss: Probability
     def reliability: Probability
 
-  case class Edge(source: Node, target: Node, channel: Channel, protocol: Option[ApplicationProtocol])
+  case class Edge(
+      source: Node,
+      target: Node,
+      channel: Channel,
+      protocol: Option[ApplicationProtocol]
+  )
