@@ -1,4 +1,4 @@
-package it.unibo.splague.model
+package it.unibo.splague.model.node
 
 object NodeId:
   opaque type NodeId = String

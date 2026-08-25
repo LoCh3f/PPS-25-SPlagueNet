@@ -1,7 +1,11 @@
-package it.unibo.splague.model
+package it.unibo.splague.model.node
 
-import it.unibo.splague.model.NodeState.{Healthy, Immune}
-import it.unibo.splague.model.NodeType.Router
+import it.unibo.splague.model.Probability
+import it.unibo.splague.model.connection.Connection
+import it.unibo.splague.model.connection.Connection.Edge
+import it.unibo.splague.model.node.NodeState.{Healthy, Immune}
+import it.unibo.splague.model.node.NodeType.Router
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
@@ -10,7 +14,17 @@ import org.scalatest.matchers.should.Matchers.{should, shouldBe}
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class NodeTest extends AnyFunSuite:
+class NodeSuite extends AnyFunSuite:
+  private val packetLoss = Probability.apply(0.1).getOrElse(fail("packet loss should be valid"))
+
+  private val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
+  private val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
+  private val nodeIde3 = NodeId.of("node-03").getOrElse(fail("Failed to create NodeId"))
+
+  private val node1 = Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5)
+  private val node2 = Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1)
+  private val node3 = Node(nodeIde3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3)
+
   test("NodeType values and coefficients should match expected values"):
     NodeType.IoTDevice.detectionCoefficient shouldBe 0.3
     NodeType.IoTDevice.structuralVulnerability shouldBe 1.3
@@ -44,33 +58,6 @@ class NodeTest extends AnyFunSuite:
     node.defenseLevel shouldBe 0.5
     node.state shouldBe NodeState.Healthy
     node.workload shouldBe 0.5
-
-  test("NodeId.of should succeed with a well formatted node id"):
-    val result = NodeId.of("node-01")
-    result.isRight shouldBe true
-    result.map(_.value) shouldBe Right("node-01")
-
-  test("NodeId.of should fail if the id is empty or blank"):
-    NodeId.of("") shouldBe Left("The ID cannot be empty")
-    NodeId.of("  ") shouldBe Left("The ID cannot be empty")
-
-  test("NodeId.of should fail if it contains whitespace"):
-    NodeId.of("node 01") shouldBe Left("The ID cannot contain white space")
-
-  test("Topology should correctly store nodes and handle empty connections"):
-    val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
-    val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
-
-    val node1 = Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5)
-    val node2 = Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1)
-
-    val nodesMap = Map("node-01" -> node1, "node-02" -> node2)
-    val topology = Topology(nodes = nodesMap, connections = Set.empty)
-
-    topology.nodes.size shouldBe 2
-    topology.nodes.contains("node-01") shouldBe true
-    topology.nodes("node-01").state shouldBe NodeState.Infected
-    topology.connections shouldBe Matchers.empty
 
   test("NodeState enum should contain all expected states"):
     val states = NodeState.values
