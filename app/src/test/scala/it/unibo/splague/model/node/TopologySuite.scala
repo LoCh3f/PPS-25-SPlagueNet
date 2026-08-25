@@ -56,6 +56,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
     topology.nodes("node-01").state shouldBe NodeState.Infected
     topology.edges shouldBe Matchers.empty
 
+  /** Topology.neighbors tests
+    */
   test("Topology.neighbors should return empty set for source node with 0 neighbors"):
     val nodesMap = Map("node-01" -> node1)
     val topology = Topology(nodes = nodesMap, edges = Set.empty)
@@ -84,6 +86,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
     val neighborsOfN1 = topology.neighbors(node1)
     neighborsOfN1 should contain only (node2, node3)
 
+  /** Topology.edgesof tests
+    */
   test("Topology.edgesOf on a single node with no edges should return an empty set"):
     val nodesMap = Map("node-01" -> node1)
     val topology = Topology(nodes = nodesMap, edges = Set.empty)
@@ -110,6 +114,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
 
     topology.edgesOf(node1) should contain only (edgeN1N2, edgeN1N3, edgeN1N1)
 
+  /** Topology.degree tests
+    */
   test("degree should return 0 for an isolated node"):
     val topology = Topology(
       nodes = Map(nodeId1.value -> node1),
@@ -129,6 +135,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
     topology.degree(node1) shouldBe 2
     topology.degree(node2) shouldBe 1
 
+  /** Topology.hub tests
+    */
   test("hub should return the node with the highest degree"):
     val edge1 = Edge(node1, node2, channel, None)
     val edge2 = Edge(node1, node3, channel, None)
@@ -143,3 +151,18 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
   test("hub should return None if topology is empty"):
     val emptyTopology = Topology(nodes = Map.empty, edges = Set.empty)
     emptyTopology.hub(node1) shouldBe None
+
+  /** Topology.reachableFrom tests
+    */
+  test("Topology reachableFrom should find all connected nodes via BFS"):
+    val edge1 = Edge(node1, node2, channel, None)
+    val edge2 = Edge(node1, node3, channel, None)
+
+    val topology = Topology(
+      nodes = Map(nodeId1.value -> node1, nodeId2.value -> node2, nodeIde3.value -> node3),
+      edges = Set(edge1, edge2)
+    )
+
+    val reachable = topology.reachableFrom(node1)
+    reachable should contain allOf (node2, node3)
+    reachable.size shouldBe 2
