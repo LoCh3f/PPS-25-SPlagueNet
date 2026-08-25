@@ -82,3 +82,29 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
 
     val neighborsOfN1 = topology.neighbors(node1)
     neighborsOfN1 should contain only (node2, node3)
+
+  test("Topology.edgesOf on a single node with no edges should return an empty set"):
+    val nodesMap = Map("node-01" -> node1)
+    val topology = Topology(nodes = nodesMap, edges = Set.empty)
+
+    topology.edgesOf(node1) shouldBe Matchers.empty
+
+  test("Topology.edgesOf on a node with one edge should return a set containing only that edge"):
+    val nodesMap = Map("node-01" -> node1, "node-02" -> node2)
+    val edgeN1N2 = Connection.Edge(node1, node2, channel, None)
+
+    val topology = Topology(nodes = nodesMap, edges = Set(edgeN1N2))
+
+    topology.edgesOf(node1) should contain only edgeN1N2
+
+  test(
+    "Topology.edgesOf on a node with multiple edges should return a set containing only those edges"
+  ):
+    val nodesMap = Map("node-01" -> node1, "node-02" -> node2, "node-03" -> node3)
+    val edgeN1N1 = Connection.Edge(node1, node1, channel, None)
+    val edgeN1N2 = Connection.Edge(node1, node2, channel, None)
+    val edgeN1N3 = Connection.Edge(node1, node3, channel, None)
+
+    val topology = Topology(nodes = nodesMap, edges = Set(edgeN1N2, edgeN1N3, edgeN1N1))
+
+    topology.edgesOf(node1) should contain only (edgeN1N2, edgeN1N3, edgeN1N1)

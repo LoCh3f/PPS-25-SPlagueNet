@@ -4,15 +4,20 @@ import it.unibo.splague.model.connection.Connection.Edge
 
 @SerialVersionUID(1L)
 case class Topology(
-    @transient nodes: Map[String, Node],
-    @transient edges: Set[Edge]
+    nodes: Map[String, Node],
+    edges: Set[Edge]
 )
 
 object Topology:
   extension (topology: Topology)
+    def edgesOf(node: Node): Set[Edge] =
+      topology.edges
+        .filter(edge => edge.source.nodeId == node.nodeId || edge.target.nodeId == node.nodeId)
+        .map(edge => edge.copy())
+
     def neighbors(node: Node): Set[Node] =
       topology.edges.flatMap { edge =>
-        if edge.source == node then Set(edge.target)
-        else if edge.target == node then Set(edge.source)
+        if edge.source.nodeId == node.nodeId then Set(edge.target)
+        else if edge.target.nodeId == node.nodeId then Set(edge.source)
         else Set.empty
       }
