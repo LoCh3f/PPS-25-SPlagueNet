@@ -14,5 +14,5 @@ object Probability:
   /** Validates that `value` lies in [0.0, 1.0]; fails otherwise. */
   def apply(value: Double): Either[String, Probability] =
     Either.cond(value >= 0.0 && value <= 1.0, value, s"Probability must be in [0,1], got $value")
-  
+
   extension (p: Probability) def value: Double = p
