@@ -1,6 +1,7 @@
-package it.unibo.splague.model
+package it.unibo.splague.model.node
 
-import it.unibo.splague.model.NodeId.NodeId
+import it.unibo.splague.model.node.NodeId.NodeId
+import it.unibo.splague.model.node.{Node, NodeId}
 
 sealed trait NodeType:
   def detectionCoefficient: Double

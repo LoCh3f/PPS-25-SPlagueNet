@@ -1,7 +1,8 @@
-package it.unibo.splague.model
+package it.unibo.splague.model.node
 
-import it.unibo.splague.model.NodeState.{Healthy, Immune}
-import it.unibo.splague.model.NodeType.Router
+import it.unibo.splague.model.node.NodeState.{Healthy, Immune}
+import it.unibo.splague.model.node.NodeType.Router
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
