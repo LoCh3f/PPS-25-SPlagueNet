@@ -1,6 +1,6 @@
 package it.unibo.splague.simulation
 
-import it.unibo.splague.model.{Node, Topology}
+import it.unibo.splague.model.node.{Node, Topology}
 import it.unibo.splague.model.malware.Malware
 
 @SerialVersionUID(1L)
