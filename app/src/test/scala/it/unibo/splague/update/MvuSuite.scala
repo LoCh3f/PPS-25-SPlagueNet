@@ -7,13 +7,15 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen}
-import scalaz.StreamT.Step
 
 @RunWith(classOf[JUnitRunner])
 final class MvuSuite extends AnyFunSuite with Matchers with EitherValues:
   test("Msg enum should contain all expected states"):
     val states = Msg.values
-    states should contain(Msg.Step)
+    states should contain allOf (
+      Msg.ReturnToMenu,
+      Msg.Step
+    )
 
   test("Creating a ModelState with a specific Screen should have that Screen"):
     val model: ModelState = ModelState(screen = Simulation(None))
@@ -24,3 +26,15 @@ final class MvuSuite extends AnyFunSuite with Matchers with EitherValues:
     val model: ModelState = ModelState.init()
 
     model.screen shouldBe Menu
+
+  test("update should leave the model unchanged when Msg.Step arrives on the Menu screen") {
+    val model = ModelState(Screen.Menu)
+
+    val result = Mvu.update(Msg.Step, model)
+
+    result shouldBe model
+  }
+
+  test("update with Msg.Step and Screen.Simulation should return an updated version of the model") {
+    succeed
+  }
