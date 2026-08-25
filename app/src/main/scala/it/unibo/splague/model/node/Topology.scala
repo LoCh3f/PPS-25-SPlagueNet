@@ -21,3 +21,9 @@ object Topology:
         else if edge.target.nodeId == node.nodeId then Set(edge.source)
         else Set.empty
       }
+
+    def degree(node: Node): Int =
+      neighbors(node).size
+
+    def hub(node: Node): Option[Node] =
+      topology.nodes.values.maxByOption(n => degree(n))

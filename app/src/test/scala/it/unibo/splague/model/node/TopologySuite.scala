@@ -2,6 +2,7 @@ package it.unibo.splague.model.node
 
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.connection.Connection
+import it.unibo.splague.model.connection.Connection.Edge
 import org.junit.runner.RunWith
 import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuite
@@ -108,3 +109,37 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
     val topology = Topology(nodes = nodesMap, edges = Set(edgeN1N2, edgeN1N3, edgeN1N1))
 
     topology.edgesOf(node1) should contain only (edgeN1N2, edgeN1N3, edgeN1N1)
+
+  test("degree should return 0 for an isolated node"):
+    val topology = Topology(
+      nodes = Map(nodeId1.value -> node1),
+      edges = Set.empty
+    )
+    topology.degree(node1) shouldBe 0
+
+  test("degree should return the correct count of connected neighbors"):
+    val edge1 = Edge(node1, node2, channel, None)
+    val edge2 = Edge(node1, node3, channel, None)
+
+    val topology = Topology(
+      nodes = Map(nodeId1.value -> node1, nodeId2.value -> node2, nodeIde3.value -> node3),
+      edges = Set(edge1, edge2)
+    )
+
+    topology.degree(node1) shouldBe 2
+    topology.degree(node2) shouldBe 1
+
+  test("hub should return the node with the highest degree"):
+    val edge1 = Edge(node1, node2, channel, None)
+    val edge2 = Edge(node1, node3, channel, None)
+
+    val topology = Topology(
+      nodes = Map(nodeId1.value -> node1, nodeId2.value -> node2, nodeIde3.value -> node3),
+      edges = Set(edge1, edge2)
+    )
+
+    topology.hub(node1) shouldBe Some(node1)
+
+  test("hub should return None if topology is empty"):
+    val emptyTopology = Topology(nodes = Map.empty, edges = Set.empty)
+    emptyTopology.hub(node1) shouldBe None
