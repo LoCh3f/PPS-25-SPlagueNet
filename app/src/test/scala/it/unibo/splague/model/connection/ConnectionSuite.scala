@@ -1,6 +1,6 @@
 package it.unibo.splague.model.connection
 
-import it.unibo.splague.model.Probability.Probability
+import it.unibo.splague.model.Probability
 import it.unibo.splague.model.*
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

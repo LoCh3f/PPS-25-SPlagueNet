@@ -1,7 +1,7 @@
 package it.unibo.splague.model.connection
 
 import it.unibo.splague.model.Node
-import it.unibo.splague.model.Probability.Probability
+import it.unibo.splague.model.Probability
 import it.unibo.splague.model.connection.Protocol.ApplicationProtocol
 
 object Connection:
