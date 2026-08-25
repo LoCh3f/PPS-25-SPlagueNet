@@ -64,6 +64,9 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
 
+    // Support for Monad[_]
+    implementation(libs.scalazlibrary)
+
     // Use Scalatest for testing our library.
     // scalactic is pinned explicitly to match scalatest's version, since
     // a transitive version mismatch between the two is what causes
@@ -74,8 +77,12 @@ dependencies {
     testImplementation(libs.scalactic)
     testImplementation(libs.scalatestplusjunit)
 
+
+
     // Need scala-xml at test runtime
     testRuntimeOnly(libs.scalaxml)
+
+
 }
 
 java {

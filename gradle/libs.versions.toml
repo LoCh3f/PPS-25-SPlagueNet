@@ -12,6 +12,7 @@ scalactic = "3.2.19"
 spotbugs = "6.5.10"
 scalafmt = "1.21.6"
 scalastyle = "3.5.0"
+scalaz = "7.3.8"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -21,6 +22,7 @@ scala3library = { module = "org.scala-lang:scala3-library_3", version.ref = "sca
 scalaxml = { module = "org.scala-lang.modules:scala-xml_3", version.ref = "scalaxml" }
 scalatest = { module = "org.scalatest:scalatest_3", version.ref = "scalatest" }
 scalactic = { module = "org.scalactic:scalactic_3", version.ref = "scalactic" }
+scalazlibrary = {module = "org.scalaz:scalaz-core_3", version.ref = "scalaz"}
 
 [plugins]
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
