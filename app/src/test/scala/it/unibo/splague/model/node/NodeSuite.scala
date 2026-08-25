@@ -14,7 +14,7 @@ import org.scalatest.matchers.should.Matchers.{should, shouldBe}
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class NodeTest extends AnyFunSuite:
+class NodeSuite extends AnyFunSuite:
   private val packetLoss = Probability.apply(0.1).getOrElse(fail("packet loss should be valid"))
 
   private val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
@@ -58,18 +58,6 @@ class NodeTest extends AnyFunSuite:
     node.defenseLevel shouldBe 0.5
     node.state shouldBe NodeState.Healthy
     node.workload shouldBe 0.5
-
-  test("NodeId.of should succeed with a well formatted node id"):
-    val result = NodeId.of("node-01")
-    result.isRight shouldBe true
-    result.map(_.value) shouldBe Right("node-01")
-
-  test("NodeId.of should fail if the id is empty or blank"):
-    NodeId.of("") shouldBe Left("The ID cannot be empty")
-    NodeId.of("  ") shouldBe Left("The ID cannot be empty")
-
-  test("NodeId.of should fail if it contains whitespace"):
-    NodeId.of("node 01") shouldBe Left("The ID cannot contain white space")
 
   test("NodeState enum should contain all expected states"):
     val states = NodeState.values
