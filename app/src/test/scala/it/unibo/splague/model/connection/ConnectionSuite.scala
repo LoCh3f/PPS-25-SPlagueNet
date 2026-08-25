@@ -1,6 +1,6 @@
 package it.unibo.splague.model.connection
 
-import it.unibo.splague.model.Probability.Probability
+import it.unibo.splague.model.Probability
 import it.unibo.splague.model.*
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType}
 import org.junit.runner.RunWith

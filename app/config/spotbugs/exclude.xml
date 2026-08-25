@@ -3,4 +3,8 @@
     <Match>
         <Bug pattern="SE_BAD_FIELD, SE_BAD_FIELD_STORE"/>
     </Match>
+    <Match>
+        <Class name="~.*\$package(\$)?" />
+        <Bug pattern="NM_CLASS_NAMING_CONVENTION" />
+    </Match>
 </FindBugsFilter>
