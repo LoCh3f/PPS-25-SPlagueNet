@@ -4,7 +4,7 @@ import it.unibo.splague.model.node.{Node, Topology}
 import it.unibo.splague.model.malware.Malware
 
 @SerialVersionUID(1L)
-final case class Scenario private (
+final case class Scenario(
     name: String,
     topology: Topology,
     virus: Malware,
