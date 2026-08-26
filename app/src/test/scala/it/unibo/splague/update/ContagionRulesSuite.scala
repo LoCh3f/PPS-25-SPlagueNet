@@ -35,27 +35,43 @@ final class ContagionRulesSuite extends AnyFunSuite with Matchers:
   private def validNode(
       defenseLevel: Double = 0.0,
       patchLevel: Double = 0.0,
-      nodeType: NodeType = NodeType.Router
+      nodeType: NodeType = NodeType.Workstation
   ): Node =
     val id = NodeId.of("test-node").getOrElse(fail("Failed to create NodeId"))
     Node(id, nodeType, patchLevel, defenseLevel, NodeState.Healthy, workload = 0.0)
 
-  test("infectionProbability equals the malware's infectivity trait"):
+  test(
+    "infectionProbability with no defense/patch reduction still applies structural vulnerability"
+  ):
     val malware = validMalware(infectivity = Probability(0.6).toOption.get)
-    ContagionRules.infectionProbability(malware).value shouldBe 0.6
+    val node = validNode(nodeType = NodeType.Workstation)
+    val result = ContagionRules.infectionProbability(malware, node)
+    result.value shouldBe 0.48 +- 0.0001
 
-  test("withStructuralVulnerability scales base probability up for vulnerable node types"):
-    val base = Probability(0.5).toOption.get
-    val result = ContagionRules.withStructuralVulnerability(base, NodeType.IoTDevice) // 1.3
-    result.value shouldBe 0.65 +- 0.0001
+  test("infectionProbability combines defense, patch and structural vulnerability in order"):
+    val malware = validMalware(infectivity = Probability(0.8).toOption.get)
+    val node = validNode(defenseLevel = 0.25, patchLevel = 0.5, nodeType = NodeType.Workstation)
+    val result = ContagionRules.infectionProbability(malware, node)
+    result.value shouldBe 0.24 +- 0.0001
 
-  test("withDefense reduces probability proportionally to defenseLevel"):
-    val base = Probability(0.8).toOption.get
-    val node = validNode(defenseLevel = 0.25)
-    ContagionRules.withDefense(base, node).value shouldBe 0.6 +- 0.0001
-
-  test("withStructuralVulnerability clamps at 1.0 instead of overflowing"):
-    val base = Probability(0.9).toOption.get
-    val result =
-      ContagionRules.withStructuralVulnerability(base, NodeType.IoTDevice) // 0.9 * 1.3 = 1.17
+  test("infectionProbability clamps at 1.0 instead of overflowing"):
+    val malware = validMalware(infectivity = Probability(0.9).toOption.get)
+    val node = validNode(nodeType = NodeType.IoTDevice)
+    val result = ContagionRules.infectionProbability(malware, node)
     result.value shouldBe 1.0
+
+  test("infectionProbability stays within [0,1] for arbitrary inputs"):
+    val malware = validMalware(infectivity = Probability(0.6).toOption.get)
+    val node = validNode(defenseLevel = 0.3, patchLevel = 0.2, nodeType = NodeType.Router)
+    val result = ContagionRules.infectionProbability(malware, node)
+    result.value should (be >= 0.0 and be <= 1.0)
+
+  test("resolveInfection returns true when the roll is below the computed probability"):
+    val malware = validMalware(infectivity = Probability(0.9).toOption.get)
+    val node = validNode(nodeType = NodeType.Router)
+    ContagionRules.resolveInfection(malware, node, roll = 0.01) shouldBe true
+
+  test("resolveInfection returns false when the roll is above the computed probability"):
+    val malware = validMalware(infectivity = Probability(0.1).toOption.get)
+    val node = validNode(defenseLevel = 0.9, patchLevel = 0.9, nodeType = NodeType.Workstation)
+    ContagionRules.resolveInfection(malware, node, roll = 0.99) shouldBe false
