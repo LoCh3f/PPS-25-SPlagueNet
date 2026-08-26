@@ -4,7 +4,7 @@
 package it.unibo.splague
 
 import it.unibo.splague.update.Mvu.ModelState
-import it.unibo.splague.view.MainView
+import it.unibo.splague.view.{MainView, Renderer}
 import it.unibo.splague.update.Runtime
 
 object App:
@@ -13,7 +13,7 @@ object App:
 
     val model: ModelState = ModelState.init()
 
-    val view: MainView = new MainView
+    val view: Renderer = new MainView
 
     val runtime: Runtime = new Runtime(model, view)
 

@@ -4,6 +4,7 @@ object Mvu:
   enum Msg:
     case Step
     case ReturnToMenu
+    case GoToSimulation
 
   enum Screen:
     case Menu
@@ -16,7 +17,12 @@ object Mvu:
   def update(msg: Msg, modelState: ModelState): ModelState =
     (msg, modelState.screen) match
       case (Msg.Step, Screen.Simulation(engine)) => modelState.copy( /*???*/ )
-      case _                                     => modelState
+      case (Msg.GoToSimulation, Screen.Menu) =>
+        val initialEngine = "InitialEngine"
+        modelState.copy(screen = Screen.Simulation(initialEngine))
+      case (Msg.ReturnToMenu, _) =>
+        modelState.copy(screen = Screen.Menu)
+      case _ => modelState
 
   object ModelState:
     def init(): ModelState = ModelState(screen = Screen.Menu)
