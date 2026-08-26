@@ -1,6 +1,9 @@
-package it.unibo.splague.model
+package it.unibo.splague.model.node
 
-import it.unibo.splague.model.NodeId.NodeId
+import it.unibo.splague.model.connection.Connection.Edge
+import it.unibo.splague.model.node.NodeId.NodeId
+import it.unibo.splague.model.node.{Node, NodeId}
+import sun.jvm.hotspot.HelloWorld.e
 
 sealed trait NodeType:
   def detectionCoefficient: Double
@@ -37,10 +40,4 @@ case class Node(
     defenseLevel: Double,
     state: NodeState,
     workload: Double
-)
-
-@SerialVersionUID(1L)
-case class Topology(
-    @transient nodes: Map[String, Node],
-    @transient connections: Set[Nothing]
 )

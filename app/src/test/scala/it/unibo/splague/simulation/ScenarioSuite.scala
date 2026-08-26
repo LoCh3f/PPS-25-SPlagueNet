@@ -1,5 +1,6 @@
 package it.unibo.splague.simulation
 
+import it.unibo.splague.model.Probability
 import it.unibo.splague.model.malware.{
   Malware,
   MalwareTraits,
@@ -7,7 +8,7 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.malware.MalwareKind.Worm
-import it.unibo.splague.model.{Node, NodeId, NodeState, NodeType, Probability, Topology}
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import org.junit.runner.RunWith
 import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuite
@@ -24,7 +25,7 @@ final class ScenarioSuite extends AnyFunSuite with Matchers with EitherValues:
 
   private val topology = Topology(
     nodes = Map("node-01" -> nodeValid),
-    connections = Set.empty
+    edges = Set.empty
   )
 
   private val validTraits = (for
