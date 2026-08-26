@@ -8,6 +8,8 @@ object Mvu:
   enum Screen:
     case Menu
     case Simulation(engine: Any)
+    case CreateScenario
+    case SelectScenario
 
   case class ModelState(screen: Screen)
 
