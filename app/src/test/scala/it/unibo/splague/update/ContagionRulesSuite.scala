@@ -5,7 +5,6 @@ import org.scalatest.matchers.should.Matchers
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import it.unibo.splague.model.Probability
-import it.unibo.splague.model.{Node, NodeId, NodeState, NodeType}
 import it.unibo.splague.model.malware.{
   Malware,
   MalwareKind,
@@ -13,6 +12,7 @@ import it.unibo.splague.model.malware.{
   PayloadSeverityLevel,
   PropagationVector
 }
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType}
 
 @RunWith(classOf[JUnitRunner])
 final class ContagionRulesSuite extends AnyFunSuite with Matchers:

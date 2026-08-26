@@ -1,7 +1,8 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.Malware
-import it.unibo.splague.model.{Node, Probability}
+import it.unibo.splague.model.node.Node
+import it.unibo.splague.model.Probability
 
 object ContagionRules:
 
