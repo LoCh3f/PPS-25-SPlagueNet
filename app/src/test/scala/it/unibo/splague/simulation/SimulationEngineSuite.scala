@@ -73,9 +73,7 @@ class SimulationEngineSuite extends AnyFunSuite:
   test("run should keep applying the selected event until the max iteration is reached"):
     val selector = new SimulationUtils.EventSelector:
       override def nextEvent(scenario: Scenario): SimulationUtils.Event =
-        new SimulationUtils.Event:
-          override def apply(current: Scenario): Scenario =
-            current.copy(seed = current.seed + 1)
+        (current: Scenario) => current.copy(seed = current.seed + 1)
 
     val result = new SimulationEngine(selector).run(scenario).toList
     result.map(_.tick) shouldBe List(0, 1, 2, 3)
