@@ -9,6 +9,7 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
+import it.unibo.splague.simulation.event.SimulationEvents
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.{should, shouldBe}
@@ -71,8 +72,8 @@ class SimulationEngineSuite extends AnyFunSuite:
   ).toOption.get
 
   test("run should keep applying the selected event until the max iteration is reached"):
-    val selector = new SimulationUtils.EventSelector:
-      override def nextEvent(scenario: Scenario): SimulationUtils.Event =
+    val selector = new SimulationEvents.EventSelector:
+      override def nextEvent(scenario: Scenario): SimulationEvents.Event =
         (current: Scenario) => current.copy(seed = current.seed + 1)
 
     val result = new SimulationEngine(selector).run(scenario).toList
@@ -80,11 +81,9 @@ class SimulationEngineSuite extends AnyFunSuite:
     result.map(_.seed) shouldBe List(7, 8, 9, 10)
 
   test("run should stop before moving past maxIterations"):
-    val selector = new SimulationUtils.EventSelector:
-      override def nextEvent(scenario: Scenario): SimulationUtils.Event =
-        new SimulationUtils.Event:
-          override def apply(current: Scenario): Scenario =
-            current.copy(name = s"${current.name}-step")
+    val selector = new SimulationEvents.EventSelector:
+      override def nextEvent(scenario: Scenario): SimulationEvents.Event =
+        (current: Scenario) => current.copy(name = s"${current.name}-step")
 
     val result = new SimulationEngine(selector).run(scenario).toList
 

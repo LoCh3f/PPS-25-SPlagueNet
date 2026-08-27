@@ -1,6 +1,8 @@
-package it.unibo.splague.simulation
+package it.unibo.splague.simulation.event
 
-object SimulationUtils:
+import it.unibo.splague.simulation.Scenario
+
+object SimulationEvents:
 
   trait Event:
     def apply(scenario: Scenario): Scenario

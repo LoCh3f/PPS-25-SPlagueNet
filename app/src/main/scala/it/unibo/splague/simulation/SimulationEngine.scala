@@ -1,5 +1,5 @@
 package it.unibo.splague.simulation
-import it.unibo.splague.simulation.SimulationUtils.EventSelector
+import it.unibo.splague.simulation.event.SimulationEvents.EventSelector
 
 final class SimulationEngine(selector: EventSelector):
 
