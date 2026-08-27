@@ -26,12 +26,12 @@ class ProtocolSuite extends AnyFunSuite:
 
   test("TCP transport should expose the expected kind and valid reliability"):
     Protocol.TcpTransport.kind shouldBe Protocol.TransportProtocolType.TCP
-    Protocol.TcpTransport.reliability.map(_.value) shouldBe Right(0.99)
+    Protocol.TcpTransport.reliability.value shouldBe 0.99
 
   test("UDP transport should expose the expected kind and valid reliability"):
     Protocol.UdpTransport.kind shouldBe Protocol.TransportProtocolType.UDP
-    Protocol.UdpTransport.reliability.map(_.value) shouldBe Right(0.90)
+    Protocol.UdpTransport.reliability.value shouldBe 0.90
 
   test("transport reliability should stay within the valid probability range"):
-    Protocol.TcpTransport.reliability.map(_.value).forall(v => v >= 0.0 && v <= 1.0) shouldBe true
-    Protocol.UdpTransport.reliability.map(_.value).forall(v => v >= 0.0 && v <= 1.0) shouldBe true
+    (Protocol.TcpTransport.reliability.value >= 0.0 && Protocol.TcpTransport.reliability.value <= 1.0) shouldBe true
+    (Protocol.UdpTransport.reliability.value >= 0.0 && Protocol.UdpTransport.reliability.value <= 1.0) shouldBe true

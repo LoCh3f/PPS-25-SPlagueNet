@@ -12,7 +12,7 @@ object Protocol:
 
   trait TransportProtocol:
     def kind: TransportProtocolType
-    def reliability: Either[String, Probability]
+    def reliability: Probability
 
   trait ApplicationProtocol:
     def kind: ApplicationProtocolType
@@ -20,8 +20,8 @@ object Protocol:
 
   case object TcpTransport extends TransportProtocol:
     val kind: TransportProtocolType = TransportProtocolType.TCP
-    val reliability: Either[String, Probability] = Probability.apply(0.99)
+    val reliability: Probability = Probability.apply(0.99).toOption.get
 
   case object UdpTransport extends TransportProtocol:
     val kind: TransportProtocolType = TransportProtocolType.UDP
-    val reliability: Either[String, Probability] = Probability.apply(0.90)
+    val reliability: Probability = Probability.apply(0.90).toOption.get
