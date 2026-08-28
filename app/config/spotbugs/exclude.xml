@@ -7,4 +7,9 @@
         <Class name="~.*\$package(\$)?" />
         <Bug pattern="NM_CLASS_NAMING_CONVENTION" />
     </Match>
+    <!-- Falso positivo su TickBasedSelector: scala.Vector è immutabile -->
+    <Match>
+        <Class name="it.unibo.splague.simulation.event.TickBasedSelector" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
 </FindBugsFilter>
