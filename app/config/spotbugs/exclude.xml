@@ -12,4 +12,12 @@
         <Class name="it.unibo.splague.simulation.event.TickBasedSelector" />
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
+    <!-- Esclude l'esposizione della rappresentazione per la classe SimulationEngineState -->
+    <Match>
+        <Class name="it.unibo.splague.update.Mvu$SimulationEngineState" />
+        <Or>
+            <Bug code="EI" />
+            <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+        </Or>
+    </Match>
 </FindBugsFilter>

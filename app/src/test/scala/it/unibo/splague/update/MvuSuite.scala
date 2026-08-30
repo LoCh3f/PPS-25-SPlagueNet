@@ -6,7 +6,7 @@ import org.scalatest.{EitherValues, stats}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
-import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen}
+import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, SimulationEngineState}
 
 @RunWith(classOf[JUnitRunner])
 final class MvuSuite extends AnyFunSuite with Matchers with EitherValues:
@@ -17,15 +17,16 @@ final class MvuSuite extends AnyFunSuite with Matchers with EitherValues:
       Msg.Step,
       Msg.GoToSimulation,
       Msg.GoToCreateView,
-      Msg.CreateScenario,
+      Msg.GoToSelection,
+      Msg.ConfirmScenario,
       Msg.LoadTopology,
       Msg.SaveScenario
     )
 
   test("Creating a ModelState with a specific Screen should have that Screen"):
-    val model: ModelState = ModelState(screen = Simulation(None))
+    val model: ModelState = ModelState(screen = Simulation(SimulationEngineState(LazyList())))
 
-    model.screen shouldBe Simulation(None)
+    model.screen shouldBe Simulation(SimulationEngineState(LazyList()))
 
   test("ModelState.init should return a ModelState with screen == Menu"):
     val model: ModelState = ModelState.init()
