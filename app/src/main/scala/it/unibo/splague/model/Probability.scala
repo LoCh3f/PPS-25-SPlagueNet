@@ -15,4 +15,6 @@ object Probability:
   def apply(value: Double): Either[String, Probability] =
     Either.cond(value >= 0.0 && value <= 1.0, value, s"Probability must be in [0,1], got $value")
 
+  def clamped(value: Double): Probability = value.max(0.0).min(1.0)
+
   extension (p: Probability) def value: Double = p
