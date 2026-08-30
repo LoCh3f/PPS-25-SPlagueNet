@@ -16,30 +16,9 @@ object Mvu:
     case LoadTopology
     case SaveScenario
 
-  class SimulationEngineState private (private val list: LazyList[Scenario]):
-    def remaining: LazyList[Scenario] = list
-
-    def nonEmpty: Boolean = list.nonEmpty
-
-    def advance(): SimulationEngineState =
-      if list.nonEmpty then SimulationEngineState(list.tail)
-      else this
-
-    override def hashCode(): Int = remaining.hashCode()
-
-    override def toString(): String = s"SimulationEngineState($remaining)"
-
-    override def equals(obj: Any): Boolean = obj match
-      case that: SimulationEngineState => this.remaining == that.remaining
-      case _                           => false
-
-  object SimulationEngineState:
-    def apply(list: LazyList[Scenario]): SimulationEngineState =
-      new SimulationEngineState(list.to(LazyList))
-
   enum Screen:
     case Menu
-    case Simulation(engineState: SimulationEngineState)
+    case Simulation(engineState: LazyList[Scenario])
     case ConfirmScenario
     case SelectScenario
 
@@ -52,14 +31,13 @@ object Mvu:
 
   def update(msg: Msg, modelState: ModelState): ModelState =
     (msg, modelState.screen) match
-//      case (Msg.GoToSimulation, Screen.Menu) =>
-//        modelState.copy(screen = Screen.Simulation(SimulationEngineState(LazyList())))
-//      case (Msg.Step, Screen.Simulation(engineState)) =>
-//        engineState.remaining match
-//          case rest if rest.nonEmpty =>
-//            val nextEngineState = SimulationEngineState(rest.tail)
-//            modelState.copy(screen = Simulation(nextEngineState))
-//          case _ => modelState
+      case (Msg.GoToSimulation, Screen.Menu) =>
+        modelState.copy(screen = Screen.Simulation(LazyList()))
+      case (Msg.Step, Screen.Simulation(engineState)) =>
+        engineState.tail match
+          case rest if rest.nonEmpty =>
+            modelState.copy(screen = Simulation(rest))
+          case _ => modelState
       case (Msg.ReturnToMenu, _) =>
         modelState.copy(screen = Screen.Menu)
       case _ => modelState
