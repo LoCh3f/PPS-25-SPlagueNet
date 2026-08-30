@@ -14,7 +14,12 @@ final class MvuSuite extends AnyFunSuite with Matchers with EitherValues:
     val states = Msg.values
     states should contain allOf (
       Msg.ReturnToMenu,
-      Msg.Step
+      Msg.Step,
+      Msg.GoToSimulation,
+      Msg.GoToCreateView,
+      Msg.CreateScenario,
+      Msg.LoadTopology,
+      Msg.SaveScenario
     )
 
   test("Creating a ModelState with a specific Screen should have that Screen"):

@@ -5,6 +5,10 @@ object Mvu:
     case Step
     case ReturnToMenu
     case GoToSimulation
+    case GoToCreateView
+    case CreateScenario
+    case LoadTopology
+    case SaveScenario
 
   enum Screen:
     case Menu
