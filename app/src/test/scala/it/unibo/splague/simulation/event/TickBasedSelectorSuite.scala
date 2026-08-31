@@ -35,7 +35,7 @@ class TickBasedSelectorSuite extends AnyFunSuite:
     Malware("m", MalwareKind.Worm, traits, Set(PropagationVector.NetworkExploit)).toOption.get
 
   private val node =
-    Node(NodeId.of("n").toOption.get, NodeType.Router, 0.0, 0.0, NodeState.Healthy, 0.0)
+    Node(NodeId.of("n").toOption.get, NodeType.Router, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
   private val topo = Topology(nodes = Map(node.nodeId.value -> node), edges = Set.empty)
 
   private def scenarioWithTick(t: Int) =

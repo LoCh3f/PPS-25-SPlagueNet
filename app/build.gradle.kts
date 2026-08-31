@@ -67,6 +67,8 @@ dependencies {
     // Support for Monad[_]
     implementation(libs.scalazlibrary)
 
+    implementation("org.scala-lang.modules:scala-swing_3:3.0.0")
+
     // Use Scalatest for testing our library.
     // scalactic is pinned explicitly to match scalatest's version, since
     // a transitive version mismatch between the two is what causes

@@ -64,7 +64,8 @@ class InfectionSuite extends AnyFunSuite:
     0.0,
     0.0,
     NodeState.Infected,
-    0.0
+    0.0,
+    Set()
   )
   private val nodeHealthy = Node(
     NodeId.of("n-hlth").getOrElse(fail("invalid id")),
@@ -72,7 +73,8 @@ class InfectionSuite extends AnyFunSuite:
     0.0,
     0.0,
     NodeState.Healthy,
-    0.0
+    0.0,
+    Set()
   )
   private val nodeHealthy1 = Node(
     NodeId.of("n-hlth-2").getOrElse(fail("invalid id")),
@@ -80,7 +82,8 @@ class InfectionSuite extends AnyFunSuite:
     0.0,
     0.0,
     NodeState.Healthy,
-    0.0
+    0.0,
+    Set()
   )
   private val nodeHealthyIndirect = Node(
     NodeId.of("n-hlth-3").getOrElse(fail("invalid id")),
@@ -88,7 +91,8 @@ class InfectionSuite extends AnyFunSuite:
     0.0,
     0.0,
     NodeState.Healthy,
-    0.0
+    0.0,
+    Set()
   )
 
   private val baseChannel =
