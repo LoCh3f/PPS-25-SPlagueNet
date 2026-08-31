@@ -39,7 +39,7 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
       stato: NodeState
   ): Node =
     val nodeId = NodeId.of(id).getOrElse(fail(s"id non valido: $id"))
-    Node(nodeId, tipo, patch, defense, stato, workload = 0.0)
+    Node(nodeId, tipo, patch, defense, stato, workload = 0.0, Set())
 
   private val validTraits = (for
     infectivity <- Probability(1.0)

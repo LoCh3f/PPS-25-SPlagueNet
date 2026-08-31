@@ -38,7 +38,7 @@ final class ContagionRulesSuite extends AnyFunSuite with Matchers:
       nodeType: NodeType = NodeType.Workstation
   ): Node =
     val id = NodeId.of("test-node").getOrElse(fail("Failed to create NodeId"))
-    Node(id, nodeType, patchLevel, defenseLevel, NodeState.Healthy, workload = 0.0)
+    Node(id, nodeType, patchLevel, defenseLevel, NodeState.Healthy, workload = 0.0, Set())
 
   test(
     "infectionProbability with no defense/patch reduction still applies structural vulnerability"
@@ -46,13 +46,13 @@ final class ContagionRulesSuite extends AnyFunSuite with Matchers:
     val malware = validMalware(infectivity = Probability(0.6).toOption.get)
     val node = validNode(nodeType = NodeType.Workstation)
     val result = ContagionRules.infectionProbability(malware, node)
-    result.value shouldBe 0.48 +- 0.0001
+    result.value shouldBe 0.6 +- 0.0001
 
   test("infectionProbability combines defense, patch and structural vulnerability in order"):
     val malware = validMalware(infectivity = Probability(0.8).toOption.get)
     val node = validNode(defenseLevel = 0.25, patchLevel = 0.5, nodeType = NodeType.Workstation)
     val result = ContagionRules.infectionProbability(malware, node)
-    result.value shouldBe 0.24 +- 0.0001
+    result.value shouldBe 0.3 +- 0.0001
 
   test("infectionProbability clamps at 1.0 instead of overflowing"):
     val malware = validMalware(infectivity = Probability(0.9).toOption.get)

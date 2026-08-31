@@ -19,7 +19,8 @@ class ConnectionSuite extends AnyFunSuite:
     0.1,
     0.5,
     NodeState.Healthy,
-    0.2
+    0.2,
+    Set()
   )
 
   private val targetNode = Node(
@@ -28,7 +29,8 @@ class ConnectionSuite extends AnyFunSuite:
     0.2,
     0.6,
     NodeState.Infected,
-    0.9
+    0.9,
+    Set()
   )
 
   private val httpProtocol: Protocol.ApplicationProtocol = new Protocol.ApplicationProtocol:

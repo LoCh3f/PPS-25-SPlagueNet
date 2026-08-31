@@ -44,7 +44,8 @@ class SimulationEngineSuite extends AnyFunSuite:
     patchLevel = 0.2,
     defenseLevel = 0.5,
     state = NodeState.Healthy,
-    workload = 0.3
+    workload = 0.3,
+    Set()
   )
 
   private val nodeB = Node(
@@ -53,7 +54,8 @@ class SimulationEngineSuite extends AnyFunSuite:
     patchLevel = 0.4,
     defenseLevel = 0.7,
     state = NodeState.Infected,
-    workload = 0.8
+    workload = 0.8,
+    Set()
   )
 
   private val topology = Topology(
