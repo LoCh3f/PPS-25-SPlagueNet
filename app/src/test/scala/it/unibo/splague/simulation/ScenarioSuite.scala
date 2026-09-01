@@ -1,6 +1,6 @@
 package it.unibo.splague.simulation
 
-import it.unibo.splague.model.Probability
+import it.unibo.splague.model.{Awareness, Probability}
 import it.unibo.splague.model.malware.{
   Malware,
   MalwareTraits,
@@ -101,3 +101,16 @@ final class ScenarioSuite extends AnyFunSuite with Matchers with EitherValues:
     )
 
     result shouldBe a[Left[?, ?]]
+
+  test("Scenario creation should start with Awareness.none"):
+    val result = Scenario(
+      name = "Simulation Alpha",
+      topology = topology,
+      virus = dummyVirus,
+      startingNode = nodeValid,
+      tick = 0,
+      seed = 42,
+      maxIterations = 100
+    )
+
+    result.value.awareness shouldBe Awareness.none
