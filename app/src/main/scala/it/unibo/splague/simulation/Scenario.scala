@@ -1,9 +1,9 @@
 package it.unibo.splague.simulation
 
+import it.unibo.splague.model.Awareness
 import it.unibo.splague.model.node.{Node, Topology}
 import it.unibo.splague.model.malware.Malware
 
-@SerialVersionUID(1L)
 final case class Scenario(
     name: String,
     topology: Topology,
@@ -11,7 +11,8 @@ final case class Scenario(
     startingNode: Node,
     tick: Int,
     seed: Int,
-    maxIterations: Int
+    maxIterations: Int,
+    awareness: Awareness
 )
 
 object Scenario:
@@ -46,4 +47,13 @@ object Scenario:
       validName <- validateName(name)
       validStartingNode <- validateStartingNode(startingNode, topology)
       validMaxIter <- validateMaxIterations(maxIterations)
-    yield new Scenario(validName, topology, virus, validStartingNode, tick, seed, validMaxIter)
+    yield new Scenario(
+      validName,
+      topology,
+      virus,
+      validStartingNode,
+      tick,
+      seed,
+      validMaxIter,
+      awareness = Awareness.none
+    )
