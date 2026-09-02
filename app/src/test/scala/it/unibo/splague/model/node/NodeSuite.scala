@@ -20,7 +20,7 @@ class NodeSuite extends AnyFunSuite:
 
   private val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
   private val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
-  private val nodeIde3 = NodeId.of("node-03").getOrElse(fail("Failed to create NodeId"))
+  private val nodeId3 = NodeId.of("node-03").getOrElse(fail("Failed to create NodeId"))
 
   private val node1 =
     Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set(Phishing))
@@ -34,7 +34,7 @@ class NodeSuite extends AnyFunSuite:
     Set(Phishing, NetworkExploit)
   )
   private val node3 =
-    Node(nodeIde3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3, Set(NetworkExploit))
+    Node(nodeId3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3, Set(NetworkExploit))
 
   test("NodeType values and coefficients should match expected values"):
     NodeType.IoTDevice.detectionCoefficient shouldBe 0.3
