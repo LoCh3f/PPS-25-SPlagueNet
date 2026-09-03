@@ -27,4 +27,4 @@ object DefenseRules:
       )
     else Probability.clamped(0.0)
 
-  def solveCure(p: Probability, roll: Double): Boolean = roll < p.value
+  def resolveCure(p: Probability, roll: Double): Boolean = roll < p.value
