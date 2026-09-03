@@ -10,7 +10,7 @@ import it.unibo.splague.update.DefenseRules
 import scala.util.Random
 
 object Cure:
-  object Cure extends Event with TopologyUpdateMixin:
+  object CureEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val countermeasureConfig = scenario.countermeasureConfig
       var nodes = scenario.topology.nodes

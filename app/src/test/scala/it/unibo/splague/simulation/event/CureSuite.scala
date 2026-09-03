@@ -75,7 +75,7 @@ class CureSuite extends AnyFunSuite:
       countermeasureConfig = config
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Cure.Cure(scenario)
+    val updatedScenario = Cure.CureEvent(scenario)
     val updatedNode = updatedScenario.topology.nodes("node-01")
 
     updatedNode.state shouldBe Immune
@@ -92,7 +92,7 @@ class CureSuite extends AnyFunSuite:
       countermeasureConfig = config
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Cure.Cure(scenario)
+    val updatedScenario = Cure.CureEvent(scenario)
     val updatedNode = updatedScenario.topology.nodes("node-02")
 
     updatedNode.state shouldBe Infected
@@ -109,7 +109,7 @@ class CureSuite extends AnyFunSuite:
       countermeasureConfig = config
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Cure.Cure(scenario)
+    val updatedScenario = Cure.CureEvent(scenario)
     updatedScenario.topology.nodes("node-01").state shouldBe Immune
 
   test("Cure event leaves Infected nodes unchanged when Patch countermeasure is inactive"):
@@ -129,5 +129,5 @@ class CureSuite extends AnyFunSuite:
       countermeasureConfig = inactiveConfig
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Cure.Cure(scenario)
+    val updatedScenario = Cure.CureEvent(scenario)
     updatedScenario.topology.nodes("node-01").state shouldBe Infected

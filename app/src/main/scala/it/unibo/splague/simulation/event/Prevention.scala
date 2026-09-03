@@ -7,7 +7,7 @@ import it.unibo.splague.simulation.event.SimulationEvents.{Event, TopologyUpdate
 import it.unibo.splague.update.DefenseRules
 
 object Prevention:
-  object Prevention extends Event with TopologyUpdateMixin:
+  object PreventionEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val countermeasureConfig = scenario.countermeasureConfig
       var nodes = scenario.topology.nodes

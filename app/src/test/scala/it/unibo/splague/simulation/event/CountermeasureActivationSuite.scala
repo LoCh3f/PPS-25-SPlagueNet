@@ -63,7 +63,7 @@ class CountermeasureActivationSuite extends AnyFunSuite:
       awareness = Awareness(0.6).getOrElse(fail())
     )
 
-    val updatedScenario = CountermeasureActivation.Activation(scenario)
+    val updatedScenario = CountermeasureActivation.ActivationEvent(scenario)
 
     updatedScenario.countermeasureConfig.activeCountermeasures should contain(Countermeasures.Patch)
 
@@ -85,6 +85,6 @@ class CountermeasureActivationSuite extends AnyFunSuite:
       awareness = Awareness(0.4).getOrElse(fail())
     )
 
-    val updatedScenario = CountermeasureActivation.Activation(scenario)
+    val updatedScenario = CountermeasureActivation.ActivationEvent(scenario)
 
     updatedScenario.countermeasureConfig.activeCountermeasures should Matchers.not contain Countermeasures.Patch

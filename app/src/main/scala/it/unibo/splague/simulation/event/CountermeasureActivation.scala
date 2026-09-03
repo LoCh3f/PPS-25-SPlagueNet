@@ -3,7 +3,7 @@ package it.unibo.splague.simulation.event
 import it.unibo.splague.simulation.Scenario
 
 object CountermeasureActivation:
-  object Activation extends SimulationEvents.Event:
+  object ActivationEvent extends SimulationEvents.Event:
     override def apply(scenario: Scenario): Scenario =
       val config = scenario.countermeasureConfig
       val currentAwareness = scenario.awareness.value
