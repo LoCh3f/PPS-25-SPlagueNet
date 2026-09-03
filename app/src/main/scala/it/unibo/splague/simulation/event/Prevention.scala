@@ -15,13 +15,13 @@ object Prevention:
       // Increase Defense
       if countermeasureConfig.activeCountermeasures.contains(DefenseBoost) then
         nodes = scenario.topology.healthyNodes().foldLeft(nodes) { (acc, n) =>
-          acc.updated(n.nodeId.value, DefenseRules.boostDefense(n))
+          acc.updated(n.nodeId.value, DefenseRules.boostDefense(n, countermeasureConfig))
         }
 
       // Increase Patch
       if countermeasureConfig.activeCountermeasures.contains(Patch) then
         nodes = scenario.topology.healthyNodes().foldLeft(nodes) { (acc, n) =>
-          acc.updated(n.nodeId.value, DefenseRules.boostPatch(n))
+          acc.updated(n.nodeId.value, DefenseRules.boostPatch(n, countermeasureConfig))
         }
 
       scenario.copy(topology = scenario.topology.copy(nodes = nodes))
