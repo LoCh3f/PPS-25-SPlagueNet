@@ -1,22 +1,27 @@
 package it.unibo.splague.model.countermeasures
 
+import it.unibo.splague.update.IsolationCriteria
+
 case class CountermeasureConfig(
     activeCountermeasures: Set[Countermeasures],
     countermeasureLevels: Map[Double, Countermeasures],
     patchBoostAmount: Double,
     defenseBoostAmount: Double,
-    patchCureProbability: Double
+    patchCureProbability: Double,
+    isolationCriteria: IsolationCriteria
 )
 object CountermeasureConfig:
   val defaultPatchBoostAmount: Double = 0.05
   val defaultDefenseBoostAmount: Double = 0.05
   val defaultPatchCureProbability: Double = 0.5
+  val defaultIsolationCriteria: IsolationCriteria = IsolationCriteria.all
   val empty: CountermeasureConfig = CountermeasureConfig(
     Set.empty,
     Map.empty,
     defaultPatchBoostAmount,
     defaultDefenseBoostAmount,
-    defaultPatchCureProbability
+    defaultPatchCureProbability,
+    defaultIsolationCriteria
   ).toOption.get
 
   def apply(
@@ -24,7 +29,8 @@ object CountermeasureConfig:
       countermeasureLevels: Map[Double, Countermeasures] = Map.empty,
       patchBoostAmount: Double = defaultPatchBoostAmount,
       defenseBoostAmount: Double = defaultDefenseBoostAmount,
-      patchCureProbability: Double = defaultPatchCureProbability
+      patchCureProbability: Double = defaultPatchCureProbability,
+      isolationCriteria: IsolationCriteria = defaultIsolationCriteria
   ): Either[String, CountermeasureConfig] =
     if countermeasureLevels.keys.exists(threshold => threshold < 0.0 || threshold > 1.0) then
       Left("Thresholds in countermeasureLevels must be between 0.0 and 1.0")
@@ -39,6 +45,7 @@ object CountermeasureConfig:
           countermeasureLevels,
           patchBoostAmount,
           defenseBoostAmount,
-          patchCureProbability
+          patchCureProbability,
+          isolationCriteria
         )
       )
