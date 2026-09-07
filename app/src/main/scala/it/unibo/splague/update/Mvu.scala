@@ -1,8 +1,6 @@
 package it.unibo.splague.update
 
-import it.unibo.splague.simulation.event.{Infection, SimulationEvents}
-import it.unibo.splague.simulation.{Scenario, SimulationEngine}
-import it.unibo.splague.simulation.event.SimulationEvents.EventSelector
+import it.unibo.splague.simulation.Scenario
 import it.unibo.splague.update.Mvu.Screen.Simulation
 
 object Mvu:
@@ -23,11 +21,6 @@ object Mvu:
     case SelectScenario
 
   case class ModelState(screen: Screen)
-
-  // TODO define all encompassing event(infection, cure, destruction?)
-  private val selector: EventSelector = _ => Infection.InfectionEvent
-
-  private val engine = SimulationEngine(selector)
 
   def update(msg: Msg, modelState: ModelState): ModelState =
     (msg, modelState.screen) match
