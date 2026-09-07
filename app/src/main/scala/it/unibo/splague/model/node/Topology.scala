@@ -47,3 +47,15 @@ object Topology:
 
     def hub(node: Node): Option[Node] =
       topology.nodes.values.maxByOption(n => degree(n))
+
+    def healthyNodes(): Set[Node] =
+      topology.nodes.values.filter(node => node.state == NodeState.Healthy).toSet
+
+    def infectedNodes(): Set[Node] =
+      topology.nodes.values.filter(node => node.state == NodeState.Infected).toSet
+
+    def quarantinedNodes(): Set[Node] =
+      topology.nodes.values.filter(node => node.state == NodeState.Quarantined).toSet
+
+    def destroyedNodes(): Set[Node] =
+      topology.nodes.values.filter(node => node.state == NodeState.Destroyed).toSet

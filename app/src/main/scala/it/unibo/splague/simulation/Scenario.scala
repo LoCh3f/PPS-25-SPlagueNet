@@ -1,6 +1,7 @@
 package it.unibo.splague.simulation
 
 import it.unibo.splague.model.Awareness
+import it.unibo.splague.model.countermeasures.CountermeasureConfig
 import it.unibo.splague.model.node.{Node, Topology}
 import it.unibo.splague.model.malware.Malware
 
@@ -12,7 +13,8 @@ final case class Scenario(
     tick: Int,
     seed: Int,
     maxIterations: Int,
-    awareness: Awareness
+    awareness: Awareness,
+    countermeasureConfig: CountermeasureConfig
 )
 
 object Scenario:
@@ -41,7 +43,8 @@ object Scenario:
       startingNode: Node,
       tick: Int,
       seed: Int,
-      maxIterations: Int
+      maxIterations: Int,
+      countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty
   ): Either[String, Scenario] =
     for
       validName <- validateName(name)
@@ -55,5 +58,6 @@ object Scenario:
       tick,
       seed,
       validMaxIter,
-      awareness = Awareness.none
+      awareness = Awareness.none,
+      countermeasureConfig
     )
