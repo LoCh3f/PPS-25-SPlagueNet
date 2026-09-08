@@ -22,8 +22,16 @@ class CountermeasureConfigSuite extends AnyFunSuite:
 
     result.isLeft shouldBe true
 
-  test("CountermeasureConfig creation with contains default FirewallPolicy"):
+  test(
+    "CountermeasureConfig creation with no specified FirewallPolicy defined contains empty FirewallPolicy"
+  ):
     val result = CountermeasureConfig()
+
+    result.isRight shouldBe true
+    result.map(_.firewallPolicy) shouldBe Right(FirewallPolicy())
+
+  test("CountermeasureConfig creation with FirewallPolicy.default contains default FirewallPolicy"):
+    val result = CountermeasureConfig(firewallPolicy = FirewallPolicy.defaultPolicy)
 
     result.isRight shouldBe true
     result.map(_.firewallPolicy) shouldBe Right(FirewallPolicy.defaultPolicy)

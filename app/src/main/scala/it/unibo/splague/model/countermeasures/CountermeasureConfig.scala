@@ -16,7 +16,7 @@ object CountermeasureConfig:
   val defaultDefenseBoostAmount: Double = 0.05
   val defaultPatchCureProbability: Double = 0.5
   val defaultIsolationCriteria: IsolationCriteria = IsolationCriteria.all
-  val defaultFirewallPolicy: FirewallPolicy = FirewallPolicy.defaultPolicy
+  val defaultFirewallPolicy: FirewallPolicy = FirewallPolicy()
 
   val empty: CountermeasureConfig = CountermeasureConfig(
     Set.empty,
