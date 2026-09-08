@@ -8,7 +8,7 @@ import it.unibo.splague.model.node.{Node, Topology}
   */
 object AwarenessRules:
 
-  /** Calculates detection signal for a single node. Signal = workload × detection coefficient × (1 -
+  /** Calculates detection signal for a single node. Signal = workload ï¿½ detection coefficient ï¿½ (1 -
     * stealth)
     *
     * @param node

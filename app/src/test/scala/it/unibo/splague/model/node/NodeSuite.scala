@@ -18,9 +18,24 @@ import org.scalatestplus.junit.JUnitRunner
 class NodeSuite extends AnyFunSuite:
   private val packetLoss = Probability.apply(0.1).getOrElse(fail("packet loss should be valid"))
 
-  private val nodeId1 = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))
-  private val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
-  private val nodeId3 = NodeId.of("node-03").getOrElse(fail("Failed to create NodeId"))
+  private val nodeId1 = NodeId
+    .of("node-01")
+    .fold(
+      err => throw new IllegalStateException(s"Failed to create test NodeId: $err"),
+      id => id
+    )
+  private val nodeId2 = NodeId
+    .of("node-02")
+    .fold(
+      err => throw new IllegalStateException(s"Failed to create test NodeId: $err"),
+      id => id
+    )
+  private val nodeId3 = NodeId
+    .of("node-03")
+    .fold(
+      err => throw new IllegalStateException(s"Failed to create test NodeId: $err"),
+      id => id
+    )
 
   private val node1 =
     Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set(Phishing))
@@ -80,3 +95,12 @@ class NodeSuite extends AnyFunSuite:
       NodeState.Immune,
       NodeState.Destroyed
     )
+
+  test("Node.test() should create a Node with default fields for testing"):
+    val node = Node.test(nodeId = nodeId1)
+
+    node.workload shouldBe Node.defaultWorkload
+    node.state shouldBe Node.defaultState
+    node.defenseLevel shouldBe Node.defaultDefenseLevel
+    node.patchLevel shouldBe Node.defaultPatchLevel
+    node.nodeType shouldBe Node.defaultNodeType
