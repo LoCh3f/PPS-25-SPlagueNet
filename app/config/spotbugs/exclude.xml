@@ -23,4 +23,8 @@
         <Class name="it.unibo.splague.update.Mvu$SimulationEngineState" />
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
+    <Match>
+        <Class name="it.unibo.splague.simulation.event.DefenseSuite" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
 </FindBugsFilter>
