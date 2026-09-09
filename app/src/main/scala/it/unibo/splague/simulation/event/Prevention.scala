@@ -7,7 +7,7 @@ import it.unibo.splague.simulation.event.SimulationEvents.{Event, TopologyUpdate
 import it.unibo.splague.update.DefenseRules
 
 object Prevention:
-  object PreventionEvent extends Event with TopologyUpdateMixin:
+  object DefenseBoostEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val countermeasureConfig = scenario.countermeasureConfig
       var nodes = scenario.topology.nodes
@@ -17,6 +17,13 @@ object Prevention:
         nodes = scenario.topology.healthyNodes().foldLeft(nodes) { (acc, n) =>
           acc.updated(n.nodeId.value, DefenseRules.boostDefense(n, countermeasureConfig))
         }
+
+      scenario.copy(topology = scenario.topology.copy(nodes = nodes))
+
+  object PatchBoostEvent extends Event with TopologyUpdateMixin:
+    override def apply(scenario: Scenario): Scenario =
+      val countermeasureConfig = scenario.countermeasureConfig
+      var nodes = scenario.topology.nodes
 
       // Increase Patch
       if countermeasureConfig.activeCountermeasures.contains(Patch) then

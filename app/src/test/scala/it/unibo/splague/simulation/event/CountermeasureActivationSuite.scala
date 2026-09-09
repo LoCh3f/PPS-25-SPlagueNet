@@ -51,17 +51,19 @@ class CountermeasureActivationSuite extends AnyFunSuite:
       countermeasureLevels = Map(0.5 -> Countermeasures.Patch)
     ).getOrElse(fail())
 
-    val scenario = Scenario(
-      name = "Activation Test",
-      topology = topology,
-      virus = dummyVirus,
-      startingNode = node,
-      tick = 0,
-      seed = 42,
-      maxIterations = 10,
-      countermeasureConfig = config,
-      awareness = Awareness(0.6).getOrElse(fail())
-    )
+    val scenario = Scenario
+      .apply(
+        name = "Activation Test",
+        topology = topology,
+        virus = dummyVirus,
+        startingNode = node,
+        tick = 0,
+        seed = 42,
+        maxIterations = 10,
+        countermeasureConfig = config,
+        awareness = Awareness(0.6).getOrElse(fail())
+      )
+      .getOrElse(fail())
 
     val updatedScenario = CountermeasureActivation.ActivationEvent(scenario)
 
@@ -73,17 +75,19 @@ class CountermeasureActivationSuite extends AnyFunSuite:
       countermeasureLevels = Map(0.8 -> Countermeasures.Patch)
     ).getOrElse(fail())
 
-    val scenario = Scenario(
-      name = "No Activation Test",
-      topology = topology,
-      virus = dummyVirus,
-      startingNode = node,
-      tick = 0,
-      seed = 42,
-      maxIterations = 10,
-      countermeasureConfig = config,
-      awareness = Awareness(0.4).getOrElse(fail())
-    )
+    val scenario = Scenario
+      .apply(
+        name = "No Activation Test",
+        topology = topology,
+        virus = dummyVirus,
+        startingNode = node,
+        tick = 0,
+        seed = 42,
+        maxIterations = 10,
+        countermeasureConfig = config,
+        awareness = Awareness(0.4).getOrElse(fail())
+      )
+      .getOrElse(fail())
 
     val updatedScenario = CountermeasureActivation.ActivationEvent(scenario)
 

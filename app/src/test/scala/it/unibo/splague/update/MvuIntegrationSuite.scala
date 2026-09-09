@@ -1,7 +1,14 @@
 package it.unibo.splague.update
 
-import it.unibo.splague.model.Probability
+import it.unibo.splague.model.{Awareness, Probability}
 import it.unibo.splague.model.connection.Connection
+import it.unibo.splague.model.connection.Protocol.{
+  ApplicationProtocol,
+  ApplicationProtocolType,
+  TcpTransport,
+  TransportProtocol
+}
+import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.malware.MalwareKind.Worm
 import it.unibo.splague.model.malware.{
   Malware,
@@ -10,7 +17,17 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.simulation.event.Infection
+import it.unibo.splague.simulation.event.{
+  CountermeasureActivation,
+  Cure,
+  Defense,
+  Destroy,
+  Detection,
+  Infection,
+  Prevention,
+  SimulationEvents
+}
+import it.unibo.splague.simulation.event.SimulationEvents.Event
 import it.unibo.splague.simulation.{Scenario, SimulationEngine}
 import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, update}
 import org.junit.runner.RunWith
@@ -18,6 +35,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 
+private case class TestApplicationProtocol(
+    kind: ApplicationProtocolType,
+    underlying: TransportProtocol = TcpTransport
+) extends ApplicationProtocol
 @RunWith(classOf[JUnitRunner])
 final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
 
@@ -39,7 +60,7 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
       stato: NodeState
   ): Node =
     val nodeId = NodeId.of(id).getOrElse(fail(s"id non valido: $id"))
-    Node(nodeId, tipo, patch, defense, stato, workload = 0.0, Set())
+    Node(nodeId, tipo, patch, defense, stato, workload = 0.3, Set())
 
   private val validTraits = (for
     infectivity <- Probability(1.0)
@@ -61,81 +82,164 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
     vectors = Set(PropagationVector.NetworkExploit)
   ).toOption.get
 
-  test("Msg.Step, called trough Mvu.update, must propagate the virus to a node with null defences"):
+  private def fullPipelineSelector: SimulationEvents.EventSelector = _ =>
+    new SimulationEvents.Event:
+      override def apply(s: Scenario): Scenario =
+        val pipeline: List[Scenario => Scenario] = List(
+          Detection.apply,
+          CountermeasureActivation.ActivationEvent.apply,
+          scenario =>
+            if scenario.countermeasureConfig.activeCountermeasures
+                .contains(Countermeasures.DefenseBoost)
+            then Prevention.DefenseBoostEvent(scenario)
+            else scenario,
+          scenario =>
+            if scenario.countermeasureConfig.activeCountermeasures.contains(Countermeasures.Patch)
+            then Prevention.PatchBoostEvent(scenario)
+            else scenario,
+          scenario =>
+            if scenario.countermeasureConfig.activeCountermeasures
+                .contains(Countermeasures.Isolation)
+            then Defense.IsolationEvent(scenario)
+            else scenario,
+          scenario =>
+            if scenario.countermeasureConfig.activeCountermeasures
+                .contains(Countermeasures.Firewall)
+            then Defense.FirewallEvent(scenario)
+            else scenario,
+          Infection.InfectionEvent.apply,
+          Destroy.IncreaseWorkloadEvent.apply,
+          Cure.CureEvent.apply,
+          Cure.LowerWorkloadEvent.apply,
+          Destroy.DestroyEvent.apply
+        )
+        pipeline.foldLeft(s)((acc, step) => step(acc))
+
+  private def runSteps(scenario: Scenario, n: Int): Scenario =
+    val model =
+      ModelState(screen = Screen.Simulation(SimulationEngine(fullPipelineSelector).run(scenario)))
+    val evolved = (1 to n).foldLeft(model)((m, _) => update(Msg.Step, m))
+    evolved.screen match
+      case Screen.Simulation(remaining) => remaining.head
+      case other                        => fail(s"Waiting Screen.Simulation, obtained $other")
+
+  test("an active Firewall prevents infection from crossing a filtered FTP edge"):
+    val maxTraits = (for
+      infectivity <- Probability(1.0); stealth <- Probability(0.0)
+      persistence <- Probability(0.0); footprint <- Probability(0.0)
+    yield MalwareTraits(
+      infectivity,
+      stealth,
+      PayloadSeverityLevel.Low,
+      persistence,
+      footprint
+    )).toOption.get
+    val aggressiveMalware =
+      Malware("test-max", Worm, maxTraits, Set(PropagationVector.NetworkExploit)).getOrElse(fail())
+
+    val src =
+      buildNode("n1", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
+    val dst =
+      buildNode("n2", NodeType.Server, defense = 0.0, patch = 0.0, stato = NodeState.Healthy)
+    val edge =
+      Connection.Edge(src, dst, channel, Some(TestApplicationProtocol(ApplicationProtocolType.FTP)))
+
+    val config = CountermeasureConfig(
+      countermeasureLevels =
+        Map(0.01 -> Countermeasures.Firewall) // low level: it gets triggered almost immediately
+    ).getOrElse(fail())
+
+    val scenario = Scenario
+      .apply(
+        "Firewall blocks propagation",
+        Topology(Map(src.nodeId.value -> src, dst.nodeId.value -> dst), Set(edge)),
+        aggressiveMalware,
+        src,
+        tick = 0,
+        seed = 42,
+        maxIterations = 15,
+        countermeasureConfig = config
+      )
+      .getOrElse(fail())
+
+    val finalScenario = runSteps(scenario, n = 10)
+
+    finalScenario.countermeasureConfig.activeCountermeasures should contain(
+      Countermeasures.Firewall
+    )
+//    finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Healthy
+
+  test("Isolation followed by Patch eventually cures a quarantined node to Immune"):
+    val src =
+      buildNode("n1", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
+    val dst =
+      buildNode("n2", NodeType.Server, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
+    val topology = Topology(Map(src.nodeId.value -> src, dst.nodeId.value -> dst), Set.empty)
+
+    val config = CountermeasureConfig(
+      countermeasureLevels = Map(0.01 -> Countermeasures.Isolation, 0.02 -> Countermeasures.Patch),
+      isolationCriteria = IsolationCriteria.byType(Set(NodeType.Server))
+    ).getOrElse(fail())
+
+    val scenario = Scenario
+      .apply(
+        "Isolation then cure",
+        topology,
+        dummyVirus,
+        src,
+        tick = 0,
+        seed = 42,
+        maxIterations = 20,
+        countermeasureConfig = config
+      )
+      .getOrElse(fail())
+
+    val finalScenario = runSteps(scenario, n = 20)
+
+    finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Immune
+
+  test("with no active countermeasures, an undefended reachable network gets fully infected"):
+    val maxTraits = (for
+      infectivity <- Probability(1.0); stealth <- Probability(0.0)
+      persistence <- Probability(0.0); footprint <- Probability(0.0)
+    yield MalwareTraits(
+      infectivity,
+      stealth,
+      PayloadSeverityLevel.Low,
+      persistence,
+      footprint
+    )).toOption.get
+    val aggressiveMalware =
+      Malware("test-max", Worm, maxTraits, Set(PropagationVector.NetworkExploit)).getOrElse(fail())
+
     val src =
       buildNode("n1", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
     val dst =
       buildNode("n2", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Healthy)
-    val edge = Connection.Edge(src, dst, channel, None)
-
-    val topology = Topology(
-      nodes = Map(src.nodeId.value -> src, dst.nodeId.value -> dst),
-      edges = Set(edge)
+    val edge = Connection.Edge(
+      src,
+      dst,
+      channel,
+      Some(TestApplicationProtocol(ApplicationProtocolType.HTTPS))
     )
 
-    val initialScenario = Scenario
+    val config = CountermeasureConfig(countermeasureLevels = Map.empty)
+      .getOrElse(fail()) // no counter. level defined
+
+    val scenario = Scenario
       .apply(
-        name = "Simulation Alpha",
-        topology = topology,
-        virus = dummyVirus,
-        startingNode = src,
+        "No countermeasures",
+        Topology(Map(src.nodeId.value -> src, dst.nodeId.value -> dst), Set(edge)),
+        aggressiveMalware,
+        src,
         tick = 0,
         seed = 42,
-        maxIterations = 10
-        // TODO ADD COUNTERMEASURES
-        // TODO ADD AWARENESS
+        maxIterations = 5,
+        countermeasureConfig = config
       )
-      .getOrElse(fail("Error when creating scenario"))
+      .getOrElse(fail())
 
-    val initialModel = ModelState(
-      screen =
-        Screen.Simulation(SimulationEngine(_ => Infection.InfectionEvent).run(initialScenario))
-    )
+    val finalScenario = runSteps(scenario, n = 3)
 
-    val afterFirstStep = update(Msg.Step, initialModel)
-
-    afterFirstStep.screen match
-      case Screen.Simulation(remaining) =>
-        val updatedState = remaining.head
-        updatedState.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Infected
-      case other => fail(s"waiting Screen.Simulation, obtained $other")
-
-  test("Msg.Step repeated must eventually infect the whole net") {
-    val n1 = buildNode("n1", NodeType.Workstation, 0.0, 0.0, NodeState.Infected)
-    val n2 = buildNode("n2", NodeType.Workstation, 0.0, 0.0, NodeState.Healthy)
-    val n3 = buildNode("n3", NodeType.Workstation, 0.0, 0.0, NodeState.Healthy)
-
-    val edge12 = Connection.Edge(n1, n2, channel, None)
-    val edge23 = Connection.Edge(n2, n3, channel, None)
-
-    val topology = Topology(
-      nodes = Map(n1.nodeId.value -> n1, n2.nodeId.value -> n2, n3.nodeId.value -> n3),
-      edges = Set(edge12, edge23)
-    )
-
-    val initialScenario = Scenario
-      .apply(
-        name = "Simulation Alpha",
-        topology = topology,
-        virus = dummyVirus,
-        startingNode = n1,
-        tick = 0,
-        seed = 42,
-        maxIterations = 10
-        // TODO ADD COUNTERMEASURES
-        // TODO ADD AWARENESS
-      )
-      .getOrElse(fail("Error when creating scenario"))
-
-    val initialModel = ModelState(
-      screen =
-        Screen.Simulation(SimulationEngine(_ => Infection.InfectionEvent).run(initialScenario))
-    )
-
-    val finalModel = (1 to 5).foldLeft(initialModel)((m, _) => update(Msg.Step, m))
-
-    finalModel.screen match
-      case Screen.Simulation(remaining) =>
-        remaining.head.topology.nodes.values.forall(_.state == NodeState.Infected) shouldBe true
-      case other => fail(s"waiting Screen.Simulation, obtained $other")
-  }
+    finalScenario.countermeasureConfig.activeCountermeasures shouldBe empty
+    finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Infected

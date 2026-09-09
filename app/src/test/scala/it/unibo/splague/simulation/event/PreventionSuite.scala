@@ -70,7 +70,7 @@ class PreventionSuite extends AnyFunSuite:
       countermeasureConfig = config
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Prevention.PreventionEvent(scenario)
+    val updatedScenario = Prevention.DefenseBoostEvent(scenario)
     val updatedNode = updatedScenario.topology.nodes("n1")
 
     updatedNode.defenseLevel should be > baseNode.defenseLevel
@@ -92,7 +92,7 @@ class PreventionSuite extends AnyFunSuite:
       countermeasureConfig = config
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Prevention.PreventionEvent(scenario)
+    val updatedScenario = Prevention.PatchBoostEvent(scenario)
     val updatedNode = updatedScenario.topology.nodes("n1")
 
     updatedNode.patchLevel should be > baseNode.patchLevel
@@ -109,6 +109,8 @@ class PreventionSuite extends AnyFunSuite:
       countermeasureConfig = CountermeasureConfig.empty
     ).getOrElse(fail("Failed to create scenario"))
 
-    val updatedScenario = Prevention.PreventionEvent(scenario)
+    val events = Seq(Prevention.DefenseBoostEvent, Prevention.PatchBoostEvent)
+    val updatedScenario = events.foldLeft(scenario): (currScenario, event) =>
+      event(currScenario)
 
     updatedScenario.topology.nodes("n1").defenseLevel shouldBe baseNode.defenseLevel

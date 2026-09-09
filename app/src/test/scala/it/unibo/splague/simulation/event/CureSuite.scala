@@ -13,8 +13,10 @@ import it.unibo.splague.model.node.NodeState.{Immune, Infected}
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.simulation.Scenario
 import org.junit.runner.RunWith
+import org.scalactic.Tolerance.convertNumericToPlusOrMinusWrapper
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers.shouldBe
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.{should, shouldBe}
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
@@ -62,6 +64,28 @@ class CureSuite extends AnyFunSuite:
     activeCountermeasures = Set(Countermeasures.Patch),
     countermeasureLevels = Map(0.0 -> Countermeasures.Patch)
   ).toOption.get
+
+  private val recoveryNodeId = NodeId.of("node-03").getOrElse(fail())
+  private val restingWorkload = 0.2
+  private val elevatedWorkload = 0.6
+
+  private val recoveryNodeAtRest =
+    Node(recoveryNodeId, NodeType.Server, 0.5, 0.5, NodeState.Infected, restingWorkload, Set())
+
+  private val topologyForRecovery =
+    Topology(nodes = Map("node-03" -> recoveryNodeAtRest), edges = Set.empty)
+
+  private def scenarioWithNode(node: Node, topology: Topology): Scenario =
+    Scenario(
+      name = "Recovery Test",
+      topology = topology,
+      virus = dummyVirus,
+      startingNode = node,
+      tick = 0,
+      seed = 42,
+      maxIterations = 10,
+      countermeasureConfig = config
+    ).getOrElse(fail("Failed to create scenario"))
 
   test("Cure event heals an Infected node with high patch level"):
     val scenario = Scenario(
@@ -131,3 +155,38 @@ class CureSuite extends AnyFunSuite:
 
     val updatedScenario = Cure.CureEvent(scenario)
     updatedScenario.topology.nodes("node-01").state shouldBe Infected
+
+  test(
+    "LowerWorkloadEvent decreases the workload of an Immune node, without dropping below its baseline"
+  ):
+    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
+
+    val elevatedNode =
+      recoveryNodeAtRest.copy(state = NodeState.Immune, workload = elevatedWorkload)
+    val scenario =
+      baseScenario.copy(topology = topologyForRecovery.copy(nodes = Map("node-03" -> elevatedNode)))
+
+    val updated = Cure.LowerWorkloadEvent(scenario)
+    val updatedWorkload = updated.topology.nodes("node-03").workload
+
+    updatedWorkload should be < elevatedWorkload
+    updatedWorkload should be >= restingWorkload
+
+//  test("LowerWorkloadEvent does not go below the node's baseline workload"):
+//    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
+//
+//    val atBaselineNode = recoveryNodeAtRest.copy(state = NodeState.Immune, workload = restingWorkload)
+//    val scenario = baseScenario.copy(topology = topologyForRecovery.copy(nodes = Map("node-03" -> atBaselineNode)))
+//
+//    val updated = Cure.LowerWorkloadEvent(scenario)
+//
+//    updated.topology.nodes("node-03").workload shouldBe (restingWorkload) +- 0.0001
+
+  test("LowerWorkloadEvent leaves non-Immune nodes untouched"):
+    val elevatedInfected = nodeHighPatch.copy(workload = 0.7)
+    val topology = topologyHighPatch.copy(nodes = Map("node-01" -> elevatedInfected))
+    val scenario = scenarioWithNode(elevatedInfected, topology)
+
+    val updated = Cure.LowerWorkloadEvent(scenario)
+
+    updated.topology.nodes("node-01").workload shouldBe 0.7

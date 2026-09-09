@@ -14,7 +14,8 @@ final case class Scenario(
     seed: Int,
     maxIterations: Int,
     awareness: Awareness,
-    countermeasureConfig: CountermeasureConfig
+    countermeasureConfig: CountermeasureConfig,
+    baselineWorkload: Map[Node, Double]
 )
 
 object Scenario:
@@ -44,8 +45,10 @@ object Scenario:
       tick: Int,
       seed: Int,
       maxIterations: Int,
-      countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty
+      countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty,
+      awareness: Awareness = Awareness.none
   ): Either[String, Scenario] =
+    val baseline = topology.nodes.map((id, node) => node -> node.workload).toMap
     for
       validName <- validateName(name)
       validStartingNode <- validateStartingNode(startingNode, topology)
@@ -58,6 +61,7 @@ object Scenario:
       tick,
       seed,
       validMaxIter,
-      awareness = Awareness.none,
-      countermeasureConfig
+      awareness,
+      countermeasureConfig,
+      baselineWorkload = baseline
     )

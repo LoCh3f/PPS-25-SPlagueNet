@@ -8,6 +8,7 @@ import it.unibo.splague.model.connection.Protocol.{
   TcpTransport,
   TransportProtocol
 }
+import it.unibo.splague.model.countermeasures.Countermeasures.Isolation
 import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
@@ -119,6 +120,7 @@ class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
 
   test("Isolation event quarantines nodes matching the criteria when Isolation is active"):
     val config = CountermeasureConfig(
+      activeCountermeasures = Set(Isolation),
       isolationCriteria = IsolationCriteria.byType(Set(NodeType.Workstation))
     ).getOrElse(fail())
 
@@ -144,7 +146,9 @@ class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
 
   test("Firewall event blocks edges with WAN channel type and FTP application protocol"):
     val config =
-      CountermeasureConfig().getOrElse(fail())
+      CountermeasureConfig(
+        activeCountermeasures = Set(Countermeasures.Firewall)
+      ).getOrElse(fail())
     val scenario = scenarioWith(config, Set(wanHttpsEdge, lanFtpEdge))
 
     val updatedScenario = Defense.FirewallEvent(scenario)
@@ -181,3 +185,20 @@ class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
       vpnFtpEdge,
       updatedScenario.countermeasureConfig.firewallPolicy
     ) shouldBe false
+
+  test("Firewall event cuts blocked edges from the scenario topology"):
+    val config =
+      CountermeasureConfig(activeCountermeasures = Set(Countermeasures.Firewall)).getOrElse(fail())
+    // wanHttpsEdge is blocked by default, lanHttpsEdge no
+    val wanFtpEdge = Edge(
+      workstationNode,
+      serverNode,
+      channelOf(ChannelType.WAN),
+      Some(protocolOf(ApplicationProtocolType.FTP))
+    )
+    val scenario = scenarioWith(config, Set(wanHttpsEdge, lanHttpsEdge))
+
+    val updatedScenario = Defense.FirewallEvent(scenario)
+
+    updatedScenario.topology.edges should contain(lanHttpsEdge)
+    updatedScenario.topology.edges should not contain (wanHttpsEdge)
