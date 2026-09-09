@@ -43,3 +43,21 @@ case class Node(
     workload: Double,
     vectors: Set[PropagationVector]
 )
+object Node:
+  val defaultNodeType: NodeType = NodeType.Server
+  val defaultPatchLevel: Double = 0.0
+  val defaultDefenseLevel: Double = 1.0
+  val defaultState: NodeState = NodeState.Healthy
+  val defaultWorkload: Double = 0.0
+  val defaultVectors: Set[PropagationVector] = Set.empty
+
+  def test(
+      nodeId: NodeId,
+      nodeType: NodeType = defaultNodeType,
+      patchLevel: Double = defaultPatchLevel,
+      defenseLevel: Double = defaultDefenseLevel,
+      state: NodeState = defaultState,
+      workload: Double = defaultWorkload,
+      vectors: Set[PropagationVector] = defaultVectors
+  ): Node =
+    Node(nodeId, nodeType, patchLevel, defenseLevel, state, workload, vectors)

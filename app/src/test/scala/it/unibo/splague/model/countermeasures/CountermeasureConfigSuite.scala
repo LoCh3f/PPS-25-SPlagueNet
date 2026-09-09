@@ -1,5 +1,6 @@
 package it.unibo.splague.model.countermeasures
 
+import it.unibo.splague.update.FirewallPolicy
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.not.include
@@ -20,3 +21,17 @@ class CountermeasureConfigSuite extends AnyFunSuite:
     val result = CountermeasureConfig(Set.empty, invalidLevels)
 
     result.isLeft shouldBe true
+
+  test(
+    "CountermeasureConfig creation with no specified FirewallPolicy defined contains empty FirewallPolicy"
+  ):
+    val result = CountermeasureConfig()
+
+    result.isRight shouldBe true
+    result.map(_.firewallPolicy) shouldBe Right(FirewallPolicy())
+
+  test("CountermeasureConfig creation with FirewallPolicy.default contains default FirewallPolicy"):
+    val result = CountermeasureConfig(firewallPolicy = FirewallPolicy.defaultPolicy)
+
+    result.isRight shouldBe true
+    result.map(_.firewallPolicy) shouldBe Right(FirewallPolicy.defaultPolicy)

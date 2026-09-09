@@ -1,6 +1,6 @@
 package it.unibo.splague.model.countermeasures
 
-import it.unibo.splague.update.IsolationCriteria
+import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria}
 
 case class CountermeasureConfig(
     activeCountermeasures: Set[Countermeasures],
@@ -8,20 +8,24 @@ case class CountermeasureConfig(
     patchBoostAmount: Double,
     defenseBoostAmount: Double,
     patchCureProbability: Double,
-    isolationCriteria: IsolationCriteria
+    isolationCriteria: IsolationCriteria,
+    firewallPolicy: FirewallPolicy
 )
 object CountermeasureConfig:
   val defaultPatchBoostAmount: Double = 0.05
   val defaultDefenseBoostAmount: Double = 0.05
   val defaultPatchCureProbability: Double = 0.5
   val defaultIsolationCriteria: IsolationCriteria = IsolationCriteria.all
+  val defaultFirewallPolicy: FirewallPolicy = FirewallPolicy()
+
   val empty: CountermeasureConfig = CountermeasureConfig(
     Set.empty,
     Map.empty,
     defaultPatchBoostAmount,
     defaultDefenseBoostAmount,
     defaultPatchCureProbability,
-    defaultIsolationCriteria
+    defaultIsolationCriteria,
+    defaultFirewallPolicy
   ).toOption.get
 
   def apply(
@@ -30,7 +34,8 @@ object CountermeasureConfig:
       patchBoostAmount: Double = defaultPatchBoostAmount,
       defenseBoostAmount: Double = defaultDefenseBoostAmount,
       patchCureProbability: Double = defaultPatchCureProbability,
-      isolationCriteria: IsolationCriteria = defaultIsolationCriteria
+      isolationCriteria: IsolationCriteria = defaultIsolationCriteria,
+      firewallPolicy: FirewallPolicy = defaultFirewallPolicy
   ): Either[String, CountermeasureConfig] =
     if countermeasureLevels.keys.exists(threshold => threshold < 0.0 || threshold > 1.0) then
       Left("Thresholds in countermeasureLevels must be between 0.0 and 1.0")
@@ -46,6 +51,7 @@ object CountermeasureConfig:
           patchBoostAmount,
           defenseBoostAmount,
           patchCureProbability,
-          isolationCriteria
+          isolationCriteria,
+          firewallPolicy
         )
       )
