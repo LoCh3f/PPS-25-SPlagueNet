@@ -181,3 +181,19 @@ class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
       vpnFtpEdge,
       updatedScenario.countermeasureConfig.firewallPolicy
     ) shouldBe false
+
+  test("Firewall event cuts blocked edges from the scenario topology"):
+    val config = CountermeasureConfig().getOrElse(fail())
+    // wanHttpsEdge is blocked by default, lanHttpsEdge no
+    val wanFtpEdge = Edge(
+      workstationNode,
+      serverNode,
+      channelOf(ChannelType.WAN),
+      Some(protocolOf(ApplicationProtocolType.FTP))
+    )
+    val scenario = scenarioWith(config, Set(wanHttpsEdge, lanHttpsEdge))
+
+    val updatedScenario = Defense.FirewallEvent(scenario)
+
+    updatedScenario.topology.edges should contain(lanHttpsEdge)
+    updatedScenario.topology.edges should not contain (wanHttpsEdge)

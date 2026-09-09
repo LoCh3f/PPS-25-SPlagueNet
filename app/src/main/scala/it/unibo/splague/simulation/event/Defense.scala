@@ -13,6 +13,11 @@ object Defense:
       topology.edges.filterNot(e => nodes.contains(e.source) || nodes.contains(e.target))
     )
 
+  private def cutEdgesWithFirewall(topology: Topology, firewallPolicy: FirewallPolicy): Topology =
+    topology.copy(edges =
+      topology.edges.filterNot(e => FirewallPolicy.isBlocked(e, firewallPolicy))
+    )
+
   object IsolationEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val config = scenario.countermeasureConfig
@@ -46,7 +51,9 @@ object Defense:
         val updatedActive = config.activeCountermeasures + Firewall
         val updatedPolicy = config.firewallPolicy.merge(FirewallPolicy.defaultPolicy)
 
+        val topologyWithoutEdges = cutEdgesWithFirewall(scenario.topology, updatedPolicy)
         scenario.copy(
+          topology = topologyWithoutEdges,
           countermeasureConfig = config.copy(
             activeCountermeasures = updatedActive,
             firewallPolicy = updatedPolicy
