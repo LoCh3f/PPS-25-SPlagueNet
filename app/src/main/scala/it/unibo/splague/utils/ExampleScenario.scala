@@ -359,7 +359,7 @@ object ExampleScenario:
         name = "Complex enterprise mesh",
         topology = topology,
         virus = malware,
-        startingNode = nodes(ids(8)),
+        startingNode = nodes(ids(0)),
         tick = 0,
         seed = 42,
         maxIterations = 60
