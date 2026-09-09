@@ -20,6 +20,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class PreventionSuite extends AnyFunSuite:
   private val nodeId1 = NodeId.of("n1").getOrElse(fail("Failed to create NodeId"))
+  private val nodeId2 = NodeId.of("n2").getOrElse(fail("Failed to create NodeId"))
 
   private val validTraits = (for
     infectivity <- Probability(0.6)
@@ -51,7 +52,17 @@ class PreventionSuite extends AnyFunSuite:
     vectors = Set()
   )
 
-  private val topology = Topology(Map("n1" -> baseNode), Set())
+  private val healthyNode = Node(
+    nodeId = nodeId2,
+    nodeType = NodeType.Workstation,
+    patchLevel = 0.0,
+    defenseLevel = 0.2,
+    state = NodeState.Healthy,
+    workload = 0.0,
+    vectors = Set()
+  )
+
+  private val topology = Topology(Map("n1" -> baseNode, "n2" -> healthyNode), Set())
 
   test("Prevention event applies defense updates when DefenseBoost countermeasure is active"):
     val config = CountermeasureConfig(
@@ -71,9 +82,9 @@ class PreventionSuite extends AnyFunSuite:
     ).getOrElse(fail("Failed to create scenario"))
 
     val updatedScenario = Prevention.PreventionEvent(scenario)
-    val updatedNode = updatedScenario.topology.nodes("n1")
+    val updatedNode = updatedScenario.topology.nodes("n2")
 
-    updatedNode.defenseLevel should be > baseNode.defenseLevel
+    updatedNode.defenseLevel should be > healthyNode.defenseLevel
 
   test("Prevention event applies patch updates when Patch countermeasure is active"):
     val config = CountermeasureConfig(
@@ -93,9 +104,9 @@ class PreventionSuite extends AnyFunSuite:
     ).getOrElse(fail("Failed to create scenario"))
 
     val updatedScenario = Prevention.PreventionEvent(scenario)
-    val updatedNode = updatedScenario.topology.nodes("n1")
+    val updatedNode = updatedScenario.topology.nodes("n2")
 
-    updatedNode.patchLevel should be > baseNode.patchLevel
+    updatedNode.patchLevel should be > healthyNode.patchLevel
 
   test("Prevention event leaves topology unchanged when no countermeasure is inactive"):
     val scenario = Scenario(
@@ -111,4 +122,4 @@ class PreventionSuite extends AnyFunSuite:
 
     val updatedScenario = Prevention.PreventionEvent(scenario)
 
-    updatedScenario.topology.nodes("n1").defenseLevel shouldBe baseNode.defenseLevel
+    updatedScenario.topology.nodes("n2").defenseLevel shouldBe healthyNode.defenseLevel

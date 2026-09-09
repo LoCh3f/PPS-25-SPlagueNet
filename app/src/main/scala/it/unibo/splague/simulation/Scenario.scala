@@ -2,7 +2,7 @@ package it.unibo.splague.simulation
 
 import it.unibo.splague.model.Awareness
 import it.unibo.splague.model.countermeasures.CountermeasureConfig
-import it.unibo.splague.model.node.{Node, Topology}
+import it.unibo.splague.model.node.{Node, NodeState, Topology}
 import it.unibo.splague.model.malware.Malware
 
 final case class Scenario(
@@ -22,12 +22,15 @@ object Scenario:
     val trimmed = name.trim
     Either.cond(trimmed.nonEmpty, trimmed, "The scenario name can't be empty")
 
-  private def validateStartingNode(node: Node, t: Topology): Either[String, Node] =
+  private def validateStartingNode(node: Node, t: Topology): Either[String, Node] = {
+
     Either.cond(
       t.nodes.values.toSet.contains(node),
       node,
       "The starting node is not part of the topology"
     )
+
+  }
 
   private def validateMaxIterations(iterations: Int): Either[String, Int] =
     Either.cond(
@@ -50,11 +53,15 @@ object Scenario:
       validName <- validateName(name)
       validStartingNode <- validateStartingNode(startingNode, topology)
       validMaxIter <- validateMaxIterations(maxIterations)
+      infectedStartingNode = validStartingNode.copy(state = NodeState.Infected)
+      updatedTopology = topology.copy(
+        nodes = topology.nodes.updated(infectedStartingNode.nodeId.value, infectedStartingNode)
+      )
     yield new Scenario(
       validName,
-      topology,
+      updatedTopology,
       virus,
-      validStartingNode,
+      infectedStartingNode,
       tick,
       seed,
       validMaxIter,
