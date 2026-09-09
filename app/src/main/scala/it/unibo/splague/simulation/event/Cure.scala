@@ -10,6 +10,9 @@ import it.unibo.splague.update.DefenseRules
 import scala.util.Random
 
 object Cure:
+
+  private val recoveryRate: Double = 0.05
+
   object CureEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val countermeasureConfig = scenario.countermeasureConfig
@@ -32,3 +35,15 @@ object Cure:
         }
 
         scenario.copy(topology = scenario.topology.copy(nodes = newNodes))
+
+  object LowerWorkloadEvent extends SimulationEvents.Event:
+    override def apply(scenario: Scenario): Scenario =
+      val immuneNodes = scenario.topology.nodes.values.filter(_.state == NodeState.Immune)
+      val updatedNodes = immuneNodes.foldLeft(scenario.topology.nodes) { (acc, node) =>
+        val baseline = scenario.baselineWorkload.getOrElse(node, 0.0)
+
+        // workload never goes below baseline
+        val newWorkload = math.max(baseline, node.workload - recoveryRate)
+        acc.updated(node.nodeId.value, node.copy(workload = newWorkload))
+      }
+      scenario.copy(topology = scenario.topology.copy(nodes = updatedNodes))
