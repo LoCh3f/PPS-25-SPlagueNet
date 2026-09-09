@@ -27,10 +27,12 @@ object DestructionRules:
     *   target infected node
     * @return
     *   Probability in range (0,1) that the node will get destroyed. It is based on the node's
-    *   workload level.
+    *   workload level and nodeType structuralVulnerability.
     */
   def destructionProbability(node: Node): Probability =
-    Probability.clamped(node.workload)
+    val base = node.workload
+    val resistance = node.nodeType.structuralVulnerability
+    Probability.clamped(base / resistance)
 
   def resolveDestruction(node: Node, roll: Double): Boolean =
     val p = destructionProbability(node)
