@@ -6,3 +6,10 @@ package it.unibo.splague.dsl
   * short-circuiting on the first failure.
   */
 type ValidationResult[A] = Either[List[String], A]
+
+object ValidationResult:
+  /** Splits a list of independently-validated results into all accumulated error messages and all
+    * successfully-produced values, preserving order within each side.
+    */
+  def partition[A](results: List[ValidationResult[A]]): (List[String], List[A]) =
+    (results.collect { case Left(e) => e }.flatten, results.collect { case Right(a) => a })
