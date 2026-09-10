@@ -1,7 +1,10 @@
 package it.unibo.splague.dsl
 
+import it.unibo.splague.model.connection.Connection.ChannelType
 import it.unibo.splague.model.malware.PropagationVector
 import it.unibo.splague.model.node.{NodeType, Topology}
+
+import scala.annotation.targetName
 
 /** Entry point for declaratively building a `Topology`.
   *
@@ -10,6 +13,7 @@ import it.unibo.splague.model.node.{NodeType, Topology}
   * val result: ValidationResult[Topology] = topology:
   *   node("A", Workstation)
   *   node("B", Server, defenseLevel = 0.3)
+  *   "A" <-> "B" via LAN
   * }}}
   *
   * The block runs against a fresh, block-scoped `TopologyBuilder` (threaded implicitly via context
@@ -36,3 +40,22 @@ def node(
     vectors: Set[PropagationVector] = Set(PropagationVector.NetworkExploit)
 )(using builder: TopologyBuilder): Unit =
   builder.addNode(id, nodeType, patchLevel, defenseLevel, workload, vectors)
+
+extension (id: String)
+  /** Declares a pending, undirected connection to `other`, to be completed with `via`. */
+  @targetName("connectedTo")
+  infix def <->(other: String): PendingEdge = PendingEdge(id, other)
+
+/** Intermediate value produced by `<->`; completed with `via` to declare the edge's channel. */
+final case class PendingEdge(idA: String, idB: String):
+  /** Completes a pending edge with a channel type, and optional overrides for its parameters.
+    * Unspecified parameters fall back to `Channel.default` for the given `channelType`.
+    */
+  infix def via(
+      channelType: ChannelType,
+      bandwidth: Option[Double] = None,
+      latency: Option[Double] = None,
+      jitter: Option[Double] = None,
+      packetLoss: Option[Double] = None
+  )(using builder: TopologyBuilder): Unit =
+    builder.addEdge(idA, idB, channelType, bandwidth, latency, jitter, packetLoss)

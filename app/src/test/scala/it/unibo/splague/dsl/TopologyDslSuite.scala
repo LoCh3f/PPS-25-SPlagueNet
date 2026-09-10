@@ -1,5 +1,6 @@
 package it.unibo.splague.dsl
 
+import it.unibo.splague.model.connection.Connection.ChannelType.LAN
 import it.unibo.splague.model.node.NodeType.{Server, Workstation}
 import org.junit.runner.RunWith
 import org.scalatest.EitherValues
@@ -40,3 +41,13 @@ final class TopologyDslSuite extends AnyFunSuite with Matchers with EitherValues
       "The ID cannot contain white space",
       "The ID cannot be empty"
     )
+
+  test("a connected pair of nodes builds a topology with one edge"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      "A" <-> "B" via LAN
+
+    val topo = result.value
+    topo.nodes.keys should contain allOf ("A", "B")
+    topo.edges.size shouldBe 1
