@@ -25,6 +25,11 @@ private final case class EdgeSpec(
     packetLoss: Option[Double]
 )
 
+/** An edge that has passed self-loop and reference-resolution checks, paired with the unordered key
+  * (`Set(sourceId, targetId)`) used to detect duplicate undirected edges.
+  */
+private final case class ResolvedEdge(key: Set[String], edge: Edge)
+
 /** Mutable accumulator backing the `topology { ... }` DSL block. Not part of the public API — only
   * reachable via a `given` instance inside the block, so all mutation stays contained behind the
   * pure `topology(...)` entry point.
@@ -98,8 +103,6 @@ private final class TopologyBuilder:
     * is an error rather than a silent no-op.
     */
   private def resolveEdges(nodesById: Map[String, Node]): (List[String], Set[Edge]) =
-    case class ResolvedEdge(key: Set[String], edge: Edge)
-
     val edgeResults: List[ValidationResult[ResolvedEdge]] =
       edgeSpecs.toList.map { spec =>
         if spec.sourceId == spec.targetId then
