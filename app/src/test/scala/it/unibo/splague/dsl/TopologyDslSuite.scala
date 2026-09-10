@@ -37,10 +37,9 @@ final class TopologyDslSuite extends AnyFunSuite with Matchers with EitherValues
       node("bad id", Workstation)
       node("", Server)
 
-    result.left.value should contain allOf (
-      "The ID cannot contain white space",
-      "The ID cannot be empty"
-    )
+    val errors = result.left.value
+    errors should contain("The ID cannot contain white space")
+    errors should contain("The ID cannot be empty")
 
   test("a connected pair of nodes builds a topology with one edge"):
     val result = topology:
@@ -51,3 +50,50 @@ final class TopologyDslSuite extends AnyFunSuite with Matchers with EitherValues
     val topo = result.value
     topo.nodes.keys should contain allOf ("A", "B")
     topo.edges.size shouldBe 1
+
+  test("an edge referencing an unknown node id should be reported as an error"):
+    val result = topology:
+      node("A", Workstation)
+      "A" <-> "ghost" via LAN
+
+    result.left.value should contain("Edge references unknown node id: ghost")
+
+  test("an edge with both sides unknown reports both missing ids"):
+    val result = topology:
+      "ghost1" <-> "ghost2" via LAN
+
+    val errors = result.left.value
+    errors should contain("Edge references unknown node id: ghost1")
+    errors should contain("Edge references unknown node id: ghost2")
+
+  test("a self-loop edge should be reported as an error"):
+    val result = topology:
+      node("A", Workstation)
+      "A" <-> "A" via LAN
+
+    result.left.value should contain("Self-loop edges are not allowed: A")
+
+  test("a self-loop referencing an unknown node reports only the self-loop error"):
+    val result = topology:
+      "ghost" <-> "ghost" via LAN
+
+    val errors = result.left.value
+    errors shouldBe List("Self-loop edges are not allowed: ghost")
+
+  test("a duplicate undirected edge should be reported as an error"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      "A" <-> "B" via LAN
+      "A" <-> "B" via LAN
+
+    result.left.value should contain("Duplicate edge between A and B")
+
+  test("a duplicate edge declared in reverse order should also be reported"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      "A" <-> "B" via LAN
+      "B" <-> "A" via LAN
+
+    result.left.value should contain("Duplicate edge between A and B")
