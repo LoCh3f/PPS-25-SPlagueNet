@@ -46,6 +46,43 @@ extension (id: String)
   @targetName("connectedTo")
   infix def <->(other: String): PendingEdge = PendingEdge(id, other)
 
+/** Optional channel-parameter values used to override the defaults associated with a
+  * [[ChannelType]].
+  *
+  * A parameter set to `None` keeps the default value defined for the selected channel type. A
+  * parameter set to `Some(value)` replaces that default.
+  *
+  * This type is used by [[PendingEdge.via]] so that channel parameters can be supplied while
+  * preserving the infix DSL syntax:
+  *
+  * {{{
+  * "A" <-> "B" via LAN
+  *
+  * "A" <-> "B" via (
+  *   WAN,
+  *   ChannelOverrides(bandwidth = Some(50.0))
+  * )
+  * }}}
+  *
+  * @param bandwidth
+  *   optional bandwidth override
+  * @param latency
+  *   optional latency override
+  * @param jitter
+  *   optional jitter override
+  * @param packetLoss
+  *   optional packet-loss override
+  */
+final case class ChannelOverrides(
+    bandwidth: Option[Double] = None,
+    latency: Option[Double] = None,
+    jitter: Option[Double] = None,
+    packetLoss: Option[Double] = None
+)
+
+object ChannelOverrides:
+  val none: ChannelOverrides = ChannelOverrides()
+
 /** Intermediate value produced by `<->`; completed with `via` to declare the edge's channel. */
 final case class PendingEdge(idA: String, idB: String):
   /** Completes a pending edge with a channel type, and optional overrides for its parameters.
@@ -53,9 +90,14 @@ final case class PendingEdge(idA: String, idB: String):
     */
   infix def via(
       channelType: ChannelType,
-      bandwidth: Option[Double] = None,
-      latency: Option[Double] = None,
-      jitter: Option[Double] = None,
-      packetLoss: Option[Double] = None
+      overrides: ChannelOverrides = ChannelOverrides.none
   )(using builder: TopologyBuilder): Unit =
-    builder.addEdge(idA, idB, channelType, bandwidth, latency, jitter, packetLoss)
+    builder.addEdge(
+      idA,
+      idB,
+      channelType,
+      overrides.bandwidth,
+      overrides.latency,
+      overrides.jitter,
+      overrides.packetLoss
+    )

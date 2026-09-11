@@ -1,5 +1,6 @@
 package it.unibo.splague.dsl
 
+import it.unibo.splague.model.connection.Connection.Channel
 import it.unibo.splague.model.connection.Connection.ChannelType.{LAN, WAN}
 import it.unibo.splague.model.node.NodeType.{Server, Workstation}
 import org.junit.runner.RunWith
@@ -141,16 +142,19 @@ final class TopologyDslSuite extends AnyFunSuite with Matchers with EitherValues
     errors should contain("Edge references unknown node id: bad id")
     errors should contain("Edge references unknown node id: ghost")
 
-  test("via should apply override parameters over channel defaults"):
+  test("via should preserve channel defaults for unspecified overrides"):
     val result = topology:
       node("A", Workstation)
       node("B", Server)
-      "A" <-> "B" via (WAN, bandwidth = Option(50.0))
+      "A" <-> "B" via (WAN, ChannelOverrides(bandwidth = Option(50.0)))
 
-    val topo = result.value
-    val edge = topo.edges.head
-    edge.channel.channelType shouldBe WAN
+    val edge = result.value.edges.head
+    val defaults = Channel.default(WAN, None, None, None, None)
+
     edge.channel.bandwidth shouldBe 50.0
+    edge.channel.latency shouldBe defaults.latency
+    edge.channel.jitter shouldBe defaults.jitter
+    edge.channel.packetLoss shouldBe defaults.packetLoss
 
   test("errors from nodes and edges accumulate together in the same result"):
     val result = topology:
