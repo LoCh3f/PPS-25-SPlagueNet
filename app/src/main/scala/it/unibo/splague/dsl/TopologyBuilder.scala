@@ -96,19 +96,25 @@ private final class TopologyBuilder:
 
     (validationErrors ++ duplicateErrors, validNodes.map(node => node.nodeId.value -> node).toMap)
 
-  /** Resolves each declared edge against `nodesById`. Self-loops and references to unknown node ids
-    * are reported as errors rather than thrown. Edges are also checked for duplicates against an
-    * *unordered* key (`Set(sourceId, targetId)`), since the network model treats connections as
-    * undirected: `"A" <-> "B"` and `"B" <-> "A"` describe the same edge, and declaring either twice
-    * is an error rather than a silent no-op.
+  /** Resolves each declared edge against `nodesById`. Edge endpoints are only checked for existence
+    * here — format validation (non-empty, no whitespace) is exclusively `NodeId.of` 's
+    * responsibility, applied once when a node is declared via `resolveNodes`. An edge referencing a
+    * malformed, never-declared id is therefore reported as "unknown node id", the same as any other
+    * undeclared reference — from the edge's perspective there is no such node, regardless of why.
+    * Endpoints are trimmed before comparison and lookup, to match the normalization `NodeId.of`
+    * already applied to the keys in `nodesById`. Self-loops are checked before existence, and edges
+    * are checked for duplicates against an *unordered* key (`Set(sourceId, targetId)`), since the
+    * network model treats connections as undirected.
     */
   private def resolveEdges(nodesById: Map[String, Node]): (List[String], Set[Edge]) =
     val edgeResults: List[ValidationResult[ResolvedEdge]] =
       edgeSpecs.toList.map { spec =>
-        if spec.sourceId == spec.targetId then
-          Left(List(s"Self-loop edges are not allowed: ${spec.sourceId}"))
+        val sourceId = NodeId.normalize(spec.sourceId)
+        val targetId = NodeId.normalize(spec.targetId)
+
+        if sourceId == targetId then Left(List(s"Self-loop edges are not allowed: $sourceId"))
         else
-          (nodesById.get(spec.sourceId), nodesById.get(spec.targetId)) match
+          (nodesById.get(sourceId), nodesById.get(targetId)) match
             case (Some(source), Some(target)) =>
               val channel = Channel.default(
                 spec.channelType,
@@ -117,12 +123,10 @@ private final class TopologyBuilder:
                 spec.jitter,
                 spec.packetLoss
               )
-              Right(
-                ResolvedEdge(Set(spec.sourceId, spec.targetId), Edge(source, target, channel, None))
-              )
+              Right(ResolvedEdge(Set(sourceId, targetId), Edge(source, target, channel, None)))
             case (sourceOpt, targetOpt) =>
-              val missingSource = Option.unless(sourceOpt.isDefined)(spec.sourceId)
-              val missingTarget = Option.unless(targetOpt.isDefined)(spec.targetId)
+              val missingSource = Option.unless(sourceOpt.isDefined)(sourceId)
+              val missingTarget = Option.unless(targetOpt.isDefined)(targetId)
               Left(
                 (missingSource ++ missingTarget).toList
                   .map(id => s"Edge references unknown node id: $id")

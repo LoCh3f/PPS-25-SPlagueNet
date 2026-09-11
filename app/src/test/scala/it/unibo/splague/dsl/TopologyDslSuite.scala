@@ -1,6 +1,6 @@
 package it.unibo.splague.dsl
 
-import it.unibo.splague.model.connection.Connection.ChannelType.LAN
+import it.unibo.splague.model.connection.Connection.ChannelType.{LAN, WAN}
 import it.unibo.splague.model.node.NodeType.{Server, Workstation}
 import org.junit.runner.RunWith
 import org.scalatest.EitherValues
@@ -97,3 +97,67 @@ final class TopologyDslSuite extends AnyFunSuite with Matchers with EitherValues
       "B" <-> "A" via LAN
 
     result.left.value should contain("Duplicate edge between A and B")
+
+  test("edge references should be normalized the same way node ids are"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      " A" <-> "B " via LAN
+
+    val topo = result.value
+    topo.edges.size shouldBe 1
+
+  test("duplicate edge detection should normalize ids, catching whitespace-padded duplicates"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      "A" <-> "B " via LAN
+      "A" <-> "B" via LAN
+
+    result.left.value should contain("Duplicate edge between A and B")
+
+  test("an edge referencing a malformed, undeclared id reports it as an unknown node id"):
+    val result = topology:
+      node("A", Workstation)
+      "bad id" <-> "A" via LAN
+
+    result.left.value shouldBe List("Edge references unknown node id: bad id")
+
+  test("a self-loop with a malformed id reports the self-loop, not a format error"):
+    val result = topology:
+      "bad id" <-> "bad id" via LAN
+
+    result.left.value shouldBe List("Self-loop edges are not allowed: bad id")
+
+  test(
+    "a malformed id reused as an edge endpoint produces its node error plus its own edge errors"
+  ):
+    val result = topology:
+      node("bad id", Workstation)
+      "bad id" <-> "ghost" via LAN
+
+    val errors = result.left.value
+    errors should contain("The ID cannot contain white space")
+    errors should contain("Edge references unknown node id: bad id")
+    errors should contain("Edge references unknown node id: ghost")
+
+  test("via should apply override parameters over channel defaults"):
+    val result = topology:
+      node("A", Workstation)
+      node("B", Server)
+      "A" <-> "B" via (WAN, bandwidth = Option(50.0))
+
+    val topo = result.value
+    val edge = topo.edges.head
+    edge.channel.channelType shouldBe WAN
+    edge.channel.bandwidth shouldBe 50.0
+
+  test("errors from nodes and edges accumulate together in the same result"):
+    val result = topology:
+      node("bad id", Workstation)
+      node("A", Workstation)
+      "bad id" <-> "ghost" via LAN
+
+    val errors = result.left.value
+    errors should contain("The ID cannot contain white space")
+    errors should contain("Edge references unknown node id: ghost")
