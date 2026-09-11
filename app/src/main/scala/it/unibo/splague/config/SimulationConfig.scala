@@ -62,3 +62,22 @@ object SimulationConfig:
   object MalwareBehavior:
     val WORM_AUTO_PROPAGATE: Boolean = false
     val VIRUS_REQUIRES_TRIGGER: Boolean = true
+
+  /** Default channel parameters per channel type, used by the topology DSL when a connection is
+    * declared without explicit values (e.g. `"A" <-> "B" via LAN`).
+    */
+  object Channels:
+    val LAN_BANDWIDTH: Double = 1000.0
+    val LAN_LATENCY: Double = 1.0
+    val LAN_JITTER: Double = 0.1
+    val LAN_PACKET_LOSS: Double = 0.001
+
+    val WAN_BANDWIDTH: Double = 100.0
+    val WAN_LATENCY: Double = 50.0
+    val WAN_JITTER: Double = 5.0
+    val WAN_PACKET_LOSS: Double = 0.01
+
+    val VPN_BANDWIDTH: Double = 200.0
+    val VPN_LATENCY: Double = 30.0
+    val VPN_JITTER: Double = 3.0
+    val VPN_PACKET_LOSS: Double = 0.005
