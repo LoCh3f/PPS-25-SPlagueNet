@@ -9,7 +9,7 @@
     </Match>
     <!-- Falso positivo su TickBasedSelector: scala.Vector è immutabile -->
     <Match>
-        <Class name="it.unibo.splague.simulation.event.TickBasedSelector" />
+        <Class name="it.unibo.splague.update.simulation.event.TickBasedSelector" />
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <!-- Esclude l'esposizione della rappresentazione per la classe Simulation -->
@@ -24,7 +24,7 @@
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="it.unibo.splague.simulation.event.DefenseSuite" />
+        <Class name="it.unibo.splague.update.simulation.event.rules.DefenseSuite" />
         <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
     <Match>
