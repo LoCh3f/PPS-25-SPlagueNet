@@ -36,3 +36,54 @@ final class TopologyShapesSuite extends AnyFunSuite with Matchers with EitherVal
     val topo = result.value
     topo.nodes.keys should contain only "hub"
     topo.edges shouldBe empty
+
+  test("ring topology forms a cycle where every node has exactly two neighbors"):
+    val result = topology:
+      ring("n", 4, Workstation, LAN)
+
+    val topo = result.value
+    topo.nodes.size shouldBe 4
+    topo.edges.size shouldBe 4
+    topo.nodes.values.foreach(n => topo.degree(n) shouldBe 2)
+
+  test("ring topology with zero nodes declares nothing"):
+    val result = topology:
+      ring("n", 0, Workstation, LAN)
+
+    val topo = result.value
+    topo.nodes shouldBe empty
+    topo.edges shouldBe empty
+
+  test("ring topology with one node declares only that node, no self-loop edge"):
+    val result = topology:
+      ring("n", 1, Workstation, LAN)
+
+    val topo = result.value
+    topo.nodes.keys should contain only "n0"
+    topo.edges shouldBe empty
+
+  test("ring topology with two nodes declares exactly one edge, not a duplicate"):
+    val result = topology:
+      ring("n", 2, Workstation, LAN)
+
+    val topo = result.value
+    topo.nodes.keys should contain allOf ("n0", "n1")
+    topo.edges.size shouldBe 1
+
+  test("mesh topology connects every pair of nodes exactly once"):
+    val result = topology:
+      mesh("n", 4, Workstation, LAN)
+
+    val topo = result.value
+    topo.nodes.size shouldBe 4
+    topo.edges.size shouldBe 6 // C(4,2)
+
+  test("mesh topology with zero or one node declares no edges"):
+    val zeroResult = topology:
+      mesh("n", 0, Workstation, LAN)
+    zeroResult.value.edges shouldBe empty
+
+    val oneResult = topology:
+      mesh("n", 1, Workstation, LAN)
+    oneResult.value.nodes.keys should contain only "n0"
+    oneResult.value.edges shouldBe empty
