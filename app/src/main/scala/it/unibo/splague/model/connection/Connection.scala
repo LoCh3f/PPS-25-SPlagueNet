@@ -3,6 +3,20 @@ package it.unibo.splague.model.connection
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.connection.Protocol.ApplicationProtocol
 import it.unibo.splague.model.node.Node
+import it.unibo.splague.utils.config.SimulationConfig.Channels.{
+  LAN_BANDWIDTH,
+  LAN_JITTER,
+  LAN_LATENCY,
+  LAN_PACKET_LOSS,
+  VPN_BANDWIDTH,
+  VPN_JITTER,
+  VPN_LATENCY,
+  VPN_PACKET_LOSS,
+  WAN_BANDWIDTH,
+  WAN_JITTER,
+  WAN_LATENCY,
+  WAN_PACKET_LOSS
+}
 
 object Connection:
 
@@ -22,7 +36,6 @@ object Connection:
       * `SimulationConfig.Channels`.
       */
     def default(channelType: ChannelType): Channel =
-      import it.unibo.splague.config.SimulationConfig.Channels.*
       channelType match
         case ChannelType.LAN =>
           Channel(

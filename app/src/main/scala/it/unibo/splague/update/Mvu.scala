@@ -1,9 +1,10 @@
 package it.unibo.splague.update
 
-import it.unibo.splague.simulation.event.{Infection, SimulationEvents}
-import it.unibo.splague.simulation.{Scenario, SimulationEngine}
-import it.unibo.splague.simulation.event.SimulationEvents.EventSelector
+import it.unibo.splague.model.Scenario
+import it.unibo.splague.update.simulation.event.SimulationEvents.EventSelector
 import it.unibo.splague.update.Mvu.Screen.Simulation
+import it.unibo.splague.update.simulation.SimulationEngine
+import it.unibo.splague.update.simulation.event.{Infection, SimulationEvents}
 
 object Mvu:
   enum Msg:

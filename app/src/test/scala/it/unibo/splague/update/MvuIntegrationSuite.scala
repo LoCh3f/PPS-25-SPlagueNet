@@ -1,6 +1,6 @@
 package it.unibo.splague.update
 
-import it.unibo.splague.model.{Awareness, Probability}
+import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.model.connection.Connection
 import it.unibo.splague.model.connection.Protocol.{
   ApplicationProtocol,
@@ -17,7 +17,10 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.simulation.event.{
+import it.unibo.splague.update.simulation.event.SimulationEvents.Event
+import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, update}
+import it.unibo.splague.update.simulation.SimulationEngine
+import it.unibo.splague.update.simulation.event.{
   CountermeasureActivation,
   Cure,
   Defense,
@@ -27,9 +30,6 @@ import it.unibo.splague.simulation.event.{
   Prevention,
   SimulationEvents
 }
-import it.unibo.splague.simulation.event.SimulationEvents.Event
-import it.unibo.splague.simulation.{Scenario, SimulationEngine}
-import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, update}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
