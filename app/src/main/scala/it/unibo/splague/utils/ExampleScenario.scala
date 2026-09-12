@@ -13,7 +13,7 @@ import it.unibo.splague.model.node.NodeState.Healthy
 import it.unibo.splague.model.node.NodeType.{IoTDevice, Router, Server, Workstation}
 import it.unibo.splague.model.node.NodeId
 import it.unibo.splague.model.node.{Node, Topology}
-import it.unibo.splague.simulation.Scenario
+import it.unibo.splague.model.Scenario
 
 object ExampleScenario:
   def complexScenario(): Either[String, Scenario] =

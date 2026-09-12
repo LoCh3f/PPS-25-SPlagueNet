@@ -2,8 +2,8 @@ package it.unibo.splague.utils
 
 import it.unibo.splague.model.node.NodeState
 import it.unibo.splague.model.node.NodeState.Infected
-import it.unibo.splague.simulation.SimulationEngine
-import it.unibo.splague.simulation.event.{
+import it.unibo.splague.update.simulation.SimulationEngine
+import it.unibo.splague.update.simulation.event.{
   CountermeasureActivation,
   Cure,
   Defense,
