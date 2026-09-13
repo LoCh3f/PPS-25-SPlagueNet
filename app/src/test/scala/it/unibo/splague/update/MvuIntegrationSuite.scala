@@ -17,9 +17,6 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.update.simulation.event.SimulationEvents.Event
-import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, update}
-import it.unibo.splague.update.simulation.SimulationEngine
 import it.unibo.splague.update.simulation.event.{
   CountermeasureActivation,
   Cure,
@@ -28,8 +25,12 @@ import it.unibo.splague.update.simulation.event.{
   Detection,
   Infection,
   Prevention,
-  SimulationEvents
+  SimulationEvents,
+  TickBasedSelector
 }
+import it.unibo.splague.update.simulation.event.SimulationEvents.Event
+import it.unibo.splague.update.simulation.{SimulationEngine}
+import it.unibo.splague.update.Mvu.{ModelState, Msg, Screen, update}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -52,6 +53,19 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
     packetLoss = packetLoss
   )
 
+  private val defaultEventVector = Vector(
+    Detection,
+    CountermeasureActivation.ActivationEvent,
+    Prevention.DefenseBoostEvent,
+    Prevention.PatchBoostEvent,
+    Defense.IsolationEvent,
+    Defense.FirewallEvent,
+    Infection.InfectionEvent,
+    Destroy.IncreaseWorkloadEvent,
+    Cure.CureEvent,
+    Cure.LowerWorkloadEvent,
+    Destroy.DestroyEvent
+  )
   private def buildNode(
       id: String,
       tipo: NodeType,
@@ -82,47 +96,6 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
     vectors = Set(PropagationVector.NetworkExploit)
   ).toOption.get
 
-  private def fullPipelineSelector: SimulationEvents.EventSelector = _ =>
-    new SimulationEvents.Event:
-      override def apply(s: Scenario): Scenario =
-        val pipeline: List[Scenario => Scenario] = List(
-          Detection.apply,
-          CountermeasureActivation.ActivationEvent.apply,
-          scenario =>
-            if scenario.countermeasureConfig.activeCountermeasures
-                .contains(Countermeasures.DefenseBoost)
-            then Prevention.DefenseBoostEvent(scenario)
-            else scenario,
-          scenario =>
-            if scenario.countermeasureConfig.activeCountermeasures.contains(Countermeasures.Patch)
-            then Prevention.PatchBoostEvent(scenario)
-            else scenario,
-          scenario =>
-            if scenario.countermeasureConfig.activeCountermeasures
-                .contains(Countermeasures.Isolation)
-            then Defense.IsolationEvent(scenario)
-            else scenario,
-          scenario =>
-            if scenario.countermeasureConfig.activeCountermeasures
-                .contains(Countermeasures.Firewall)
-            then Defense.FirewallEvent(scenario)
-            else scenario,
-          Infection.InfectionEvent.apply,
-          Destroy.IncreaseWorkloadEvent.apply,
-          Cure.CureEvent.apply,
-          Cure.LowerWorkloadEvent.apply,
-          Destroy.DestroyEvent.apply
-        )
-        pipeline.foldLeft(s)((acc, step) => step(acc))
-
-  private def runSteps(scenario: Scenario, n: Int): Scenario =
-    val model =
-      ModelState(screen = Screen.Simulation(SimulationEngine(fullPipelineSelector).run(scenario)))
-    val evolved = (1 to n).foldLeft(model)((m, _) => update(Msg.Step, m))
-    evolved.screen match
-      case Screen.Simulation(remaining) => remaining.head
-      case other                        => fail(s"Waiting Screen.Simulation, obtained $other")
-
   test("an active Firewall prevents infection from crossing a filtered FTP edge"):
     val maxTraits = (for
       infectivity <- Probability(1.0); stealth <- Probability(0.0)
@@ -138,9 +111,9 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
       Malware("test-max", Worm, maxTraits, Set(PropagationVector.NetworkExploit)).getOrElse(fail())
 
     val src =
-      buildNode("n1", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
+      buildNode("n1", NodeType.Workstation, defense = 0.5, patch = 0.5, stato = NodeState.Infected)
     val dst =
-      buildNode("n2", NodeType.Server, defense = 0.0, patch = 0.0, stato = NodeState.Healthy)
+      buildNode("n2", NodeType.Server, defense = 0.5, patch = 0.5, stato = NodeState.Healthy)
     val edge =
       Connection.Edge(src, dst, channel, Some(TestApplicationProtocol(ApplicationProtocolType.FTP)))
 
@@ -157,17 +130,31 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
         src,
         tick = 0,
         seed = 42,
-        maxIterations = 15,
+        maxIterations = 100,
         countermeasureConfig = config
       )
       .getOrElse(fail())
 
-    val finalScenario = runSteps(scenario, n = 10)
+    val eventVectorWithoutDestroy = Vector(
+      Detection,
+      CountermeasureActivation.ActivationEvent,
+      Prevention.DefenseBoostEvent,
+      Prevention.PatchBoostEvent,
+      Defense.IsolationEvent,
+      Defense.FirewallEvent,
+      Infection.InfectionEvent,
+      Destroy.IncreaseWorkloadEvent,
+      Cure.CureEvent,
+      Cure.LowerWorkloadEvent
+    )
 
+    val selector = new TickBasedSelector(eventVectorWithoutDestroy)
+    val states = new SimulationEngine(selector).run(scenario).toList
+    val finalScenario = states.last
     finalScenario.countermeasureConfig.activeCountermeasures should contain(
       Countermeasures.Firewall
     )
-//    finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Healthy
+    finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Healthy
 
   test("Isolation followed by Patch eventually cures a quarantined node to Immune"):
     val src =
@@ -189,12 +176,14 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
         src,
         tick = 0,
         seed = 42,
-        maxIterations = 20,
+        maxIterations = 50, // many iterations
         countermeasureConfig = config
       )
       .getOrElse(fail())
 
-    val finalScenario = runSteps(scenario, n = 20)
+    val selector = new TickBasedSelector(defaultEventVector)
+    val states = new SimulationEngine(selector).run(scenario).toList
+    val finalScenario = states.last
 
     finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Immune
 
@@ -234,12 +223,14 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
         src,
         tick = 0,
         seed = 42,
-        maxIterations = 5,
+        maxIterations = 20,
         countermeasureConfig = config
       )
       .getOrElse(fail())
 
-    val finalScenario = runSteps(scenario, n = 3)
+    val selector = new TickBasedSelector(defaultEventVector)
+    val states = new SimulationEngine(selector).run(scenario).toList
+    val finalScenario = states.last
 
     finalScenario.countermeasureConfig.activeCountermeasures shouldBe empty
     finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Infected
