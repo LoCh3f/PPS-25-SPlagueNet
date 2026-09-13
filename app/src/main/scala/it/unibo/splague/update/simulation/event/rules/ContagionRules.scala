@@ -24,11 +24,19 @@ object ContagionRules:
   private def withPacketLoss: Modifier =
     (base, _, node, edge) => Probability.clamped(base.value * (1 - edge.channel.packetLoss.value))
 
+  private def withApplicationProtocol: Modifier =
+    (base, _, _, edge) =>
+      edge.protocol match
+        case Some(protocol) =>
+          Probability.clamped(base.value * protocol.underlying.reliability.value)
+        case None => base
+
   private val infectionPipeline: Seq[Modifier] = Seq(
     withDefense,
     withPatch,
     withStructuralVulnerability,
-    withPacketLoss
+    withPacketLoss,
+    withApplicationProtocol
   )
 
   def infectionProbability(malware: Malware, target: Node, edge: Edge): Probability =
