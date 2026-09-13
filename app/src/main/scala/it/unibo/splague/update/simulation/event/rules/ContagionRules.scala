@@ -1,42 +1,43 @@
 package it.unibo.splague.update.simulation.event.rules
 
 import it.unibo.splague.model.Probability
+import it.unibo.splague.model.connection.Connection.Edge
 import it.unibo.splague.model.malware.Malware
 import it.unibo.splague.model.node.Node
 
 object ContagionRules:
 
-  private type Modifier = (Probability, Malware, Node) => Probability
+  private type Modifier = (Probability, Malware, Node, Edge) => Probability
 
-  private def infectionBase(malware: Malware, node: Node): Probability =
+  private def infectionBase(malware: Malware, node: Node, edge: Edge): Probability =
     malware.traits.infectivity
 
   private def withDefense: Modifier =
-    (base, _, node) => Probability.clamped(base.value * (1 - node.defenseLevel))
+    (base, _, node, edge) => Probability.clamped(base.value * (1 - node.defenseLevel))
 
   private def withPatch: Modifier =
-    (base, _, node) => Probability.clamped(base.value * (1 - node.patchLevel))
+    (base, _, node, edge) => Probability.clamped(base.value * (1 - node.patchLevel))
 
   private def withStructuralVulnerability: Modifier =
-    (base, _, node) => Probability.clamped(base.value * node.nodeType.structuralVulnerability)
+    (base, _, node, edge) => Probability.clamped(base.value * node.nodeType.structuralVulnerability)
 
-  // TODO: withPropagationFactor was removed because ChannelType has no propagationFactor field yet
-  // (see Connection module). Once it's added, reintroduce `channel: Channel` into Modifier,
-  // infectionBase, infectionProbability and resolveInfection, and add a withPropagationFactor
-  // modifier back into this pipeline.
+  private def withPacketLoss: Modifier =
+    (base, _, node, edge) => Probability.clamped(base.value * (1 - edge.channel.packetLoss.value))
+
   private val infectionPipeline: Seq[Modifier] = Seq(
     withDefense,
     withPatch,
-    withStructuralVulnerability
+    withStructuralVulnerability,
+    withPacketLoss
   )
 
-  def infectionProbability(malware: Malware, target: Node): Probability =
-    infectionPipeline.foldLeft(infectionBase(malware, target)) { (acc, modifier) =>
-      modifier(acc, malware, target)
+  def infectionProbability(malware: Malware, target: Node, edge: Edge): Probability =
+    infectionPipeline.foldLeft(infectionBase(malware, target, edge)) { (acc, modifier) =>
+      modifier(acc, malware, target, edge)
     }
 
   private def resolveEvent(probability: Probability, roll: Double): Boolean =
     roll < probability.value
 
-  def resolveInfection(malware: Malware, target: Node, roll: Double): Boolean =
-    resolveEvent(infectionProbability(malware, target), roll)
+  def resolveInfection(malware: Malware, target: Node, edge: Edge, roll: Double): Boolean =
+    resolveEvent(infectionProbability(malware, target, edge), roll)

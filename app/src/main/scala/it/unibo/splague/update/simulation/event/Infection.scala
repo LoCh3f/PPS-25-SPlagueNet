@@ -22,16 +22,21 @@ object Infection:
         malware: it.unibo.splague.model.malware.Malware,
         roll: Double
     ): Topology =
-      val neighbors = topology.neighbors(source)
+      val edgesFromSource = topology.edgesOf(source)
 
-      neighbors.foldLeft(topology): (topoAcc, neighborFromEdge) =>
-        val idStr = neighborFromEdge.nodeId.value
+      edgesFromSource.foldLeft(topology): (topoAcc, edge) =>
+        val target = if edge.source.nodeId == source.nodeId then edge.target else edge.source
+        val idStr = target.nodeId.value
+
         topoAcc.nodes.get(idStr) match
-          case Some(target)
-              if target.state == NodeState.Healthy & target.vectors.exists(malware.vectors) =>
-            if ContagionRules.resolveInfection(malware, target, roll) then
-              val infectedTarget = target.copy(state = NodeState.Infected)
-              topoAcc.copy(nodes = topoAcc.nodes.updated(idStr, infectedTarget))
+          case Some(currentTarget)
+              if currentTarget.state == NodeState.Healthy && currentTarget.vectors.exists(
+                malware.vectors
+              ) =>
+            if ContagionRules.resolveInfection(malware, currentTarget, edge, roll) then
+              topoAcc.copy(nodes =
+                topoAcc.nodes.updated(idStr, currentTarget.copy(state = NodeState.Infected))
+              )
             else topoAcc
           case _ =>
             topoAcc
