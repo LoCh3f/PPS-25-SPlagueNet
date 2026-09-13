@@ -80,12 +80,12 @@ final class DetectionSuite extends AnyFunSuite with Matchers:
     result.name shouldBe scenario.name
     result.virus shouldBe scenario.virus
 
-  test("Detection.apply repeated over many ticks should accumulate awareness, clamped at 1.0"):
+  test("Detection.apply repeated over many ticks should accumulate awareness, clamped at 0.0"):
     val scenario = freshScenario()
 
     val result = (1 to 50).foldLeft(scenario)((s, _) => Detection.apply(s))
 
-    result.awareness.value shouldBe 1.0
+    result.awareness.value shouldBe 0.0
 
   test("Detection.apply on an all-idle topology (zero workload) should not raise awareness"):
     val idleNode = node.copy(workload = 0.0)

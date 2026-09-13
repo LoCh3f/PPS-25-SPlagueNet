@@ -32,7 +32,5 @@ object AwarenessRules:
     *   average detection signal (0.0 if no nodes exist)
     */
   def detectionSignal(topology: Topology, malware: Malware): Double =
-    // TODO: After moving infected nodes filtering to Topology class,
-    // add a parameter to accept filtered nodes (e.g., only infected nodes)
     if topology.nodes.isEmpty then 0.0
-    else topology.nodes.values.map(nodeSignal(_, malware)).sum / topology.nodes.size
+    else topology.infectedNodes().map(nodeSignal(_, malware)).sum / topology.nodes.size
