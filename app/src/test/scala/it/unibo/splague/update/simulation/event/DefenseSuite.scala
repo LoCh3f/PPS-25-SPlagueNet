@@ -72,7 +72,6 @@ final class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
   private def channelOf(t: ChannelType): Channel =
     Channel(t, bandwidth = 100.0, latency = 10.0, jitter = 1.0, packetLoss = packetLoss(0.01))
 
-  // Modifica protocolOf per istanziare la case class concreta
   private def protocolOf(k: ApplicationProtocolType): ApplicationProtocol =
     TestApplicationProtocol(kind = k)
 

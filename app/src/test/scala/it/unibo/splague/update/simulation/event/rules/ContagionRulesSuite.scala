@@ -1,9 +1,10 @@
 package it.unibo.splague.update.simulation.event.rules
 
 import it.unibo.splague.model.Probability
-import it.unibo.splague.model.connection.Connection
+import it.unibo.splague.model.connection.{Connection, Protocol}
 import it.unibo.splague.model.malware.*
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType}
+import it.unibo.splague.utils.TestApplicationProtocol
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -111,3 +112,19 @@ final class ContagionRulesSuite extends AnyFunSuite with Matchers:
     val edge = validEdge(source, target)
 
     ContagionRules.resolveInfection(malware, target, edge, roll = 0.99) shouldBe false
+
+  test("infectionProbability applies TCP reliability when an application protocol is present"):
+    val malware = validMalware(infectivity = Probability(0.6).toOption.get)
+    val source = validNode(idSuffix = "src")
+    val target = validNode(idSuffix = "dst")
+    val edgeConProtocollo = Connection.Edge(
+      source,
+      target,
+      Connection.Channel(Connection.ChannelType.LAN, 100.0, 1.0, 0.0, Probability.clamped(0.0)),
+      protocol =
+        Some(TestApplicationProtocol(Protocol.ApplicationProtocolType.HTTPS, Protocol.TcpTransport))
+    )
+
+    val result = ContagionRules.infectionProbability(malware, target, edgeConProtocollo)
+
+    result.value shouldBe (0.6 * 0.99) +- 0.0001 // infectivity * reliability TCP
