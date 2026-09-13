@@ -27,7 +27,8 @@ object Infection:
       neighbors.foldLeft(topology): (topoAcc, neighborFromEdge) =>
         val idStr = neighborFromEdge.nodeId.value
         topoAcc.nodes.get(idStr) match
-          case Some(target) if target.state == NodeState.Healthy =>
+          case Some(target)
+              if target.state == NodeState.Healthy & target.vectors.exists(malware.vectors) =>
             if ContagionRules.resolveInfection(malware, target, roll) then
               val infectedTarget = target.copy(state = NodeState.Infected)
               topoAcc.copy(nodes = topoAcc.nodes.updated(idStr, infectedTarget))
