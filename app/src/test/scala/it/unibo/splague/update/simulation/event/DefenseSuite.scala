@@ -26,11 +26,7 @@ import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.should.Matchers.not.contain
 import org.scalatest.matchers.should.Matchers.{should, shouldBe}
-
-private case class TestApplicationProtocol(
-    kind: ApplicationProtocolType,
-    underlying: TransportProtocol = TcpTransport
-) extends ApplicationProtocol
+import it.unibo.splague.utils.TestApplicationProtocol
 
 @RunWith(classOf[JUnitRunner])
 final class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:

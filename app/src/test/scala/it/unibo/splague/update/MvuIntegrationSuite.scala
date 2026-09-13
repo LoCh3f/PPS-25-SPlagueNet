@@ -35,11 +35,8 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
+import it.unibo.splague.utils.TestApplicationProtocol
 
-private case class TestApplicationProtocol(
-    kind: ApplicationProtocolType,
-    underlying: TransportProtocol = TcpTransport
-) extends ApplicationProtocol
 @RunWith(classOf[JUnitRunner])
 final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
 
@@ -96,7 +93,9 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
     vectors = Set(PropagationVector.NetworkExploit)
   ).toOption.get
 
-  test("an active Firewall prevents infection from crossing a filtered FTP edge"):
+  test(
+    "an active Firewall prevents infection from crossing a filtered FTP edge, with no destruction event"
+  ):
     val maxTraits = (for
       infectivity <- Probability(1.0); stealth <- Probability(0.0)
       persistence <- Probability(0.0); footprint <- Probability(0.0)
@@ -187,7 +186,9 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
 
     finalScenario.topology.nodes(dst.nodeId.value).state shouldBe NodeState.Immune
 
-  test("with no active countermeasures, an undefended reachable network gets fully infected"):
+  test(
+    "with no active countermeasures and no destruction, an undefended reachable network gets fully infected"
+  ):
     val maxTraits = (for
       infectivity <- Probability(1.0); stealth <- Probability(0.0)
       persistence <- Probability(0.0); footprint <- Probability(0.0)
@@ -201,10 +202,28 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
     val aggressiveMalware =
       Malware("test-max", Worm, maxTraits, Set(PropagationVector.NetworkExploit)).getOrElse(fail())
 
-    val src =
-      buildNode("n1", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Infected)
-    val dst =
-      buildNode("n2", NodeType.Workstation, defense = 0.0, patch = 0.0, stato = NodeState.Healthy)
+    val srcId = NodeId.of("n1").getOrElse(fail("Failed to create node"))
+    val src = Node(
+      srcId,
+      NodeType.Workstation,
+      0.0,
+      0.0,
+      NodeState.Infected,
+      0.3,
+      Set(PropagationVector.NetworkExploit)
+    )
+
+    val dstId = NodeId.of("n2").getOrElse(fail("Failed to create node"))
+    val dst = Node(
+      dstId,
+      NodeType.Workstation,
+      0.0,
+      0.0,
+      NodeState.Healthy,
+      0.3,
+      Set(PropagationVector.NetworkExploit)
+    )
+
     val edge = Connection.Edge(
       src,
       dst,
@@ -223,12 +242,25 @@ final class MvuIntegrationSuite extends AnyFunSuite with Matchers:
         src,
         tick = 0,
         seed = 42,
-        maxIterations = 20,
+        maxIterations = 100,
         countermeasureConfig = config
       )
       .getOrElse(fail())
 
-    val selector = new TickBasedSelector(defaultEventVector)
+    val eventVectorWithoutDestroy = Vector(
+      Detection,
+      CountermeasureActivation.ActivationEvent,
+      Prevention.DefenseBoostEvent,
+      Prevention.PatchBoostEvent,
+      Defense.IsolationEvent,
+      Defense.FirewallEvent,
+      Infection.InfectionEvent,
+      Destroy.IncreaseWorkloadEvent,
+      Cure.CureEvent,
+      Cure.LowerWorkloadEvent
+    )
+
+    val selector = new TickBasedSelector(eventVectorWithoutDestroy)
     val states = new SimulationEngine(selector).run(scenario).toList
     val finalScenario = states.last
 
