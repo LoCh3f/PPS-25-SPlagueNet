@@ -15,6 +15,7 @@ plugins {
 
     alias(libs.plugins.spotbugs)
     alias(libs.plugins.scalafmt)
+    id("jacoco")
 
     /*
      * The Scalastyle plugin's latest published version is 3.5.0, but it still uses the deprecated API.
@@ -84,7 +85,8 @@ dependencies {
     // Need scala-xml at test runtime
     testRuntimeOnly(libs.scalaxml)
 
-
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.3")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
 }
 
 java {
@@ -97,4 +99,24 @@ java {
 application {
     // Define the main class for the application.
     mainClass = "it.unibo.splague.App"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude("**/App*")
+            }
+        })
+    )
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
