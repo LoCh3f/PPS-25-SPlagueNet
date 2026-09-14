@@ -26,11 +26,7 @@ import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.should.Matchers.not.contain
 import org.scalatest.matchers.should.Matchers.{should, shouldBe}
-
-private case class TestApplicationProtocol(
-    kind: ApplicationProtocolType,
-    underlying: TransportProtocol = TcpTransport
-) extends ApplicationProtocol
+import it.unibo.splague.utils.TestApplicationProtocol
 
 @RunWith(classOf[JUnitRunner])
 final class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
@@ -76,7 +72,6 @@ final class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
   private def channelOf(t: ChannelType): Channel =
     Channel(t, bandwidth = 100.0, latency = 10.0, jitter = 1.0, packetLoss = packetLoss(0.01))
 
-  // Modifica protocolOf per istanziare la case class concreta
   private def protocolOf(k: ApplicationProtocolType): ApplicationProtocol =
     TestApplicationProtocol(kind = k)
 
