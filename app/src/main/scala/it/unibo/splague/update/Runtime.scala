@@ -1,21 +1,43 @@
 package it.unibo.splague.update
 
-import it.unibo.splague.update.Mvu.{ModelState, Msg, update}
-import it.unibo.splague.view.{MainView, Renderer}
+import it.unibo.splague.AppState
+import it.unibo.splague.update.Msg
+import it.unibo.splague.update.Mvu.update
+import it.unibo.splague.view.Renderer
 
-class Runtime(initialModel: ModelState, view: Renderer):
-  private var model: ModelState = initialModel
-  private val timer = javax.swing.Timer(200, _ => dispatch(Msg.Step))
+import javax.swing.Timer
+
+final class Runtime(
+    initialState: AppState,
+    view: Renderer
+):
+
+  private var state: AppState = initialState
+
+  private val tickIntervalMillis = 2500
+
+  private val timer =
+    new Timer(
+      tickIntervalMillis,
+      _ => dispatch(Msg.SimulationStep)
+    )
 
   render()
 
   def dispatch(msg: Msg): Unit =
-    model = update(msg, model)
-    render()
+    val nextState = update(msg, state)
+    if nextState != state then
+      state = nextState
+      render()
 
   private def render(): Unit =
-    val component = view.showView(model, dispatch)
+    val component =
+      view.showView(state, dispatch)
+
     view.update(component)
 
-  def pause(): Unit = timer.stop()
-  def start(): Unit = timer.start()
+  def pause(): Unit =
+    timer.stop()
+
+  def start(): Unit =
+    timer.start()

@@ -57,6 +57,14 @@ repositories {
 tasks.withType<ScalaCompile>().configureEach {
     scalaCompileOptions.additionalParameters = listOf("-release", "21")
 }
+tasks.named<Test>("test") {
+    useJUnit()  // più adatto a ScalaTest + junit4
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
 
 dependencies {
     // Use Scala 3 in our library project
