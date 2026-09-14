@@ -1,9 +1,10 @@
-package it.unibo.splague.view
+package it.unibo.splague.view.menu
 
-import it.unibo.splague.update.Mvu.Msg
-import java.awt.{Dimension, Font}
+import it.unibo.splague.update.Msg
+
 import java.awt.event.{ComponentAdapter, ComponentEvent}
-import scala.swing.{Action, Alignment, Button, Component, GridBagPanel, Label}
+import java.awt.{Dimension, Font}
+import scala.swing.*
 
 object MenuView:
   def render(dispatch: Msg => Unit): Component =
