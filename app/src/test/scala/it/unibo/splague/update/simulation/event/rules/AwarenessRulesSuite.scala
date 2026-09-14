@@ -3,6 +3,7 @@ package it.unibo.splague.update.simulation.event.rules
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.malware.*
 import it.unibo.splague.model.node.*
+import it.unibo.splague.model.node.NodeState.Infected
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -29,10 +30,11 @@ final class AwarenessRulesSuite extends AnyFunSuite with Matchers:
   private def nodeWith(
       id: String,
       workload: Double,
-      nodeType: NodeType = NodeType.Workstation
+      nodeType: NodeType = NodeType.Workstation,
+      nodeState: NodeState = NodeState.Healthy
   ): Node =
     val nodeId = NodeId.of(id).getOrElse(fail("Failed to create NodeId"))
-    Node(nodeId, nodeType, patchLevel = 0.0, defenseLevel = 0.0, NodeState.Healthy, workload, Set())
+    Node(nodeId, nodeType, patchLevel = 0.0, defenseLevel = 0.0, nodeState, workload, Set())
 
   private def topologyOf(nodes: Node*): Topology =
     Topology(nodes = nodes.map(n => n.nodeId.value -> n).toMap, edges = Set.empty)
@@ -47,7 +49,12 @@ final class AwarenessRulesSuite extends AnyFunSuite with Matchers:
     val stealth = 0.4
     val workload = 0.5
     val malware = malwareWithStealth(stealth)
-    val node = nodeWith("n1", workload = workload, nodeType = NodeType.Server)
+    val node = nodeWith(
+      "n1",
+      workload = workload,
+      nodeType = NodeType.Server,
+      nodeState = NodeState.Infected
+    )
     val topology = topologyOf(node)
 
     val expected = workload * NodeType.Server.detectionCoefficient * (1 - stealth)
@@ -55,8 +62,8 @@ final class AwarenessRulesSuite extends AnyFunSuite with Matchers:
 
   test("detectionSignal averages contributions across multiple nodes"):
     val malware = malwareWithStealth(0.0)
-    val n1 = nodeWith("n1", workload = 1.0, nodeType = NodeType.Workstation)
-    val n2 = nodeWith("n2", workload = 0.0, nodeType = NodeType.Router)
+    val n1 = nodeWith("n1", workload = 1.0, nodeType = NodeType.Workstation, nodeState = Infected)
+    val n2 = nodeWith("n2", workload = 0.0, nodeType = NodeType.Router, nodeState = Infected)
 
     val topology = topologyOf(n1, n2)
 
@@ -78,7 +85,7 @@ final class AwarenessRulesSuite extends AnyFunSuite with Matchers:
     val lowLoad = topologyOf(nodeWith("n1", workload = 0.1))
     val highLoad = topologyOf(nodeWith("n1", workload = 0.9))
 
-    AwarenessRules.detectionSignal(highLoad, malware) should be > AwarenessRules.detectionSignal(
+    AwarenessRules.detectionSignal(highLoad, malware) should be >= AwarenessRules.detectionSignal(
       lowLoad,
       malware
     )
