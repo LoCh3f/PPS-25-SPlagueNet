@@ -2,11 +2,10 @@ package it.unibo.splague.view.simulation
 
 import it.unibo.splague.model.connection.Connection.Channel
 import it.unibo.splague.model.connection.Connection.ChannelType
-import it.unibo.splague.model.node.{Node, NodeState}
+import it.unibo.splague.model.node.Node
 import it.unibo.splague.update.Msg
 import it.unibo.splague.view.form.{ChannelForm, EdgeForm, NodeForm, TopologyForm}
 
-import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -18,9 +17,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
-import java.awt.geom.Ellipse2D
-import java.awt.geom.Line2D
-import java.awt.geom.Path2D
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
@@ -32,12 +28,13 @@ final case class ViewNode(
     var y: Double
 )
 
-/** Responsible only for: graph rendering, node screen positions, zoom, pan, node/edge selection,
-  * hit testing, node dragging, mouse/keyboard/wheel handling, opening the editor dialogs,
-  * dispatching the already existing messages, and re-syncing graphics when a new [[TopologyForm]]
-  * arrives.
+/** Responsible for: node screen positions, zoom, pan, node/edge selection, node dragging,
+  * mouse/keyboard/wheel handling, opening the editor dialogs, dispatching the already existing
+  * messages, and re-syncing state when a new [[TopologyForm]] arrives.
   *
-  * Detailed dialog field logic lives in [[NodeEditorDialog]] and [[EdgeEditorDialog]].
+  * Rendering is delegated to [[WorkspaceRenderer]] and coordinate conversion/hit-testing to
+  * [[WorkspaceGeometry]]; detailed dialog field logic lives in [[NodeEditorDialog]] and
+  * [[EdgeEditorDialog]].
   *
   * `EdgeForm` has no `id` field: edge identity is the `(from, to)` pair, so
   * selection/hit-testing/deletion are keyed on that pair instead of a synthetic id.
@@ -135,15 +132,20 @@ final class ScenarioWorkspacePanel(
           requestFocusInWindow()
 
           val (modelX, modelY) =
-            screenToModel(
+            WorkspaceGeometry.screenToModel(
               event.getX,
-              event.getY
+              event.getY,
+              offsetX,
+              offsetY,
+              zoom
             )
 
           val selectedNode =
-            pickNode(
+            WorkspaceGeometry.pickNode(
               modelX,
-              modelY
+              modelY,
+              nodeViews,
+              nodeRadius
             )
 
           if event.isControlDown && selectedNode.isEmpty then
@@ -184,9 +186,11 @@ final class ScenarioWorkspacePanel(
               panning = false
 
             case None =>
-              selectedEdgeKey = pickEdge(
+              selectedEdgeKey = WorkspaceGeometry.pickEdge(
                 modelX,
-                modelY
+                modelY,
+                topology.edges,
+                nodeViews
               )
 
               panning = true
@@ -198,12 +202,15 @@ final class ScenarioWorkspacePanel(
         ): Unit =
           if SwingUtilities.isRightMouseButton(event) then
             val (modelX, modelY) =
-              screenToModel(
+              WorkspaceGeometry.screenToModel(
                 event.getX,
-                event.getY
+                event.getY,
+                offsetX,
+                offsetY,
+                zoom
               )
 
-            pickNode(modelX, modelY) match
+            WorkspaceGeometry.pickNode(modelX, modelY, nodeViews, nodeRadius) match
               case Some(nodeId) =>
                 selectedNodeId = Some(nodeId)
 
@@ -221,21 +228,22 @@ final class ScenarioWorkspacePanel(
                 }
 
               case None =>
-                pickEdge(modelX, modelY).foreach { key =>
-                  selectedNodeId = None
+                WorkspaceGeometry.pickEdge(modelX, modelY, topology.edges, nodeViews).foreach {
+                  key =>
+                    selectedNodeId = None
 
-                  selectedEdgeKey = Some(key)
+                    selectedEdgeKey = Some(key)
 
-                  findEdge(key).foreach { edge =>
-                    EdgeEditorDialog.show(
-                      owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
-                      initial = edge,
-                      screenX = event.getXOnScreen,
-                      screenY = event.getYOnScreen,
-                      isNew = false,
-                      dispatch = dispatch
-                    )
-                  }
+                    findEdge(key).foreach { edge =>
+                      EdgeEditorDialog.show(
+                        owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
+                        initial = edge,
+                        screenX = event.getXOnScreen,
+                        screenY = event.getYOnScreen,
+                        isNew = false,
+                        dispatch = dispatch
+                      )
+                    }
                 }
 
             repaint()
@@ -280,19 +288,22 @@ final class ScenarioWorkspacePanel(
         ): Unit =
           if creatingConnection then
             val (modelX, modelY) =
-              screenToModel(
+              WorkspaceGeometry.screenToModel(
                 event.getX,
-                event.getY
+                event.getY,
+                offsetX,
+                offsetY,
+                zoom
               )
 
             val targetNode =
-              pickNode(modelX, modelY)
+              WorkspaceGeometry.pickNode(modelX, modelY, nodeViews, nodeRadius)
 
             for
               sourceId <- connectionStartNodeId
               targetId <- targetNode
               if sourceId != targetId
-              if !connectionExists(sourceId, targetId)
+              if !WorkspaceGeometry.connectionExists(topology.edges, sourceId, targetId)
             do
               val edge =
                 EdgeForm(
@@ -421,151 +432,14 @@ final class ScenarioWorkspacePanel(
       zoom
     )
 
-    drawEdges(g2)
-    drawNodes(g2)
-
-  private def drawEdges(
-      g2: Graphics2D
-  ): Unit =
-    topology.edges.foreach { edge =>
-      val selected =
-        selectedEdgeKey.contains((edge.from, edge.to))
-
-      g2.setColor(
-        if selected then new Color(255, 87, 34)
-        else new Color(170, 170, 170)
-      )
-
-      g2.setStroke(
-        new BasicStroke(
-          if selected then 4.0f else 2.0f
-        )
-      )
-
-      for
-        source <- nodeViews.get(edge.from)
-        target <- nodeViews.get(edge.to)
-      do
-        drawEdge(
-          g2,
-          source.x,
-          source.y,
-          target.x,
-          target.y
-        )
-    }
-
-  private def drawEdge(
-      g2: Graphics2D,
-      sourceX: Double,
-      sourceY: Double,
-      targetX: Double,
-      targetY: Double
-  ): Unit =
-    val dx =
-      targetX - sourceX
-
-    val dy =
-      targetY - sourceY
-
-    val angle =
-      math.atan2(dy, dx)
-
-    val endX =
-      targetX -
-        math.cos(angle) *
-        (nodeRadius + 6.0)
-
-    val endY =
-      targetY -
-        math.sin(angle) *
-        (nodeRadius + 6.0)
-
-    g2.draw(
-      new Line2D.Double(
-        sourceX,
-        sourceY,
-        endX,
-        endY
-      )
+    WorkspaceRenderer.draw(
+      g2,
+      topology,
+      nodeViews,
+      nodeRadius,
+      selectedNodeId,
+      selectedEdgeKey
     )
-
-    drawArrowHead(g2, endX, endY, angle)
-
-  /** Draws a filled triangular arrowhead pointing along `angle`, tip at `(tipX, tipY)`. Used to
-    * show the direction of a connection, since edges are directed.
-    */
-  private def drawArrowHead(
-      g2: Graphics2D,
-      tipX: Double,
-      tipY: Double,
-      angle: Double
-  ): Unit =
-    val length = 10.0
-    val spread = math.toRadians(25.0)
-
-    val leftX = tipX - length * math.cos(angle - spread)
-    val leftY = tipY - length * math.sin(angle - spread)
-
-    val rightX = tipX - length * math.cos(angle + spread)
-    val rightY = tipY - length * math.sin(angle + spread)
-
-    val arrowHead = new Path2D.Double()
-    arrowHead.moveTo(tipX, tipY)
-    arrowHead.lineTo(leftX, leftY)
-    arrowHead.lineTo(rightX, rightY)
-    arrowHead.closePath()
-
-    g2.fill(arrowHead)
-
-  private def colorFor(state: NodeState): Color =
-    state match
-      case NodeState.Healthy     => new Color(15, 157, 88)
-      case NodeState.Infected    => new Color(219, 68, 55)
-      case NodeState.Quarantined => new Color(244, 160, 0)
-      case NodeState.Immune      => new Color(66, 133, 244)
-      case NodeState.Destroyed   => new Color(95, 99, 104)
-
-  private def drawNodes(
-      g2: Graphics2D
-  ): Unit =
-    nodeViews.foreach { case (id, nodeView) =>
-      val selected =
-        selectedNodeId.contains(id)
-
-      val shape =
-        new Ellipse2D.Double(
-          nodeView.x - nodeRadius,
-          nodeView.y - nodeRadius,
-          nodeRadius * 2,
-          nodeRadius * 2
-        )
-
-      g2.setColor(
-        colorFor(nodeView.form.state)
-      )
-
-      g2.fill(shape)
-
-      g2.setColor(
-        if selected then Color.BLACK
-        else Color.WHITE
-      )
-
-      g2.setStroke(
-        new BasicStroke(
-          if selected then 3.0f else 2.0f
-        )
-      )
-
-      g2.draw(shape)
-
-      g2.drawString(
-        nodeView.form.id,
-        (nodeView.x + nodeRadius + 4).toFloat,
-        (nodeView.y + 4).toFloat
-      )
-    }
 
   private def rebuildNodeViews(): Unit =
     val previous =
@@ -604,54 +478,3 @@ final class ScenarioWorkspacePanel(
           view
         )
       }
-
-  private def screenToModel(
-      x: Int,
-      y: Int
-  ): (Double, Double) =
-    (
-      (x - offsetX) / zoom,
-      (y - offsetY) / zoom
-    )
-
-  private def pickNode(
-      x: Double,
-      y: Double
-  ): Option[String] =
-    nodeViews.collectFirst {
-      case (id, nodeView)
-          if math.hypot(
-            x - nodeView.x,
-            y - nodeView.y
-          ) <= nodeRadius =>
-        id
-    }
-
-  private def pickEdge(
-      x: Double,
-      y: Double
-  ): Option[(String, String)] =
-    topology.edges.collectFirst {
-      case edge
-          if nodeViews
-            .get(edge.from)
-            .zip(nodeViews.get(edge.to))
-            .exists { case (source, target) =>
-              new Line2D.Double(
-                source.x,
-                source.y,
-                target.x,
-                target.y
-              ).ptSegDist(x, y) <= 6.0
-            } =>
-        (edge.from, edge.to)
-    }
-
-  private def connectionExists(
-      from: String,
-      to: String
-  ): Boolean =
-    topology.edges.exists { edge =>
-      (edge.from == from && edge.to == to) ||
-      (edge.from == to && edge.to == from)
-    }
