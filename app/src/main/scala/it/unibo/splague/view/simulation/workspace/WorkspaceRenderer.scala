@@ -1,4 +1,4 @@
-package it.unibo.splague.view.simulation
+package it.unibo.splague.view.simulation.workspace
 
 import it.unibo.splague.model.node.NodeState
 import it.unibo.splague.view.form.TopologyForm

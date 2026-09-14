@@ -43,7 +43,7 @@
          classi anonime annidate (listener), scalac lo promuove a campo pubblico
          (con nome mangled) a livello di bytecode: falso positivo. -->
     <Match>
-        <Class name="it.unibo.splague.view.simulation.ScenarioWorkspacePanel" />
+        <Class name="it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel" />
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
     </Match>
 

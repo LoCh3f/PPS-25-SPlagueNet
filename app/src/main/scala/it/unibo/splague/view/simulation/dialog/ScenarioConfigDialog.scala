@@ -1,4 +1,4 @@
-package it.unibo.splague.view.simulation
+package it.unibo.splague.view.simulation.dialog
 
 import it.unibo.splague.model.malware.MalwareKind
 import it.unibo.splague.model.malware.PayloadSeverityLevel

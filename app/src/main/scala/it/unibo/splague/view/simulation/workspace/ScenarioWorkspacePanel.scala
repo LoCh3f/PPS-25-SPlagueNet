@@ -1,9 +1,10 @@
-package it.unibo.splague.view.simulation
+package it.unibo.splague.view.simulation.workspace
 
 import it.unibo.splague.model.connection.Connection.Channel
 import it.unibo.splague.model.connection.Connection.ChannelType
 import it.unibo.splague.model.node.Node
 import it.unibo.splague.update.Msg
+import it.unibo.splague.view.simulation.dialog.{EdgeEditorDialog, NodeEditorDialog}
 import it.unibo.splague.view.form.{ChannelForm, EdgeForm, NodeForm, TopologyForm}
 
 import java.awt.Color

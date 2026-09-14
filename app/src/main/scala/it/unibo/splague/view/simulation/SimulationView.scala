@@ -2,6 +2,8 @@ package it.unibo.splague.view.simulation
 
 import it.unibo.splague.AppState
 import it.unibo.splague.update.Msg
+import it.unibo.splague.view.simulation.dialog.ScenarioConfigDialog
+import it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel
 import it.unibo.splague.view.form.{ScenarioForm, TopologyForm}
 
 import java.awt.{BorderLayout, Dimension, FlowLayout}
