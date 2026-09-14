@@ -11,7 +11,7 @@ import scala.util.Random
 object Infection:
 
   trait InfectionMixin:
-    self: SimulationEvents.Event =>
+    self: SimulationEvents.Event & TopologyUpdateMixin =>
 
     protected def infectedNodes(topology: Topology): Iterable[Node] =
       topology.nodes.values.filter(_.state == NodeState.Infected)
@@ -25,13 +25,14 @@ object Infection:
       val neighbors = topology.neighbors(source)
 
       neighbors.foldLeft(topology): (topoAcc, neighborFromEdge) =>
-        val idStr = neighborFromEdge.nodeId.value
-        topoAcc.nodes.get(idStr) match
-          case Some(target) if target.state == NodeState.Healthy =>
-            if ContagionRules.resolveInfection(malware, target, roll) then
-              val infectedTarget = target.copy(state = NodeState.Infected)
-              topoAcc.copy(nodes = topoAcc.nodes.updated(idStr, infectedTarget))
-            else topoAcc
+        topoAcc.nodes.get(neighborFromEdge.nodeId.value) match
+          case Some(target)
+              if target.state == NodeState.Healthy && ContagionRules.resolveInfection(
+                malware,
+                target,
+                roll
+              ) =>
+            updateNode(topoAcc, neighborFromEdge.nodeId)(_.copy(state = NodeState.Infected))
           case _ =>
             topoAcc
 
