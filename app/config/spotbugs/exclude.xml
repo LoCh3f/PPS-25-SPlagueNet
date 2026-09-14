@@ -7,28 +7,64 @@
         <Class name="~.*\$package(\$)?" />
         <Bug pattern="NM_CLASS_NAMING_CONVENTION" />
     </Match>
-    <!-- Falso positivo su TickBasedSelector: scala.Vector è immutabile -->
+
+    <!-- Falsi positivi: scala.Vector/LazyList sono immutabili, quindi esporli o
+         memorizzarli non espone davvero la rappresentazione interna. -->
     <Match>
         <Class name="it.unibo.splague.update.simulation.event.TickBasedSelector" />
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
-    <!-- Esclude l'esposizione della rappresentazione per la classe Simulation -->
     <Match>
-        <Class name="it.unibo.splague.update.Mvu$Screen$Simulation" />
+        <Class name="it.unibo.splague.AppState" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="it.unibo.splague.model.ModelState" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="it.unibo.splague.update.simulation.SimulationState" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="it.unibo.splague.view.form.TopologyForm" />
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
 
-    <!-- Esclusione precedente per SimulationEngineState (se presente) -->
+    <!-- Il package view.simulation è composto da componenti Swing (dialog/pannelli),
+         che sono per natura mutabili e con stato condiviso: memorizzare o restituire
+         riferimenti diretti tra di essi è il pattern normale in Swing, non un difetto. -->
     <Match>
-        <Class name="it.unibo.splague.update.Mvu$SimulationEngineState" />
+        <Class name="~it\.unibo\.splague\.view\.simulation\..*" />
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
+
+    <!-- ScenarioWorkspacePanel.zoom è privato, ma essendo letto/scritto anche dalle
+         classi anonime annidate (listener), scalac lo promuove a campo pubblico
+         (con nome mangled) a livello di bytecode: falso positivo. -->
     <Match>
-        <Class name="it.unibo.splague.update.simulation.event.rules.DefenseSuite" />
-        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+        <Class name="it.unibo.splague.view.simulation.ScenarioWorkspacePanel" />
+        <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
     </Match>
+
+    <!-- Scala 3 desugarizza `case (a, b) => ...` nelle lambda con un controllo di
+         null sintetico sul Tuple2 (che non può mai essere null): SpotBugs lo legge
+         come "load di un valore null noto", ma non è un difetto reale. -->
     <Match>
-        <Class name="it.unibo.splague.update.MvuIntegrationSuite" />
+        <Bug pattern="NP_LOAD_OF_KNOWN_NULL_VALUE" />
+    </Match>
+
+    <!-- Un `object` Scala viene compilato in una classe JVM con campi statici: ogni
+         suo metodo è quindi, di fatto, un metodo statico. La scrittura di
+         SimulationView$.currentSession non soffre dei problemi di concorrenza a cui
+         questo controllo si riferisce. -->
+    <Match>
+        <Class name="it.unibo.splague.view.simulation.SimulationView$" />
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+    </Match>
+
+    <Match>
+        <Class name="it.unibo.splague.update.simulation.event.DefenseSuite" />
         <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
 </FindBugsFilter>
