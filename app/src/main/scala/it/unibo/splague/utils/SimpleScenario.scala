@@ -19,7 +19,10 @@ import it.unibo.splague.model.node.{Node, NodeId, Topology}
   * to [[ExampleScenario]] for trying out the simulation.
   *
   * Nodes have no defense/patch and the malware has maximum infectivity, so the outbreak reliably
-  * marches down the chain one hop at a time instead of depending on a coin flip per node.
+  * marches down the chain one hop at a time instead of depending on a coin flip per node. Nodes
+  * also carry the same `NetworkExploit` vector as the malware: infection only ever propagates to a
+  * node that shares at least one propagation vector with the malware, so without this the chain
+  * would never actually spread past the seeded starting node.
   */
 object SimpleScenario:
   def linearScenario(): Either[String, Scenario] =
@@ -35,7 +38,7 @@ object SimpleScenario:
           defenseLevel = 0.0,
           state = Healthy,
           workload = 0.0,
-          vectors = Set()
+          vectors = Set(PropagationVector.NetworkExploit)
         )
       }.toMap
 

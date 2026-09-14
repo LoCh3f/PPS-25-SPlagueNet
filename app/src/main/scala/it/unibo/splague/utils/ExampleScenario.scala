@@ -40,7 +40,7 @@ object ExampleScenario:
         defenseLevel = 0.9,
         state = Healthy,
         workload = 0.7,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(1) -> Node(
         ids(1),
@@ -49,7 +49,7 @@ object ExampleScenario:
         defenseLevel = 0.85,
         state = Healthy,
         workload = 0.8,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(2) -> Node(
         ids(2),
@@ -58,7 +58,7 @@ object ExampleScenario:
         defenseLevel = 0.9,
         state = Healthy,
         workload = 0.75,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(3) -> Node(
         ids(3),
@@ -67,7 +67,7 @@ object ExampleScenario:
         defenseLevel = 0.88,
         state = Healthy,
         workload = 0.82,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(4) -> Node(
         ids(4),
@@ -76,7 +76,7 @@ object ExampleScenario:
         defenseLevel = 0.68,
         state = Healthy,
         workload = 0.5,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(5) -> Node(
         ids(5),
@@ -85,7 +85,7 @@ object ExampleScenario:
         defenseLevel = 0.7,
         state = Healthy,
         workload = 0.52,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(6) -> Node(
         ids(6),
@@ -94,7 +94,7 @@ object ExampleScenario:
         defenseLevel = 0.72,
         state = Healthy,
         workload = 0.48,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(7) -> Node(
         ids(7),
@@ -103,7 +103,7 @@ object ExampleScenario:
         defenseLevel = 0.8,
         state = Healthy,
         workload = 0.65,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(8) -> Node(
         ids(8),
@@ -112,7 +112,7 @@ object ExampleScenario:
         defenseLevel = 0.3,
         state = Healthy,
         workload = 0.25,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(9) -> Node(
         ids(9),
@@ -121,7 +121,7 @@ object ExampleScenario:
         defenseLevel = 0.35,
         state = Healthy,
         workload = 0.3,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(10) -> Node(
         ids(10),
@@ -130,7 +130,7 @@ object ExampleScenario:
         defenseLevel = 0.78,
         state = Healthy,
         workload = 0.55,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       ),
       ids(11) -> Node(
         ids(11),
@@ -139,7 +139,7 @@ object ExampleScenario:
         defenseLevel = 0.76,
         state = Healthy,
         workload = 0.57,
-        vectors = Set()
+        vectors = Set(PropagationVector.NetworkExploit)
       )
     )
 
