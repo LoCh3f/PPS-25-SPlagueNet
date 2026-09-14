@@ -20,6 +20,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.geom.Ellipse2D
 import java.awt.geom.Line2D
+import java.awt.geom.Path2D
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
@@ -488,6 +489,34 @@ final class ScenarioWorkspacePanel(
         endY
       )
     )
+
+    drawArrowHead(g2, endX, endY, angle)
+
+  /** Draws a filled triangular arrowhead pointing along `angle`, tip at `(tipX, tipY)`. Used to
+    * show the direction of a connection, since edges are directed.
+    */
+  private def drawArrowHead(
+      g2: Graphics2D,
+      tipX: Double,
+      tipY: Double,
+      angle: Double
+  ): Unit =
+    val length = 10.0
+    val spread = math.toRadians(25.0)
+
+    val leftX = tipX - length * math.cos(angle - spread)
+    val leftY = tipY - length * math.sin(angle - spread)
+
+    val rightX = tipX - length * math.cos(angle + spread)
+    val rightY = tipY - length * math.sin(angle + spread)
+
+    val arrowHead = new Path2D.Double()
+    arrowHead.moveTo(tipX, tipY)
+    arrowHead.lineTo(leftX, leftY)
+    arrowHead.lineTo(rightX, rightY)
+    arrowHead.closePath()
+
+    g2.fill(arrowHead)
 
   private def colorFor(state: NodeState): Color =
     state match
