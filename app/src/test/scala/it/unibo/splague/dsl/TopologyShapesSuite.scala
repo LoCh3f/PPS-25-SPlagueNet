@@ -87,3 +87,35 @@ final class TopologyShapesSuite extends AnyFunSuite with Matchers with EitherVal
       mesh("n", 1, Workstation, LAN)
     oneResult.value.nodes.keys should contain only "n0"
     oneResult.value.edges shouldBe empty
+
+  test("star returns the hub id, usable to wire the shape to other declarations"):
+    val result = topology:
+      val hubId = star("hub", Router, "leaf", 2, Workstation, LAN)
+      node("extra", Workstation)
+      hubId <-> "extra" via LAN
+
+    val topo = result.value
+    topo.edges.size shouldBe 3
+    topo.nodes.keys should contain allOf ("hub", "leaf0", "leaf1", "extra")
+
+  test("ring returns every node id in order, usable to wire the shape to other declarations"):
+    val result = topology:
+      val ids = ring("n", 3, Workstation, LAN)
+      ids shouldBe List("n0", "n1", "n2")
+      node("extra", Workstation)
+      ids.head <-> "extra" via LAN
+
+    val topo = result.value
+    topo.edges.size shouldBe 4
+    topo.nodes.keys should contain("extra")
+
+  test("mesh returns every node id in order, usable to wire the shape to other declarations"):
+    val result = topology:
+      val ids = mesh("n", 3, Workstation, LAN)
+      ids shouldBe List("n0", "n1", "n2")
+      node("extra", Workstation)
+      ids.last <-> "extra" via LAN
+
+    val topo = result.value
+    topo.edges.size shouldBe 4 // C(3,2) + 1
+    topo.nodes.keys should contain("extra")

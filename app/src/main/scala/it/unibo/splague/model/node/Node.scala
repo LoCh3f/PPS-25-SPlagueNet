@@ -1,10 +1,7 @@
 package it.unibo.splague.model.node
 
-import it.unibo.splague.model.connection.Connection.Edge
 import it.unibo.splague.model.malware.PropagationVector
 import it.unibo.splague.model.node.NodeId.NodeId
-import it.unibo.splague.model.node.{Node, NodeId}
-import sun.jvm.hotspot.HelloWorld.e
 
 sealed trait NodeType:
   def detectionCoefficient: Double

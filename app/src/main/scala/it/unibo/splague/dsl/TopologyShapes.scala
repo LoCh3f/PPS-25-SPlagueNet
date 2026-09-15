@@ -3,6 +3,21 @@ package it.unibo.splague.dsl
 import it.unibo.splague.model.connection.Connection.ChannelType
 import it.unibo.splague.model.node.NodeType
 
+/** Declares `count` nodes named `"${prefix}0"` through `"${prefix}(count - 1)"`, all of `nodeType`.
+  * Shared by `ring` and `mesh`, which differ only in which edges they declare afterward.
+  *
+  * @return
+  *   the declared ids, in order
+  */
+private def declareIndexedNodes(
+    prefix: String,
+    count: Int,
+    nodeType: NodeType
+)(using builder: TopologyBuilder): List[String] =
+  val ids = (0 until count).map(i => s"$prefix$i").toList
+  for id <- ids do node(id, nodeType)
+  ids
+
 /** Declares a star-shaped topology inside an enclosing `topology { ... }` block: one central hub
   * node, connected individually to `leafCount` leaf nodes. No edges exist between leaves.
   *
@@ -24,6 +39,9 @@ import it.unibo.splague.model.node.NodeType
   *   node type shared by every leaf
   * @param channelType
   *   channel type used for every hub-to-leaf edge
+  * @return
+  *   the hub's id, so it can be referenced to wire this shape to other declarations in the same
+  *   `topology { ... }` block
   */
 def star(
     hubId: String,
@@ -32,12 +50,13 @@ def star(
     leafCount: Int,
     leafType: NodeType,
     channelType: ChannelType
-)(using builder: TopologyBuilder): Unit =
+)(using builder: TopologyBuilder): String =
   node(hubId, hubType)
   for i <- 0 until leafCount do
     val leafId = s"$leafPrefix$i"
     node(leafId, leafType)
     hubId <-> leafId via channelType
+  hubId
 
 /** Declares a ring-shaped topology: `count` nodes, each connected to exactly its two neighbors in a
   * cycle (`node0 <-> node1 <-> ... <-> node(count-1) <-> node0`).
@@ -56,14 +75,17 @@ def star(
   *   node type shared by every node in the ring
   * @param channelType
   *   channel type used for every edge in the ring
+  * @return
+  *   the ids of every node in the ring, in order, so it can be wired to other declarations in the
+  *   same `topology { ... }` block
   */
 def ring(
     prefix: String,
     count: Int,
     nodeType: NodeType,
     channelType: ChannelType
-)(using builder: TopologyBuilder): Unit =
-  for i <- 0 until count do node(s"$prefix$i", nodeType)
+)(using builder: TopologyBuilder): List[String] =
+  val ids = declareIndexedNodes(prefix, count, nodeType)
 
   count match
     case n if n <= 1 => () // no edges: nothing to connect, or would self-loop
@@ -73,6 +95,8 @@ def ring(
         val a = s"$prefix$i"
         val b = s"$prefix${(i + 1) % n}"
         a <-> b via channelType
+
+  ids
 
 /** Declares a fully-connected (complete-graph) topology: `count` nodes, with an edge between every
   * distinct pair. Iterating pairs as `i < j` naturally avoids both self-loops (`i == j` never
@@ -87,16 +111,21 @@ def ring(
   *   node type shared by every node in the mesh
   * @param channelType
   *   channel type used for every edge in the mesh
+  * @return
+  *   the ids of every node in the mesh, in order, so it can be wired to other declarations in the
+  *   same `topology { ... }` block
   */
 def mesh(
     prefix: String,
     count: Int,
     nodeType: NodeType,
     channelType: ChannelType
-)(using builder: TopologyBuilder): Unit =
-  for i <- 0 until count do node(s"$prefix$i", nodeType)
+)(using builder: TopologyBuilder): List[String] =
+  val ids = declareIndexedNodes(prefix, count, nodeType)
 
   for
     i <- 0 until count
     j <- (i + 1) until count
   do s"$prefix$i" <-> s"$prefix$j" via channelType
+
+  ids
