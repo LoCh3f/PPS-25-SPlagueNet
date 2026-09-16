@@ -20,6 +20,7 @@ plugins {
 //    id("jacoco")
     id("org.scoverage") version "9.1"
 
+
     /*
      * The Scalastyle plugin's latest published version is 3.5.0, but it still uses the deprecated API.
      * Scalastyle is effectively unmaintained. (https://docs.fukuii.com/reports/STATIC_ANALYSIS_INVENTORY/)
@@ -98,6 +99,11 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.3")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
+
+    // Circe for serialization/deserialization
+    implementation("io.circe:circe-core_3:0.14.7")
+    implementation("io.circe:circe-parser_3:0.14.7")
+    implementation("io.circe:circe-generic_3:0.14.7")
 }
 
 java {
