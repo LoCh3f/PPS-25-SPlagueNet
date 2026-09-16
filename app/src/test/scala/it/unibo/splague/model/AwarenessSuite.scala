@@ -47,3 +47,15 @@ final class AwarenessSuite extends AnyFunSuite with Matchers with EitherValues:
   test("raise should clamp at 0.0 when delta is negative and large"):
     val base = Awareness.clamped(0.2)
     base.raise(-0.5).value shouldBe 0.0
+
+  test(
+    "with a constant moderate signal, awareness converges near the signal instead of diverging to 1.0"
+  ):
+    val rate = Probability.clamped(0.3)
+    val signal = 0.2
+
+    val result = (1 to 100).foldLeft(Awareness.none): (a, _) =>
+      a.trackTowards(signal, rate.value)
+
+    result.value shouldBe signal +- 0.01
+    result.value should be < 0.9
