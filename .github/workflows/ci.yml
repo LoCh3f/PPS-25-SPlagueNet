@@ -42,17 +42,13 @@ jobs:
       - name: Run Quality Checks and Tests
         run: ./gradlew check
 
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: app/build/reports/tests/test/
+      - name: Run build and generate Scoverage report
+        run: ./gradlew reportScoverage
 
-      - name: Upload JaCoCo coverage report
+      - name: Upload Scoverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-report
-          path: app/build/reports/jacoco/test/html/
+          name: scoverage-report
+          path: app/build/reports/scoverage/
 
