@@ -1,6 +1,6 @@
 package it.unibo.splague.update.simulation.event
 
-import it.unibo.splague.model.Scenario
+import it.unibo.splague.model.{Awareness, Scenario}
 import SimulationEvents.Event
 import it.unibo.splague.update.simulation.event.rules.AwarenessRules
 
@@ -17,7 +17,5 @@ object Detection extends Event:
     *   updated scenario with raised awareness level
     */
   override def apply(scenario: Scenario): Scenario =
-    // TODO: Once infected nodes filtering is extracted to Topology class,
-    // use only infected nodes for detection signal calculation instead of all nodes
     val signal = AwarenessRules.detectionSignal(scenario.topology, scenario.virus)
-    scenario.copy(awareness = scenario.awareness.raise(signal))
+    scenario.copy(awareness = scenario.awareness.trackTowards(signal, Awareness.defaultRate))
