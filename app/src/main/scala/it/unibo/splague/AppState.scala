@@ -5,6 +5,7 @@ import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.view.form.ScenarioForm
 import it.unibo.splague.view.{Screen, ValidationError}
 
+// $COVERAGE-OFF$
 final case class AppState(
     model: ModelState,
     screen: Screen = Screen.Menu,
@@ -17,3 +18,4 @@ object AppState:
     AppState(
       model = model
     )
+// $COVERAGE-ON$

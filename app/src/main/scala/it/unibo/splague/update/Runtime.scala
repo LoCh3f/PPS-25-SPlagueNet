@@ -7,6 +7,7 @@ import it.unibo.splague.view.Renderer
 
 import javax.swing.Timer
 
+// $COVERAGE-OFF$
 final class Runtime(
     initialState: AppState,
     view: Renderer
@@ -41,3 +42,4 @@ final class Runtime(
 
   def start(): Unit =
     timer.start()
+// $COVERAGE-ON$

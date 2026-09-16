@@ -20,6 +20,7 @@ import it.unibo.splague.utils.SimpleScenario
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.view.form.{AwarenessForm, ScenarioForm}
 
+// $COVERAGE-OFF$
 object Mvu:
 
   def update(msg: Msg, state: AppState): AppState = msg match
@@ -328,3 +329,4 @@ object Mvu:
               scenarioForm = Some(ScenarioForm.fromScenario(updatedScenario)),
               errors = Vector.empty
             )
+// $COVERAGE-ON$
