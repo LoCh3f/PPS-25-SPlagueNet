@@ -112,43 +112,14 @@ application {
     mainClass = "it.unibo.splague.App"
 }
 
-//tasks.jacocoTestReport {
-//    dependsOn(tasks.test)
-//    reports {
-//        xml.required.set(true)
-//        html.required.set(true)
-//    }
-//    classDirectories.setFrom(
-//        files(classDirectories.files.map {
-//            fileTree(it) {
-//                exclude("**/App*", "**/view/**")
-//            }
-//        })
-//    )
-//}
-
 scoverage {
     excludedPackages.set(
         listOf(
             "it\\.unibo\\.splague\\.view\\..*",
         )
     )
-    excludedFiles.set(
-        listOf(
-            listOf(
-                ".*/it/unibo/splague/App.*",
-                ".*/it/unibo/splague/AppState.*",
-                ".*/it/unibo/splague/utils/ExampleScenario.*",
-                ".*/it/unibo/splague/utils/SimpleScenario.*",
-                ".*/it/unibo/splague/update/Mvu.*",
-                ".*/it/unibo/splague/update/Runtime.*",
-                ".*/it/unibo/splague/utils/config/UIConfig.*"
-            ).joinToString("|")
-        )
-    )
 }
 
 tasks.test {
     useJUnitPlatform()
-//    finalizedBy(tasks.jacocoTestReport)
 }
