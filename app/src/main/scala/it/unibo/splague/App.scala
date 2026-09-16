@@ -7,6 +7,7 @@ import it.unibo.splague.model.ModelState
 import it.unibo.splague.view.{MainView, Renderer}
 import it.unibo.splague.update.Runtime
 
+// $COVERAGE-OFF$
 object App:
 
   def main(args: Array[String]): Unit = {
@@ -23,3 +24,4 @@ object App:
   }
 
   def greeting(): String = "Hello, world!"
+// $COVERAGE-ON$
