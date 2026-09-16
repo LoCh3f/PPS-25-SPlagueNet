@@ -59,3 +59,6 @@ object Topology:
 
     def destroyedNodes(): Set[Node] =
       topology.nodes.values.filter(node => node.state == NodeState.Destroyed).toSet
+
+    def immuneNodes(): Set[Node] =
+      topology.nodes.values.filter(node => node.state == NodeState.Immune).toSet
