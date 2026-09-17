@@ -5,6 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import it.unibo.splague.model.Awareness
 import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
+import it.unibo.splague.model.countermeasures.Countermeasures
 import it.unibo.splague.model.node.NodeId.NodeId
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
@@ -183,3 +184,24 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
     result.isRight shouldBe true
     result.toOption.get.edges should have size 1
+
+  test("Countermeasures enum should be correctly encoded and decoded"):
+    val cm = Countermeasures.Firewall
+    val encoder = summon[Encoder[Countermeasures, FileFormat.Json]]
+    val decoder = summon[Decoder[Countermeasures, FileFormat.Json]]
+
+    val json = encoder.encode(cm)
+    json shouldBe "\"Firewall\""
+
+    decoder.decode(json) shouldBe Right(Countermeasures.Firewall)
+
+  test("Map[Double, Countermeasures] should be correctly encoded and decoded"):
+    val map: Map[Double, Countermeasures] = Map(0.5 -> Countermeasures.Patch)
+    val encoder = summon[Encoder[Map[Double, Countermeasures], FileFormat.Json]]
+    val decoder = summon[Decoder[Map[Double, Countermeasures], FileFormat.Json]]
+
+    val json = encoder.encode(map)
+    val result = decoder.decode(json)
+
+    result.isRight shouldBe true
+    result.toOption.get.get(0.5) shouldBe Some(Countermeasures.Patch)

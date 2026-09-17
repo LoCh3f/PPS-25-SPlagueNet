@@ -16,13 +16,14 @@ import it.unibo.splague.model.connection.Protocol.{
   TransportProtocolType,
   UdpTransport
 }
-import it.unibo.splague.model.countermeasures.CountermeasureConfig
+import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.malware.{Malware, MalwareTraits}
 import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.model.node.NodeId.NodeId
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.model.node.NodeState.{Destroyed, Healthy, Immune, Infected, Quarantined}
 import it.unibo.splague.persistence.{Encoder, FileFormat}
+import it.unibo.splague.update.IsolationCriteria
 
 case class TestApplicationProtocol(
     kind: ApplicationProtocolType,
@@ -93,9 +94,36 @@ object JsonCodecs:
   given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
     CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
 
+  given countermeasuresCirceEncoder: CirceEncoder[Countermeasures] =
+    CirceEncoder.encodeString.contramap(_.toString)
+
+  given countermeasuresCirceDecoder: CirceDecoder[Countermeasures] =
+    CirceDecoder.decodeString.emap {
+      case "DefenseBoost" => Right(Countermeasures.DefenseBoost)
+      case "Firewall"     => Right(Countermeasures.Firewall)
+      case "Isolation"    => Right(Countermeasures.Isolation)
+      case "Patch"        => Right(Countermeasures.Patch)
+      case other          => Left(s"Unknown Countermeasures: $other")
+    }
+
+  // --- 2. Map[Double, Countermeasures] (tramite lista di coppie) ---
+  given mapDoubleCountermeasuresEncoder: CirceEncoder[Map[Double, Countermeasures]] =
+    CirceEncoder.encodeList[(Double, Countermeasures)].contramap(_.toList)
+
+  given mapDoubleCountermeasuresDecoder: CirceDecoder[Map[Double, Countermeasures]] =
+    CirceDecoder.decodeList[(Double, Countermeasures)].map(_.toMap)
+
+  // --- 3. IsolationCriteria (Gestione della funzione Node => Boolean) ---
+  given isolationCriteriaCirceCodec: CirceCodec[IsolationCriteria] =
+    CirceCodec.from(
+      io.circe.Decoder.const(IsolationCriteria.all),
+      io.circe.Encoder.instance(_ => Json.fromString(""))
+    )
+
   given nodeCirceCodec: CirceCodec[Node] = deriveCodec[Node]
-//  given countermeasureConfigCirceCodec: CirceCodec[CountermeasureConfig] = deriveCodec[CountermeasureConfig]
-//  given scenarioCirceCodec: CirceCodec[Scenario] = deriveCodec[Scenario]
+  given countermeasureConfigCirceCodec: CirceCodec[CountermeasureConfig] =
+    deriveCodec[CountermeasureConfig]
+  given scenarioCirceCodec: CirceCodec[Scenario] = deriveCodec[Scenario]
 
   // Probability
   given probabilityCirceEncoder: CirceEncoder[Probability] =
