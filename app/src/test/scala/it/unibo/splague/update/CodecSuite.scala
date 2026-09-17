@@ -7,6 +7,7 @@ import org.scalatestplus.junit.JUnitRunner
 import io.circe.syntax.*
 import io.circe.parser.*
 import io.circe.Codec
+import it.unibo.splague.model.Awareness
 import it.unibo.splague.model.node.{NodeState, NodeType}
 import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
 import org.scalatest.matchers.should.Matchers
@@ -68,6 +69,35 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     val json = "\"Unknown\""
 
     val decoder = summon[Decoder[NodeType, FileFormat.Json]]
+
+    val state = decoder.decode(json)
+
+    state.isLeft shouldBe true
+    state.left.toOption.get match
+      case PersistenceError.Parsing(_) => succeed
+      case other                       => fail(s"Expected Parsing error, got $other")
+
+  test("Awareness should be correctly encoded to a clean string"):
+    val awareness: Awareness = Awareness.clamped(1.0)
+    val encoder = summon[Encoder[Awareness, FileFormat.Json]]
+
+    encoder.encode(awareness) shouldBe "1.0"
+
+  test("Awareness should be correctly decoded from a clean string"):
+    val json = "1.0"
+    val decoder = summon[Decoder[Awareness, FileFormat.Json]]
+
+    val result = decoder.decode(json)
+
+    result shouldBe Right(Awareness.clamped(1.0))
+    result.toOption.get.value shouldBe 1.0
+
+  test(
+    "A JSON decoder should return a Persistence.Parsing error when anything but a Double gets encountered"
+  ):
+    val json = "\"Unknown\""
+
+    val decoder = summon[Decoder[Awareness, FileFormat.Json]]
 
     val state = decoder.decode(json)
 
