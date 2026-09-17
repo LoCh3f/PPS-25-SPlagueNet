@@ -5,7 +5,7 @@ import io.circe.{Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceE
 import io.circe.syntax.*
 import io.circe.parser.decode
 import io.circe.generic.semiauto.*
-import it.unibo.splague.model.node.NodeState
+import it.unibo.splague.model.node.{NodeState, NodeType}
 import it.unibo.splague.model.node.NodeState.{Destroyed, Healthy, Immune, Infected, Quarantined}
 import it.unibo.splague.persistence.{Encoder, FileFormat}
 
@@ -14,11 +14,14 @@ object JsonCodecs:
   // Circe config
   given Configuration = Configuration.default
 
-  // Custom encoders for sealed traits, enums
+  // Custom encoders for atomic types
   given Encoder[NodeState, FileFormat.Json] with
     override def encode(a: NodeState): String = s"\"$a\""
 
-  // Custom decoder for sealed traits, enums
+  given Encoder[NodeType, FileFormat.Json] with
+    override def encode(a: NodeType): String = s"\"$a\""
+
+  // Custom decoders for atomic types
   given Decoder[NodeState, FileFormat.Json] with
     override def decode(raw: String): Either[PersistenceError, NodeState] =
       raw.trim.stripPrefix("\"").stripSuffix("\"") match
@@ -28,6 +31,16 @@ object JsonCodecs:
         case "Immune"      => Right(Immune)
         case "Destroyed"   => Right(Destroyed)
         case other         => Left(PersistenceError.Parsing(s"Unknown NodeState: $other"))
+
+  given Decoder[NodeType, FileFormat.Json] with
+    override def decode(raw: String): Either[PersistenceError, NodeType] =
+      raw.trim.stripPrefix("\"").stripSuffix("\"") match
+        case "Workstation"  => Right(NodeType.Workstation)
+        case "Server"       => Right(NodeType.Server)
+        case "Router"       => Right(NodeType.Router)
+        case "IoTDevice"    => Right(NodeType.IoTDevice)
+        case "MobileDevice" => Right(NodeType.MobileDevice)
+        case other          => Left(PersistenceError.Parsing(s"Unknown NodeType: $other"))
 
   // Generic encoder for json objects
   given [A](using cEncoder: CirceEncoder[A]): Encoder[A, FileFormat.Json] with
