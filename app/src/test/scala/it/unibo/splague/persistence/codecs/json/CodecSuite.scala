@@ -1,9 +1,5 @@
-package it.unibo.splague.update
+package it.unibo.splague.persistence.codecs.json
 
-import org.junit.runner.RunWith
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
-import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
 import it.unibo.splague.model.countermeasures.Countermeasures
 import it.unibo.splague.model.malware.MalwareKind.Worm
@@ -14,14 +10,20 @@ import it.unibo.splague.model.malware.{
   PropagationVector
 }
 import it.unibo.splague.model.node.NodeId.NodeId
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
+import it.unibo.splague.model.node.*
+import it.unibo.splague.model.{Awareness, Probability, Scenario}
+import it.unibo.splague.persistence.codecs.json.JsonCodecs.given
+import it.unibo.splague.persistence.codecs.{Decoder, Encoder, FileFormat, PersistenceError}
+import org.junit.runner.RunWith
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import it.unibo.splague.persistence.JsonCodecs.given
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 final class CodecSuite extends AnyFunSuite with Matchers:
-  import it.unibo.splague.persistence.JsonCodecs
+
+  import it.unibo.splague.persistence.codecs.json.JsonCodec.given
+  import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
 
   test("A JSON encoder should correctly encode a NodeState into a JSON object"):
     val nodeState = NodeState.Healthy

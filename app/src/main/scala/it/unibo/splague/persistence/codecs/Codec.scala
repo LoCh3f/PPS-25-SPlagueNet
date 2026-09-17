@@ -1,9 +1,4 @@
-package it.unibo.splague.persistence
-
-import it.unibo.splague.persistence.FileFormat
-
-import java.nio.file.{Files, Path}
-import scala.util.Try
+package it.unibo.splague.persistence.codecs
 
 enum PersistenceError:
   case IO(message: String)
