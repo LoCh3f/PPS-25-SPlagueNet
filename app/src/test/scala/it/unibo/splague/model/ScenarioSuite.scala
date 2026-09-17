@@ -94,7 +94,7 @@ final class ScenarioSuite extends AnyFunSuite with Matchers with EitherValues:
       name = "Simulation Alpha",
       topology = topology,
       virus = dummyVirus,
-      startingNode = nodeInvalid, // Non presente nella topologia
+      startingNode = nodeInvalid,
       tick = 0,
       seed = 42,
       maxIterations = 100

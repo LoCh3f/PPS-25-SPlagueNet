@@ -4,8 +4,9 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import it.unibo.splague.model.Awareness
+import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
 import it.unibo.splague.model.node.NodeId.NodeId
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType}
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
 import org.scalatest.matchers.should.Matchers
 import it.unibo.splague.persistence.JsonCodecs.given
@@ -158,3 +159,27 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     decodedMap should have size 1
     decodedMap.head._2 shouldBe 0.75
     decodedMap.head._1.nodeId.value shouldBe "node-1"
+
+  test("Topology with nodes and edges should be correctly encoded and decoded"):
+    val id1 = NodeId.of("node-1").toOption.get
+    val id2 = NodeId.of("node-2").toOption.get
+
+    val node1 = Node.test(nodeId = id1, nodeType = NodeType.Server, state = NodeState.Healthy)
+    val node2 = Node.test(nodeId = id2, nodeType = NodeType.Workstation, state = NodeState.Healthy)
+
+    val channel = Channel.default(ChannelType.LAN)
+    val edge = Edge(node1, node2, channel, None)
+
+    val topology = Topology(
+      nodes = Map(id1.value -> node1, id2.value -> node2),
+      edges = Set(edge)
+    )
+
+    val encoder = summon[Encoder[Topology, FileFormat.Json]]
+    val decoder = summon[Decoder[Topology, FileFormat.Json]]
+
+    val json = encoder.encode(topology)
+    val result = decoder.decode(json)
+
+    result.isRight shouldBe true
+    result.toOption.get.edges should have size 1

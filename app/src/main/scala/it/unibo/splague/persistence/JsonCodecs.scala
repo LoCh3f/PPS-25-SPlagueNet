@@ -1,17 +1,33 @@
 package it.unibo.splague.persistence
 
 import io.circe.derivation.Configuration
-import io.circe.{Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
+import io.circe.{Json, Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
 import io.circe.syntax.*
 import io.circe.parser.decode
 import io.circe.generic.semiauto.*
 import io.circe.generic.auto.deriveDecoder
 import io.circe.generic.auto.deriveEncoder
-import it.unibo.splague.model.Awareness
+import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
+import it.unibo.splague.model.connection.Protocol.{
+  ApplicationProtocol,
+  ApplicationProtocolType,
+  TcpTransport,
+  TransportProtocol,
+  TransportProtocolType,
+  UdpTransport
+}
+import it.unibo.splague.model.countermeasures.CountermeasureConfig
+import it.unibo.splague.model.malware.{Malware, MalwareTraits}
+import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.model.node.NodeId.NodeId
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType}
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.model.node.NodeState.{Destroyed, Healthy, Immune, Infected, Quarantined}
 import it.unibo.splague.persistence.{Encoder, FileFormat}
+
+case class TestApplicationProtocol(
+    kind: ApplicationProtocolType,
+    underlying: TransportProtocol = TcpTransport
+) extends ApplicationProtocol
 
 object JsonCodecs:
 
@@ -76,6 +92,100 @@ object JsonCodecs:
 
   given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
     CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
+
+  given nodeCirceCodec: CirceCodec[Node] = deriveCodec[Node]
+//  given countermeasureConfigCirceCodec: CirceCodec[CountermeasureConfig] = deriveCodec[CountermeasureConfig]
+//  given scenarioCirceCodec: CirceCodec[Scenario] = deriveCodec[Scenario]
+
+  // Probability
+  given probabilityCirceEncoder: CirceEncoder[Probability] =
+    CirceEncoder.encodeDouble.contramap(_.value)
+
+  given probabilityCirceDecoder: CirceDecoder[Probability] =
+    CirceDecoder.decodeDouble.emap { d =>
+      Probability(d) match
+        case Right(p)  => Right(p)
+        case Left(err) => Left(err)
+    }
+
+  // ChannelType
+  given channelTypeCirceEncoder: CirceEncoder[ChannelType] =
+    CirceEncoder.encodeString.contramap(_.toString)
+
+  given channelTypeCirceDecoder: CirceDecoder[ChannelType] =
+    CirceDecoder.decodeString.emap {
+      case "LAN" => Right(ChannelType.LAN)
+      case "WAN" => Right(ChannelType.WAN)
+      case "VPN" => Right(ChannelType.VPN)
+      case other => Left(s"Unknown ChannelType: $other")
+    }
+
+  // Channel
+  given channelCirceCodec: CirceCodec[Channel] = deriveCodec[Channel]
+
+  // Protocol Types & Traits
+  given transportProtocolTypeEncoder: CirceEncoder[TransportProtocolType] =
+    CirceEncoder.encodeString.contramap(_.toString)
+
+  given transportProtocolTypeDecoder: CirceDecoder[TransportProtocolType] =
+    CirceDecoder.decodeString.emap {
+      case "TCP" => Right(TransportProtocolType.TCP)
+      case "UDP" => Right(TransportProtocolType.UDP)
+      case other => Left(s"Unknown TransportProtocolType: $other")
+    }
+
+  given applicationProtocolTypeEncoder: CirceEncoder[ApplicationProtocolType] =
+    CirceEncoder.encodeString.contramap(_.toString)
+
+  given applicationProtocolTypeDecoder: CirceDecoder[ApplicationProtocolType] =
+    CirceDecoder.decodeString.emap {
+      case "HTTP"   => Right(ApplicationProtocolType.HTTP)
+      case "HTTPS"  => Right(ApplicationProtocolType.HTTPS)
+      case "FTP"    => Right(ApplicationProtocolType.FTP)
+      case "SSH"    => Right(ApplicationProtocolType.SSH)
+      case "IMAP"   => Right(ApplicationProtocolType.IMAP)
+      case "Telnet" => Right(ApplicationProtocolType.Telnet)
+      case other    => Left(s"Unknown ApplicationProtocolType: $other")
+    }
+
+  given transportProtocolEncoder: CirceEncoder[TransportProtocol] =
+    CirceEncoder.encodeString.contramap {
+      case TcpTransport => "TCP"
+      case UdpTransport => "UDP"
+    }
+
+  given transportProtocolDecoder: CirceDecoder[TransportProtocol] =
+    CirceDecoder.decodeString.emap {
+      case "TCP" => Right(TcpTransport)
+      case "UDP" => Right(UdpTransport)
+      case other => Left(s"Unknown TransportProtocol: $other")
+    }
+
+  given applicationProtocolEncoder: CirceEncoder[ApplicationProtocol] =
+    CirceEncoder.instance { ap =>
+      Json.obj(
+        "kind" -> ap.kind.asJson,
+        "underlying" -> ap.underlying.asJson
+      )
+    }
+
+  given applicationProtocolDecoder: CirceDecoder[ApplicationProtocol] =
+    CirceDecoder.instance { cursor =>
+      for
+        kind <- cursor.downField("kind").as[ApplicationProtocolType]
+        underlying <- cursor.downField("underlying").as[TransportProtocol]
+      yield TestApplicationProtocol(kind, underlying): ApplicationProtocol
+    }
+
+  // Edge
+  given edgeCirceCodec: CirceCodec[Edge] = deriveCodec[Edge]
+
+  // Topology
+  given topologyCirceCodec: CirceCodec[Topology] = deriveCodec[Topology]
+
+  given malwareCirceCodec: CirceCodec[Malware] = deriveCodec[Malware]
+
+  given malwareTraitsCirceCodec: CirceCodec[MalwareTraits] = deriveCodec[MalwareTraits]
 
   // Generic json encoders/decoders that use CirceEncoders/Decoders
   given [A](using cEncoder: CirceEncoder[A]): Encoder[A, FileFormat.Json] with
