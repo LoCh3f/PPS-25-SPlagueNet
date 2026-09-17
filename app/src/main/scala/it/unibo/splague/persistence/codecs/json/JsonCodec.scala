@@ -2,7 +2,8 @@ package it.unibo.splague.persistence.codecs.json
 
 import io.circe.{Json, Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
 import it.unibo.splague.persistence.*
-import it.unibo.splague.persistence.codecs.{Decoder, Encoder, FileFormat, PersistenceError}
+import it.unibo.splague.persistence.codecs.{Decoder, Encoder}
+import it.unibo.splague.persistence.FileFormat
 
 /** Provides generic JSON-based implementations for the framework's persistence `Encoder` and
   * `Decoder` interfaces, delegating the actual serialization and parsing work to underlying Circe

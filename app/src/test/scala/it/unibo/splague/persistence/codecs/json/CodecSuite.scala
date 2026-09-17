@@ -12,8 +12,9 @@ import it.unibo.splague.model.malware.{
 import it.unibo.splague.model.node.NodeId.NodeId
 import it.unibo.splague.model.node.*
 import it.unibo.splague.model.{Awareness, Probability, Scenario}
-import it.unibo.splague.persistence.codecs.json.JsonCodecs.given
-import it.unibo.splague.persistence.codecs.{Decoder, Encoder, FileFormat, PersistenceError}
+import it.unibo.splague.persistence.{FileFormat, PersistenceError}
+import it.unibo.splague.persistence.codecs.json.JsonCodec.given
+import it.unibo.splague.persistence.codecs.{Decoder, Encoder}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers

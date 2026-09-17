@@ -1,14 +1,6 @@
 package it.unibo.splague.persistence.codecs
 
-enum PersistenceError:
-  case IO(message: String)
-  case Parsing(message: String)
-
-sealed trait FileFormat
-object FileFormat:
-  sealed trait Json extends FileFormat
-  sealed trait Txt extends FileFormat
-  sealed trait Html extends FileFormat
+import it.unibo.splague.persistence.{FileFormat, PersistenceError}
 
 trait Encoder[A, F <: FileFormat]:
   def encode(a: A): String
