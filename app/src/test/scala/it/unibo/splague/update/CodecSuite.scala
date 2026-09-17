@@ -7,7 +7,7 @@ import org.scalatestplus.junit.JUnitRunner
 import io.circe.syntax.*
 import io.circe.parser.*
 import io.circe.Codec
-import it.unibo.splague.model.node.NodeState
+import it.unibo.splague.model.node.{NodeState, NodeType}
 import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
 import org.scalatest.matchers.should.Matchers
 import it.unibo.splague.persistence.JsonCodecs.given
@@ -38,6 +38,36 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     val json = "\"Unknown\""
 
     val decoder = summon[Decoder[NodeState, FileFormat.Json]]
+
+    val state = decoder.decode(json)
+
+    state.isLeft shouldBe true
+    state.left.toOption.get match
+      case PersistenceError.Parsing(_) => succeed
+      case other                       => fail(s"Expected Parsing error, got $other")
+
+  test("NodeType should be correctly encoded to a clean string"):
+    val nodeType: NodeType = NodeType.Server
+    val encoder = summon[Encoder[NodeType, FileFormat.Json]]
+
+    encoder.encode(nodeType) shouldBe "\"Server\""
+
+  test("NodeType should be correctly decoded from a clean string and keep its methods"):
+    val json = "\"Server\""
+    val decoder = summon[Decoder[NodeType, FileFormat.Json]]
+
+    val result = decoder.decode(json)
+
+    result shouldBe Right(NodeType.Server)
+    result.toOption.get.detectionCoefficient shouldBe NodeType.Server.detectionCoefficient
+    result.toOption.get.structuralVulnerability shouldBe NodeType.Server.structuralVulnerability
+
+  test(
+    "A JSON decoder should return a Persistence.Parsing error when an unknown NodeType is encountered"
+  ):
+    val json = "\"Unknown\""
+
+    val decoder = summon[Decoder[NodeType, FileFormat.Json]]
 
     val state = decoder.decode(json)
 
