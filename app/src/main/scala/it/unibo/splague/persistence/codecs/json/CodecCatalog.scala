@@ -1,28 +1,18 @@
-package it.unibo.splague.persistence
+package it.unibo.splague.persistence.codecs.json
 
 import io.circe.derivation.Configuration
-import io.circe.{Json, Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
-import io.circe.syntax.*
-import io.circe.parser.decode
+import io.circe.generic.auto.{deriveDecoder, deriveEncoder}
 import io.circe.generic.semiauto.*
-import io.circe.generic.auto.deriveDecoder
-import io.circe.generic.auto.deriveEncoder
+import io.circe.syntax.*
+import io.circe.{Json, Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
 import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
-import it.unibo.splague.model.connection.Protocol.{
-  ApplicationProtocol,
-  ApplicationProtocolType,
-  TcpTransport,
-  TransportProtocol,
-  TransportProtocolType,
-  UdpTransport
-}
+import it.unibo.splague.model.connection.Protocol.*
 import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.malware.{Malware, MalwareTraits}
-import it.unibo.splague.model.{Awareness, Probability, Scenario}
+import it.unibo.splague.model.node.*
 import it.unibo.splague.model.node.NodeId.NodeId
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.model.node.NodeState.{Destroyed, Healthy, Immune, Infected, Quarantined}
-import it.unibo.splague.persistence.{Encoder, FileFormat}
+import it.unibo.splague.model.{Awareness, Probability, Scenario}
+import it.unibo.splague.persistence.*
 import it.unibo.splague.update.IsolationCriteria
 
 case class TestApplicationProtocol(
@@ -30,14 +20,14 @@ case class TestApplicationProtocol(
     underlying: TransportProtocol = TcpTransport
 ) extends ApplicationProtocol
 
-object JsonCodecs:
+object CodecCatalog:
 
   // --- Circe Configuration ---
   given Configuration = Configuration.default
 
-  // CIRCE ENCODERS/DECODERS
+  // ---  ATOMIC & LEAF TYPES (Value Classes, Opaque Types, Enums) ---------
 
-  // NodeId (with validation of NodeId.of)
+  // NodeId
   given nodeIdCirceEncoder: CirceEncoder[NodeId] =
     CirceEncoder.encodeString.contramap(_.value)
 
@@ -48,7 +38,7 @@ object JsonCodecs:
         case Left(err) => Left(err)
     }
 
-  // Awareness (with validation in range [0, 1])
+  // Awareness
   given awarenessCirceEncoder: CirceEncoder[Awareness] =
     CirceEncoder.encodeDouble.contramap(_.value)
 
@@ -56,6 +46,17 @@ object JsonCodecs:
     CirceDecoder.decodeDouble.emap { d =>
       Awareness(d) match
         case Right(a)  => Right(a)
+        case Left(err) => Left(err)
+    }
+
+  // Probability
+  given probabilityCirceEncoder: CirceEncoder[Probability] =
+    CirceEncoder.encodeDouble.contramap(_.value)
+
+  given probabilityCirceDecoder: CirceDecoder[Probability] =
+    CirceDecoder.decodeDouble.emap { d =>
+      Probability(d) match
+        case Right(p)  => Right(p)
         case Left(err) => Left(err)
     }
 
@@ -87,13 +88,7 @@ object JsonCodecs:
       case other          => Left(s"Unknown NodeType: $other")
     }
 
-  // Map[Node, Double] (serialization with list of tuples)
-  given mapNodeDoubleEncoder: CirceEncoder[Map[Node, Double]] =
-    CirceEncoder.encodeList[(Node, Double)].contramap(_.toList)
-
-  given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
-    CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
-
+  // Countermeasures
   given countermeasuresCirceEncoder: CirceEncoder[Countermeasures] =
     CirceEncoder.encodeString.contramap(_.toString)
 
@@ -104,36 +99,6 @@ object JsonCodecs:
       case "Isolation"    => Right(Countermeasures.Isolation)
       case "Patch"        => Right(Countermeasures.Patch)
       case other          => Left(s"Unknown Countermeasures: $other")
-    }
-
-  // --- 2. Map[Double, Countermeasures] (tramite lista di coppie) ---
-  given mapDoubleCountermeasuresEncoder: CirceEncoder[Map[Double, Countermeasures]] =
-    CirceEncoder.encodeList[(Double, Countermeasures)].contramap(_.toList)
-
-  given mapDoubleCountermeasuresDecoder: CirceDecoder[Map[Double, Countermeasures]] =
-    CirceDecoder.decodeList[(Double, Countermeasures)].map(_.toMap)
-
-  // --- 3. IsolationCriteria (Gestione della funzione Node => Boolean) ---
-  given isolationCriteriaCirceCodec: CirceCodec[IsolationCriteria] =
-    CirceCodec.from(
-      io.circe.Decoder.const(IsolationCriteria.all),
-      io.circe.Encoder.instance(_ => Json.fromString(""))
-    )
-
-  given nodeCirceCodec: CirceCodec[Node] = deriveCodec[Node]
-  given countermeasureConfigCirceCodec: CirceCodec[CountermeasureConfig] =
-    deriveCodec[CountermeasureConfig]
-  given scenarioCirceCodec: CirceCodec[Scenario] = deriveCodec[Scenario]
-
-  // Probability
-  given probabilityCirceEncoder: CirceEncoder[Probability] =
-    CirceEncoder.encodeDouble.contramap(_.value)
-
-  given probabilityCirceDecoder: CirceDecoder[Probability] =
-    CirceDecoder.decodeDouble.emap { d =>
-      Probability(d) match
-        case Right(p)  => Right(p)
-        case Left(err) => Left(err)
     }
 
   // ChannelType
@@ -148,10 +113,7 @@ object JsonCodecs:
       case other => Left(s"Unknown ChannelType: $other")
     }
 
-  // Channel
-  given channelCirceCodec: CirceCodec[Channel] = deriveCodec[Channel]
-
-  // Protocol Types & Traits
+  // TransportProtocolType
   given transportProtocolTypeEncoder: CirceEncoder[TransportProtocolType] =
     CirceEncoder.encodeString.contramap(_.toString)
 
@@ -162,6 +124,7 @@ object JsonCodecs:
       case other => Left(s"Unknown TransportProtocolType: $other")
     }
 
+  // ApplicationProtocolType
   given applicationProtocolTypeEncoder: CirceEncoder[ApplicationProtocolType] =
     CirceEncoder.encodeString.contramap(_.toString)
 
@@ -176,6 +139,9 @@ object JsonCodecs:
       case other    => Left(s"Unknown ApplicationProtocolType: $other")
     }
 
+  // --- PROTOCOLS, STUBS & COMPLEX COLLECTIONS ---------------------------
+
+  // TransportProtocol
   given transportProtocolEncoder: CirceEncoder[TransportProtocol] =
     CirceEncoder.encodeString.contramap {
       case TcpTransport => "TCP"
@@ -189,6 +155,7 @@ object JsonCodecs:
       case other => Left(s"Unknown TransportProtocol: $other")
     }
 
+  // ApplicationProtocol
   given applicationProtocolEncoder: CirceEncoder[ApplicationProtocol] =
     CirceEncoder.instance { ap =>
       Json.obj(
@@ -205,22 +172,47 @@ object JsonCodecs:
       yield TestApplicationProtocol(kind, underlying): ApplicationProtocol
     }
 
-  // Edge
+  // IsolationCriteria (Stub workaround for functions)
+  given isolationCriteriaCirceCodec: CirceCodec[IsolationCriteria] =
+    CirceCodec.from(
+      io.circe.Decoder.const(IsolationCriteria.all),
+      io.circe.Encoder.instance(_ => Json.fromString(""))
+    )
+
+  // Complex Maps (serialized as lists of tuples to support non-string keys)
+  given mapNodeDoubleEncoder: CirceEncoder[Map[Node, Double]] =
+    CirceEncoder.encodeList[(Node, Double)].contramap(_.toList)
+
+  given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
+    CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
+
+  given mapDoubleCountermeasuresEncoder: CirceEncoder[Map[Double, Countermeasures]] =
+    CirceEncoder.encodeList[(Double, Countermeasures)].contramap(_.toList)
+
+  given mapDoubleCountermeasuresDecoder: CirceDecoder[Map[Double, Countermeasures]] =
+    CirceDecoder.decodeList[(Double, Countermeasures)].map(_.toMap)
+
+  // --- INTERMEDIATE MODEL STRUCTURES ------------------------------------
+
+  given channelCirceCodec: CirceCodec[Channel] = deriveCodec[Channel]
+
+  given nodeCirceCodec: CirceCodec[Node] = deriveCodec[Node]
+
   given edgeCirceCodec: CirceCodec[Edge] = deriveCodec[Edge]
 
-  // Topology
-  given topologyCirceCodec: CirceCodec[Topology] = deriveCodec[Topology]
+  // --- AGGREGATE DOMAIN ENTITIES & ROOT (Scenario) ----------------------
 
-  given malwareCirceCodec: CirceCodec[Malware] = deriveCodec[Malware]
+  given countermeasureConfigCirceCodec: CirceCodec[CountermeasureConfig] =
+    deriveCodec[CountermeasureConfig]
 
-  given malwareTraitsCirceCodec: CirceCodec[MalwareTraits] = deriveCodec[MalwareTraits]
+  given topologyCirceCodec: CirceCodec[Topology] =
+    deriveCodec[Topology]
 
-  // Generic json encoders/decoders that use CirceEncoders/Decoders
-  given [A](using cEncoder: CirceEncoder[A]): Encoder[A, FileFormat.Json] with
-    override def encode(a: A): String = cEncoder(a).noSpaces
+  given malwareTraitsCirceCodec: CirceCodec[MalwareTraits] =
+    deriveCodec[MalwareTraits]
 
-  given [A](using cDecoder: CirceDecoder[A]): Decoder[A, FileFormat.Json] with
-    override def decode(raw: String): Either[PersistenceError, A] =
-      io.circe.parser.decode[A](raw) match
-        case Right(value) => Right(value)
-        case Left(error)  => Left(PersistenceError.Parsing(error.getMessage))
+  given malwareCirceCodec: CirceCodec[Malware] =
+    deriveCodec[Malware]
+
+  given scenarioCirceCodec: CirceCodec[Scenario] =
+    deriveCodec[Scenario]
