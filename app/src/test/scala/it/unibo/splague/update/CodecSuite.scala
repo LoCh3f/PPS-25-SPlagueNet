@@ -3,9 +3,16 @@ package it.unibo.splague.update
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
-import it.unibo.splague.model.Awareness
+import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
 import it.unibo.splague.model.countermeasures.Countermeasures
+import it.unibo.splague.model.malware.MalwareKind.Worm
+import it.unibo.splague.model.malware.{
+  Malware,
+  MalwareTraits,
+  PayloadSeverityLevel,
+  PropagationVector
+}
 import it.unibo.splague.model.node.NodeId.NodeId
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.persistence.{Decoder, Encoder, FileFormat, PersistenceError}
@@ -205,3 +212,67 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
     result.isRight shouldBe true
     result.toOption.get.get(0.5) shouldBe Some(Countermeasures.Patch)
+
+  test(
+    "Scenario should be successfully encoded to JSON and decoded back via Persistence framework"
+  ):
+    val id1 = NodeId.of("node-01").getOrElse(fail())
+    val id2 = NodeId.of("node-02").getOrElse(fail())
+
+    val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set())
+    val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set())
+
+    val topology = Topology(
+      nodes = Map("node-01" -> nodeValid),
+      edges = Set.empty
+    )
+
+    val validTraits = (for
+      infectivity <- Probability(0.6)
+      stealth <- Probability(0.4)
+      persistence <- Probability(0.5)
+      footprint <- Probability(0.3)
+    yield MalwareTraits(
+      infectivity,
+      stealth,
+      payloadSeverity = PayloadSeverityLevel.Low,
+      persistence,
+      footprint
+    )).toOption.get
+
+    val dummyVirus = Malware(
+      "dummy",
+      Worm,
+      validTraits,
+      vectors = Set(PropagationVector.NetworkExploit)
+    ).toOption.get
+
+    val scenarioCreationResult = Scenario(
+      name = "Full Simulation Test",
+      topology = topology,
+      virus = dummyVirus,
+      startingNode = nodeValid,
+      tick = 5,
+      seed = 123,
+      maxIterations = 50
+    )
+
+    scenarioCreationResult.isRight shouldBe true
+    val originalScenario = scenarioCreationResult.toOption.get
+
+    val encoder = summon[Encoder[Scenario, FileFormat.Json]]
+    val decoder = summon[Decoder[Scenario, FileFormat.Json]]
+
+    val jsonString = encoder.encode(originalScenario)
+    jsonString should not be empty
+
+    val decodedResult = decoder.decode(jsonString)
+    decodedResult.isRight shouldBe true
+
+    val decodedScenario = decodedResult.toOption.get
+
+    decodedScenario.name shouldBe originalScenario.name
+    decodedScenario.maxIterations shouldBe originalScenario.maxIterations
+    decodedScenario.seed shouldBe originalScenario.seed
+    decodedScenario.tick shouldBe originalScenario.tick
+    decodedScenario.startingNode.nodeId shouldBe originalScenario.startingNode.nodeId
