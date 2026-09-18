@@ -32,3 +32,10 @@ object Repository:
           )
           a <- dec.decode(raw)
         yield a
+
+  def txtWriter[A](using enc: Encoder[A, FileFormat.Txt.type]): Writer[A] =
+    new Writer[A]:
+      def save(a: A, path: Path): Either[PersistenceError, Path] =
+        Try(Files.writeString(path, enc.encode(a))).toEither.left
+          .map(e => PersistenceError.IO(e.getMessage))
+          .map(_ => path)

@@ -4,6 +4,7 @@ import it.unibo.splague.AppState
 import it.unibo.splague.AppState.defaultScenarioJsonRepository
 import it.unibo.splague.model.node.{NodeId, NodeState}
 import it.unibo.splague.model.Scenario
+import it.unibo.splague.persistence.FileFormat.{Json, Txt}
 import it.unibo.splague.persistence.{ExportPaths, FileFormat}
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.{SimulationEngine, SimulationState}
@@ -254,8 +255,11 @@ object Mvu:
       resolveScenarioToExport(state) match
         case Left(error) =>
           state.copy(errors = Vector(ValidationError("export", "Unable to export scenario")))
-        case Right(scenario) =>
-          val path = ExportPaths.pathFor(scenario.name)
+        case Right(scenarioToExport) =>
+          val path = format match {
+            case Json => ExportPaths.pathFor(scenarioToExport.name, FileFormat.Json)
+            case Txt  => ExportPaths.pathFor(scenarioToExport.name, FileFormat.Txt)
+          }
 
           val res: Either[String, Unit] = for
             _ <- Try(Files.createDirectories(ExportPaths.baseDirectory)).toEither.left.map(e =>
@@ -264,7 +268,12 @@ object Mvu:
 
             _ <- format match
               case FileFormat.Json =>
-                AppState.defaultScenarioJsonRepository.save(scenario, path).left.map(_.toString)
+                AppState.defaultScenarioJsonRepository
+                  .save(scenarioToExport, path)
+                  .left
+                  .map(_.toString)
+              case FileFormat.Txt =>
+                AppState.defaultScenarioTxtWriter.save(scenarioToExport, path).left.map(_.toString)
               case other =>
                 Left(s"File format not supported yet: $other")
           yield ()
@@ -282,10 +291,10 @@ object Mvu:
             case Left(error) =>
               state.copy(errors = Vector(ValidationError("import", error.toString)))
 
-            case Right(scenario) =>
+            case Right(scenarioToImport) =>
               state.copy(
-                model = state.model.copy(currentScenario = Some(scenario)),
-                scenarioForm = Some(ScenarioForm.fromScenario(scenario))
+                model = state.model.copy(currentScenario = Some(scenarioToImport)),
+                scenarioForm = Some(ScenarioForm.fromScenario(scenarioToImport))
               )
 
         case _ =>
