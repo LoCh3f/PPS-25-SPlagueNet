@@ -2,7 +2,7 @@ package it.unibo.splague.update.simulation.report
 
 import it.unibo.splague.model.Scenario
 import it.unibo.splague.model.countermeasures.Countermeasures
-import it.unibo.splague.model.report.TickSummary
+import it.unibo.splague.model.report.{Milestones, TickSummary}
 import it.unibo.splague.update.simulation.SimulationEngine
 import it.unibo.splague.update.simulation.event.SimulationEvents.EventSelector
 
@@ -17,7 +17,8 @@ final case class ScenarioReport(
     seed: Int,
     malwareName: String,
     timeline: Vector[TickSummary],
-    activationTicks: Map[Countermeasures, Int]
+    activationTicks: Map[Countermeasures, Int],
+    milestones: Milestones
 ):
   def finalTick: TickSummary = timeline.last
 
@@ -36,4 +37,11 @@ object ScenarioReport:
             accActivation ++ newlyActive.map(_ -> scenario.tick)
           )
         }
-    ScenarioReport(initial.name, initial.seed, initial.virus.name, timeline, activationTicks)
+    ScenarioReport(
+      initial.name,
+      initial.seed,
+      initial.virus.name,
+      timeline,
+      activationTicks,
+      Milestones.from(timeline)
+    )

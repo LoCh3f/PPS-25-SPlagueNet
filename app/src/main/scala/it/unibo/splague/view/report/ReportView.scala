@@ -39,6 +39,7 @@ object ReportView:
     val panel = new JPanel(new GridLayout(1, 2, 12, 0))
     panel.add(finalStatePanel(report))
     panel.add(activationPanel(report))
+    panel.add(milestonesPanel(report))
     panel
 
   private def finalStatePanel(report: ScenarioReport): JPanel =
@@ -75,6 +76,25 @@ object ReportView:
         panel.add(new JLabel(countermeasure.toString))
         panel.add(new JLabel(s"tick $tick"))
       }
+
+    panel
+
+  private def milestonesPanel(report: ScenarioReport): JPanel =
+    val panel = new JPanel(new GridLayout(0, 2, 4, 4))
+    panel.setBorder(BorderFactory.createTitledBorder("Key moments"))
+
+    val milestones = report.milestones
+
+    panel.add(new JLabel("First spread"))
+    panel.add(new JLabel(milestones.firstSpreadTick.map(t => s"tick $t").getOrElse("never")))
+
+    panel.add(new JLabel("Peak infected"))
+    panel.add(
+      new JLabel(s"${milestones.peakInfectedCount} at tick ${milestones.peakInfectedTick}")
+    )
+
+    panel.add(new JLabel("First destruction"))
+    panel.add(new JLabel(milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")))
 
     panel
 
