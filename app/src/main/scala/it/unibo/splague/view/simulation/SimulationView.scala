@@ -4,7 +4,7 @@ import it.unibo.splague.AppState
 import it.unibo.splague.update.Msg
 import it.unibo.splague.view.simulation.dialog.ScenarioConfigDialog
 import it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel
-import it.unibo.splague.view.form.{ScenarioForm, TopologyForm}
+import it.unibo.splague.view.form.ScenarioForm
 
 import java.awt.{BorderLayout, Dimension, FlowLayout}
 import javax.swing.{
@@ -27,6 +27,7 @@ object SimulationView:
       workspace: ScenarioWorkspacePanel,
       configuration: ScenarioConfigDialog,
       tickLabel: JLabel,
+      reportButton: JButton,
       root: Component
   )
 
@@ -38,13 +39,15 @@ object SimulationView:
   ): Component =
     state.scenarioForm match
       case Some(form) =>
+        val reportEnabled = state.simulation.exists(!_.running)
+
         currentSession match
           case Some(session) =>
-            session.update(form)
+            session.update(form, reportEnabled)
             session.root
 
           case None =>
-            val session = createSession(form, dispatch)
+            val session = createSession(form, reportEnabled, dispatch)
             currentSession = Some(session)
             session.root
 
@@ -56,6 +59,7 @@ object SimulationView:
 
   private def createSession(
       form: ScenarioForm,
+      reportEnabled: Boolean,
       dispatch: Msg => Unit
   ): Session =
     val workspace =
@@ -73,8 +77,14 @@ object SimulationView:
     val tickLabel =
       new JLabel(s"Tick: ${form.tick}")
 
+    val reportButton =
+      new JButton("Report")
+
+    reportButton.addActionListener(_ => dispatch(Msg.GoToReport))
+    reportButton.setEnabled(reportEnabled)
+
     val toolbar =
-      createToolbar(workspace, tickLabel, dispatch)
+      createToolbar(workspace, tickLabel, reportButton, dispatch)
 
     val splitPane =
       new JSplitPane(
@@ -98,12 +108,14 @@ object SimulationView:
       workspace = workspace,
       configuration = configuration,
       tickLabel = tickLabel,
+      reportButton = reportButton,
       root = Component.wrap(rootPanel)
     )
 
   private def createToolbar(
       workspace: ScenarioWorkspacePanel,
       tickLabel: JLabel,
+      reportButton: JButton,
       dispatch: Msg => Unit
   ): JToolBar =
     val toolbar = new JToolBar
@@ -139,6 +151,7 @@ object SimulationView:
     left.add(save)
     left.add(run)
     left.add(step)
+    left.add(reportButton)
     left.add(tickLabel)
     right.add(back)
     right.add(ExportButton(dispatch))
@@ -163,7 +176,8 @@ object SimulationView:
     )
 
   extension (session: Session)
-    private def update(form: ScenarioForm): Unit =
+    private def update(form: ScenarioForm, reportEnabled: Boolean): Unit =
       session.workspace.setTopology(form.topology)
       session.configuration.updateForm(form)
       session.tickLabel.setText(s"Tick: ${form.tick}")
+      session.reportButton.setEnabled(reportEnabled)

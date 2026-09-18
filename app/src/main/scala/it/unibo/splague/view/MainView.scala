@@ -5,6 +5,7 @@ import it.unibo.splague.update.Mvu
 import it.unibo.splague.view.Screen
 import it.unibo.splague.update.Msg
 import it.unibo.splague.view.menu.MenuView
+import it.unibo.splague.view.report.ReportView
 import it.unibo.splague.view.simulation.SimulationView
 
 import java.awt.Dimension
@@ -41,6 +42,12 @@ final class MainView extends MainFrame with Renderer:
 
       case Screen.Simulation =>
         SimulationView.render(
+          state = state,
+          dispatch = dispatch
+        )
+
+      case Screen.Report =>
+        ReportView.render(
           state = state,
           dispatch = dispatch
         )

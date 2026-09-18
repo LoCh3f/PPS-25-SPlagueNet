@@ -3,6 +3,7 @@ package it.unibo.splague
 import it.unibo.splague.model.{ModelState, Scenario}
 import it.unibo.splague.persistence.Repository
 import it.unibo.splague.update.simulation.SimulationState
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.view.form.ScenarioForm
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
@@ -14,6 +15,7 @@ final case class AppState(
     screen: Screen = Screen.Menu,
     scenarioForm: Option[ScenarioForm] = None,
     simulation: Option[SimulationState] = None,
+    report: Option[ScenarioReport] = None,
     errors: Vector[ValidationError] = Vector.empty
 )
 object AppState:

@@ -18,6 +18,7 @@ import it.unibo.splague.update.simulation.event.{
   SimulationEvents,
   TickBasedCyclicSelector
 }
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.utils.SimpleScenario
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.view.form.{AwarenessForm, ScenarioForm}
@@ -55,6 +56,25 @@ object Mvu:
               state.copy(
                 errors = Vector(ValidationError("scenario", error))
               )
+
+    case Msg.GoToReport =>
+      state.simulation match
+        case Some(simulation) if !simulation.running =>
+          state.copy(
+            screen = Screen.Report,
+            report = Some(ScenarioReport.from(simulation.initial, simulation.selector)),
+            errors = Vector.empty
+          )
+
+        case Some(_) =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "Simulation is still running"))
+          )
+
+        case None =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "No simulation to report on"))
+          )
 
     case Msg.UpdateScenarioName(form) =>
       updateForm(state) { s =>
@@ -185,14 +205,17 @@ object Mvu:
               state.copy(errors = Vector(ValidationError("scenario", error)))
 
             case Right(scenario) =>
+              val seeded = seedOutbreak(scenario)
               val states =
-                new SimulationEngine(simulationSelector).run(seedOutbreak(scenario))
+                new SimulationEngine(simulationSelector).run(seeded)
 
               states match
                 case current #:: upcoming =>
                   state.copy(
                     simulation = Some(
                       SimulationState(
+                        initial = seeded,
+                        selector = simulationSelector,
                         states = upcoming,
                         current = current,
                         running = upcoming.nonEmpty
