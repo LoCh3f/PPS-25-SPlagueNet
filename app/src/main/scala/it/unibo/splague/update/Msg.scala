@@ -1,19 +1,23 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.{MalwareKind, PayloadSeverityLevel, PropagationVector}
+import it.unibo.splague.persistence.FileFormat
 import it.unibo.splague.view.form.{
-  CountermeasureForm,
   AwarenessForm,
+  CountermeasureForm,
   EdgeForm,
   MalwareForm,
   NodeForm,
   ScenarioForm
 }
 
+import java.nio.file.Path
+
 enum Msg:
 
   case GoToMenu
   case GoToSimulation
+  case GoToReport
   case SelectScenario(name: String)
 
   case UpdateScenarioName(scenario: ScenarioForm)
@@ -35,3 +39,7 @@ enum Msg:
   case CancelScenario
   case StartSimulation
   case SimulationStep
+
+  // export/import scenario
+  case ExportScenario(format: FileFormat)
+  case ImportScenario(format: FileFormat, path: Path)

@@ -15,6 +15,7 @@ import it.unibo.splague.model.node.NodeId
 import it.unibo.splague.model.node.{Node, Topology}
 import it.unibo.splague.model.Scenario
 
+// $COVERAGE-OFF$
 object ExampleScenario:
   def complexScenario(): Either[String, Scenario] =
     val ids: Vector[it.unibo.splague.model.node.NodeId.NodeId] = Vector(
@@ -365,3 +366,4 @@ object ExampleScenario:
         maxIterations = 60
       )
     yield scenario
+// $COVERAGE-ON$
