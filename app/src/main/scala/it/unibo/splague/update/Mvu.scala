@@ -236,7 +236,7 @@ object Mvu:
 
           val res: Either[String, Unit] = for
             _ <- Try(Files.createDirectories(ExportPaths.baseDirectory)).toEither.left.map(e =>
-              s"Impossible to create dir: ${e.getMessage}"
+              s"Unable to create dir: ${e.getMessage}"
             )
 
             _ <- format match
@@ -251,6 +251,24 @@ object Mvu:
               state.copy(errors = Vector(ValidationError("export", err)))
             case Right(_) =>
               state
+
+    case Msg.ImportScenario(format, path) =>
+      format match
+        case FileFormat.Json =>
+          AppState.defaultScenarioJsonRepository.load(path) match
+            case Left(error) =>
+              state.copy(errors = Vector(ValidationError("import", error.toString)))
+
+            case Right(scenario) =>
+              state.copy(
+                model = state.model.copy(currentScenario = Some(scenario)),
+                scenarioForm = Some(ScenarioForm.fromScenario(scenario))
+              )
+
+        case _ =>
+          state.copy(errors =
+            Vector(ValidationError("import", "File format not yet supported for import"))
+          )
 
   /** Marks the scenario's starting node as the outbreak's patient zero. A scenario's `startingNode`
     * is only a topology reference; nothing else ever infects it, so without this every node stays

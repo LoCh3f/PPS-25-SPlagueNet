@@ -11,6 +11,8 @@ import it.unibo.splague.view.form.{
   ScenarioForm
 }
 
+import java.nio.file.Path
+
 enum Msg:
 
   case GoToMenu
@@ -39,4 +41,4 @@ enum Msg:
 
   // export/import scenario
   case ExportScenario(format: FileFormat)
-  case ImportScenario(format: FileFormat)
+  case ImportScenario(format: FileFormat, path: Path)
