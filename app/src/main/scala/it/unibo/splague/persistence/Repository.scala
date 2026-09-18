@@ -15,8 +15,8 @@ trait Repository[A] extends Writer[A] with Reader[A]
 
 object Repository:
   def json[A](using
-      enc: Encoder[A, FileFormat.Json],
-      dec: Decoder[A, FileFormat.Json]
+      enc: Encoder[A, FileFormat.Json.type],
+      dec: Decoder[A, FileFormat.Json.type]
   ): Repository[A] =
     new Repository[A]:
 

@@ -29,7 +29,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
   test("A JSON encoder should correctly encode a NodeState into a JSON object"):
     val nodeState = NodeState.Healthy
 
-    val encoder = summon[Encoder[NodeState, FileFormat.Json]]
+    val encoder = summon[Encoder[NodeState, FileFormat.Json.type]]
 
     val rawJson = encoder.encode(nodeState)
     rawJson shouldBe "\"Healthy\""
@@ -37,7 +37,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
   test("A JSON decoder should correctly decode a JSON NodeState object into a NodeState"):
     val json = "\"Healthy\""
 
-    val decoder = summon[Decoder[NodeState, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeState, FileFormat.Json.type]]
 
     val state = decoder.decode(json)
     state shouldBe Right(NodeState.Healthy)
@@ -47,7 +47,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
   ):
     val json = "\"Unknown\""
 
-    val decoder = summon[Decoder[NodeState, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeState, FileFormat.Json.type]]
 
     val state = decoder.decode(json)
 
@@ -58,13 +58,13 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("NodeType should be correctly encoded to a clean string"):
     val nodeType: NodeType = NodeType.Server
-    val encoder = summon[Encoder[NodeType, FileFormat.Json]]
+    val encoder = summon[Encoder[NodeType, FileFormat.Json.type]]
 
     encoder.encode(nodeType) shouldBe "\"Server\""
 
   test("NodeType should be correctly decoded from a clean string and keep its methods"):
     val json = "\"Server\""
-    val decoder = summon[Decoder[NodeType, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeType, FileFormat.Json.type]]
 
     val result = decoder.decode(json)
 
@@ -77,7 +77,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
   ):
     val json = "\"Unknown\""
 
-    val decoder = summon[Decoder[NodeType, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeType, FileFormat.Json.type]]
 
     val state = decoder.decode(json)
 
@@ -88,13 +88,13 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("Awareness should be correctly encoded to a clean string"):
     val awareness: Awareness = Awareness.clamped(1.0)
-    val encoder = summon[Encoder[Awareness, FileFormat.Json]]
+    val encoder = summon[Encoder[Awareness, FileFormat.Json.type]]
 
     encoder.encode(awareness) shouldBe "1.0"
 
   test("Awareness should be correctly decoded from a clean string"):
     val json = "1.0"
-    val decoder = summon[Decoder[Awareness, FileFormat.Json]]
+    val decoder = summon[Decoder[Awareness, FileFormat.Json.type]]
 
     val result = decoder.decode(json)
 
@@ -106,7 +106,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
   ):
     val json = "\"Unknown\""
 
-    val decoder = summon[Decoder[Awareness, FileFormat.Json]]
+    val decoder = summon[Decoder[Awareness, FileFormat.Json.type]]
 
     val state = decoder.decode(json)
 
@@ -117,13 +117,13 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("NodeId should be correctly encoded to a clean JSON string"):
     val nodeId = NodeId.of("node-1").toOption.get
-    val encoder = summon[Encoder[NodeId, FileFormat.Json]]
+    val encoder = summon[Encoder[NodeId, FileFormat.Json.type]]
 
     encoder.encode(nodeId) shouldBe "\"node-1\""
 
   test("NodeId should be correctly decoded from a clean JSON string"):
     val json = "\"node-1\""
-    val decoder = summon[Decoder[NodeId, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeId, FileFormat.Json.type]]
 
     val result = decoder.decode(json)
 
@@ -134,7 +134,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     "A JSON decoder should return a Persistence.Parsing error when an invalid NodeId (e.g., containing whitespace) is encountered"
   ):
     val json = "\"node 1\""
-    val decoder = summon[Decoder[NodeId, FileFormat.Json]]
+    val decoder = summon[Decoder[NodeId, FileFormat.Json.type]]
 
     val state = decoder.decode(json)
 
@@ -154,8 +154,8 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
     val sampleMap: Map[Node, Double] = Map(node -> 0.75)
 
-    val encoder = summon[Encoder[Map[Node, Double], FileFormat.Json]]
-    val decoder = summon[Decoder[Map[Node, Double], FileFormat.Json]]
+    val encoder = summon[Encoder[Map[Node, Double], FileFormat.Json.type]]
+    val decoder = summon[Decoder[Map[Node, Double], FileFormat.Json.type]]
 
     // Encoding test
     val jsonString = encoder.encode(sampleMap)
@@ -186,8 +186,8 @@ final class CodecSuite extends AnyFunSuite with Matchers:
       edges = Set(edge)
     )
 
-    val encoder = summon[Encoder[Topology, FileFormat.Json]]
-    val decoder = summon[Decoder[Topology, FileFormat.Json]]
+    val encoder = summon[Encoder[Topology, FileFormat.Json.type]]
+    val decoder = summon[Decoder[Topology, FileFormat.Json.type]]
 
     val json = encoder.encode(topology)
     val result = decoder.decode(json)
@@ -197,8 +197,8 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("Countermeasures enum should be correctly encoded and decoded"):
     val cm = Countermeasures.Firewall
-    val encoder = summon[Encoder[Countermeasures, FileFormat.Json]]
-    val decoder = summon[Decoder[Countermeasures, FileFormat.Json]]
+    val encoder = summon[Encoder[Countermeasures, FileFormat.Json.type]]
+    val decoder = summon[Decoder[Countermeasures, FileFormat.Json.type]]
 
     val json = encoder.encode(cm)
     json shouldBe "\"Firewall\""
@@ -207,8 +207,8 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("Map[Double, Countermeasures] should be correctly encoded and decoded"):
     val map: Map[Double, Countermeasures] = Map(0.5 -> Countermeasures.Patch)
-    val encoder = summon[Encoder[Map[Double, Countermeasures], FileFormat.Json]]
-    val decoder = summon[Decoder[Map[Double, Countermeasures], FileFormat.Json]]
+    val encoder = summon[Encoder[Map[Double, Countermeasures], FileFormat.Json.type]]
+    val decoder = summon[Decoder[Map[Double, Countermeasures], FileFormat.Json.type]]
 
     val json = encoder.encode(map)
     val result = decoder.decode(json)
@@ -263,8 +263,8 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     scenarioCreationResult.isRight shouldBe true
     val originalScenario = scenarioCreationResult.toOption.get
 
-    val encoder = summon[Encoder[Scenario, FileFormat.Json]]
-    val decoder = summon[Decoder[Scenario, FileFormat.Json]]
+    val encoder = summon[Encoder[Scenario, FileFormat.Json.type]]
+    val decoder = summon[Decoder[Scenario, FileFormat.Json.type]]
 
     val jsonString = encoder.encode(originalScenario)
     jsonString should not be empty

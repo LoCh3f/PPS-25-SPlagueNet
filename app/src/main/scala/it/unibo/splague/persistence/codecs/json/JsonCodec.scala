@@ -1,9 +1,8 @@
 package it.unibo.splague.persistence.codecs.json
 
-import io.circe.{Json, Codec as CirceCodec, Decoder as CirceDecoder, Encoder as CirceEncoder}
+import io.circe.{Decoder as CirceDecoder, Encoder as CirceEncoder}
 import it.unibo.splague.persistence.*
 import it.unibo.splague.persistence.codecs.{Decoder, Encoder}
-import it.unibo.splague.persistence.FileFormat
 
 /** Provides generic JSON-based implementations for the framework's persistence `Encoder` and
   * `Decoder` interfaces, delegating the actual serialization and parsing work to underlying Circe
@@ -24,10 +23,10 @@ object JsonCodec {
     * @return
     *   an instance of [[Encoder]] specialized for [[FileFormat.Json]]
     */
-  given [A](using cEncoder: CirceEncoder[A]): Encoder[A, FileFormat.Json] with
+  given [A](using cEncoder: CirceEncoder[A]): Encoder[A, FileFormat.Json.type] with
     override def encode(a: A): String = cEncoder(a).noSpaces
 
-  given [A](using cDecoder: CirceDecoder[A]): Decoder[A, FileFormat.Json] with
+  given [A](using cDecoder: CirceDecoder[A]): Decoder[A, FileFormat.Json.type] with
     override def decode(raw: String): Either[PersistenceError, A] =
       io.circe.parser.decode[A](raw) match
         case Right(value) => Right(value)
