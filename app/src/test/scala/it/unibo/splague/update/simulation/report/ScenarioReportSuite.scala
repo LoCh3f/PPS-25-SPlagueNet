@@ -5,6 +5,7 @@ import it.unibo.splague.model.connection.Connection.ChannelType.LAN
 import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.malware.*
 import it.unibo.splague.model.node.NodeType.Workstation
+import it.unibo.splague.model.report.Milestones
 import it.unibo.splague.model.{Probability, Scenario}
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.report.ScenarioReport
@@ -87,3 +88,9 @@ final class ScenarioReportSuite extends AnyFunSuite with Matchers with EitherVal
     val initial = initialScenario(maxIterations = 5)
 
     ScenarioReport.from(initial, noOpSelector) shouldBe ScenarioReport.from(initial, noOpSelector)
+
+  test("ScenarioReport.from computes milestones from its own timeline"):
+    val initial = initialScenario(maxIterations = 5)
+    val report = ScenarioReport.from(initial, noOpSelector)
+
+    report.milestones shouldBe Milestones.from(report.timeline)
