@@ -1,8 +1,10 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.AppState
+import it.unibo.splague.AppState.defaultScenarioJsonRepository
 import it.unibo.splague.model.node.{NodeId, NodeState}
 import it.unibo.splague.model.Scenario
+import it.unibo.splague.persistence.ExportPaths
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.{SimulationEngine, SimulationState}
 import it.unibo.splague.update.simulation.event.{
@@ -19,6 +21,9 @@ import it.unibo.splague.update.simulation.event.{
 import it.unibo.splague.utils.SimpleScenario
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.view.form.{AwarenessForm, ScenarioForm}
+
+import java.nio.file.Files
+import scala.util.Try
 
 // $COVERAGE-OFF$
 object Mvu:
@@ -222,6 +227,22 @@ object Mvu:
 
         case _ => state
 
+    case Msg.ExportScenario =>
+      resolveScenarioToExport(state) match
+        case Left(error) =>
+          state.copy(errors = Vector(ValidationError("export", "Unable to export scenario")))
+        case Right(scenario) =>
+          val path = ExportPaths.pathFor(scenario.name)
+
+          val res =
+            Try(Files.createDirectory(ExportPaths.baseDirectory)).toEither.left
+              .map(e => s"Impossible to create dir: ${e.getMessage}")
+              .flatMap(_ => defaultScenarioJsonRepository.save(scenario, path).left.map(_.toString))
+
+          res match
+            case Left(error) => state.copy(errors = Vector(ValidationError("export", error)))
+            case _           => state
+
   /** Marks the scenario's starting node as the outbreak's patient zero. A scenario's `startingNode`
     * is only a topology reference; nothing else ever infects it, so without this every node stays
     * `Healthy` forever and the simulation runs to completion doing nothing observable.
@@ -329,4 +350,16 @@ object Mvu:
               scenarioForm = Some(ScenarioForm.fromScenario(updatedScenario)),
               errors = Vector.empty
             )
+
+  private def resolveScenarioToExport(state: AppState): Either[String, Scenario] =
+    state.simulation.map(_.current) match
+      case Some(scenario) => Right(scenario)
+      case None =>
+        state.model.currentScenario match
+          case Some(scenario) => Right(scenario)
+          case None =>
+            state.scenarioForm match
+              case Some(scenarioForm: ScenarioForm) => ScenarioForm.toDomain(scenarioForm)
+              case None                             => Left("No scenario to export available!")
+
 // $COVERAGE-ON$
