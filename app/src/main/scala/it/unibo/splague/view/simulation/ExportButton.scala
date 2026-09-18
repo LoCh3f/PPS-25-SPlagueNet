@@ -14,14 +14,10 @@ object ExportButton:
     jsonItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Json)))
 
     val txtItem = new JMenuItem("txt")
-    jsonItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Txt)))
-
-    val ymlItem = new JMenuItem("html")
-    jsonItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Html)))
+    txtItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Txt)))
 
     exportMenu.add(jsonItem)
     exportMenu.add(txtItem)
-    exportMenu.add(ymlItem)
 
     val exportButton = new JButton("Export Scenario ▾")
     exportButton.addActionListener(_ => exportMenu.show(exportButton, 0, exportButton.getHeight()))

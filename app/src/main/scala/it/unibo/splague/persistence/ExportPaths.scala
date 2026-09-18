@@ -1,16 +1,18 @@
 package it.unibo.splague.persistence
 
+import it.unibo.splague.persistence.FileFormat.{Json, Txt}
+
 import java.nio.file.Path
 
-object ExportPaths {
+object ExportPaths:
 
   def baseDirectory: Path =
     Path.of(System.getProperty("user.home"), "splagnet")
 
-  def sanitizeFileName(name: String): String =
+  private def sanitizeFileName(name: String): String =
     name.trim.replaceAll("""[\\/:*?"<>|]""", "_")
 
-  def pathFor(scenarioName: String): Path =
-    baseDirectory.resolve(sanitizeFileName(scenarioName) + ".json")
-
-}
+  def pathFor(scenarioName: String, fileFormat: FileFormat): Path = fileFormat match
+    case Json  => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".json")
+    case Txt   => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".txt")
+    case other => throw IllegalArgumentException(s"Unsupported file format: $other")
