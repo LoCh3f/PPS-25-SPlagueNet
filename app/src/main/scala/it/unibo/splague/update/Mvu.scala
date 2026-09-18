@@ -185,14 +185,17 @@ object Mvu:
               state.copy(errors = Vector(ValidationError("scenario", error)))
 
             case Right(scenario) =>
+              val seeded = seedOutbreak(scenario)
               val states =
-                new SimulationEngine(simulationSelector).run(seedOutbreak(scenario))
+                new SimulationEngine(simulationSelector).run(seeded)
 
               states match
                 case current #:: upcoming =>
                   state.copy(
                     simulation = Some(
                       SimulationState(
+                        initial = seeded,
+                        selector = simulationSelector,
                         states = upcoming,
                         current = current,
                         running = upcoming.nonEmpty
