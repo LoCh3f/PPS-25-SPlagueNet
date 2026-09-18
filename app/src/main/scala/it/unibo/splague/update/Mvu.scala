@@ -379,14 +379,16 @@ object Mvu:
             )
 
   private def resolveScenarioToExport(state: AppState): Either[String, Scenario] =
-    state.simulation.map(_.current) match
-      case Some(scenario) => Right(scenario)
+    state.simulation match
+      case Some(sim) =>
+        Right(sim.current)
+
       case None =>
         state.model.currentScenario match
           case Some(scenario) => Right(scenario)
           case None =>
             state.scenarioForm match
-              case Some(scenarioForm: ScenarioForm) => ScenarioForm.toDomain(scenarioForm)
-              case None                             => Left("No scenario to export available!")
+              case Some(scenarioForm) => ScenarioForm.toDomain(scenarioForm)
+              case None               => Left("No scenario to export available!")
 
 // $COVERAGE-ON$
