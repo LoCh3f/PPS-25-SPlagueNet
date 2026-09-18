@@ -39,3 +39,4 @@ enum Msg:
 
   // export/import scenario
   case ExportScenario(format: FileFormat)
+  case ImportScenario(format: FileFormat)

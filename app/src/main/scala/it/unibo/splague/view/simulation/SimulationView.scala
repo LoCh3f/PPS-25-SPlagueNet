@@ -19,7 +19,7 @@ import javax.swing.{
   SwingConstants
 }
 import scala.swing.Component
-import it.unibo.splague.view.simulation.ExportButton
+import it.unibo.splague.view.simulation.{ExportButton, ImportButton}
 
 object SimulationView:
 
@@ -142,6 +142,7 @@ object SimulationView:
     left.add(tickLabel)
     right.add(back)
     right.add(ExportButton(dispatch))
+    right.add(ImportButton(dispatch))
 
     toolbar.setLayout(new BorderLayout())
     toolbar.add(left, BorderLayout.WEST)
