@@ -7,8 +7,19 @@ import it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel
 import it.unibo.splague.view.form.{ScenarioForm, TopologyForm}
 
 import java.awt.{BorderLayout, Dimension, FlowLayout}
-import javax.swing.{BorderFactory, JButton, JLabel, JPanel, JSplitPane, JToolBar, SwingConstants}
+import javax.swing.{
+  BorderFactory,
+  JButton,
+  JLabel,
+  JMenuItem,
+  JPanel,
+  JPopupMenu,
+  JSplitPane,
+  JToolBar,
+  SwingConstants
+}
 import scala.swing.Component
+import it.unibo.splague.view.simulation.ExportButton
 
 object SimulationView:
 
@@ -130,6 +141,7 @@ object SimulationView:
     left.add(step)
     left.add(tickLabel)
     right.add(back)
+    right.add(ExportButton(dispatch))
 
     toolbar.setLayout(new BorderLayout())
     toolbar.add(left, BorderLayout.WEST)
