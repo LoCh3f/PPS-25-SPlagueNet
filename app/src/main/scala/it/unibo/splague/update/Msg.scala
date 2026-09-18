@@ -35,3 +35,6 @@ enum Msg:
   case CancelScenario
   case StartSimulation
   case SimulationStep
+
+  // export/import scenario
+  case ExportScenario
