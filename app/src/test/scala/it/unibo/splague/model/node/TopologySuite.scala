@@ -27,6 +27,7 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
   private val nodeId2 = NodeId.of("node-02").getOrElse(fail("Failed to create NodeId"))
   private val nodeId3 = NodeId.of("node-03").getOrElse(fail("Failed to create NodeId"))
   private val nodeId4 = NodeId.of("node-04").getOrElse(fail("Failed to create NodeId"))
+  private val nodeId5 = NodeId.of("node-05").getOrElse(fail("Failed to create NodeId"))
 
   private val node1 = Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set())
   private val node2 = Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1, Set())
@@ -40,6 +41,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
     Node(nodeId3, NodeType.Workstation, 0.0, 0.0, NodeState.Quarantined, 0.0, Set())
   private val destroyedNode =
     Node(nodeId4, NodeType.Workstation, 0.0, 0.0, NodeState.Destroyed, 0.0, Set())
+  private val immuneNode =
+    Node(nodeId5, NodeType.Workstation, 0.0, 0.0, NodeState.Immune, 0.0, Set())
 
   test("Topology should correctly store nodes and edges"):
     val nodesMap = Map("node-01" -> node1, "node-02" -> node2, "node-03" -> node3)
@@ -182,7 +185,8 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
       "n1" -> healthyNode,
       "n2" -> infectedNode,
       "n3" -> quarantinedNode,
-      "n4" -> destroyedNode
+      "n4" -> destroyedNode,
+      "n5" -> immuneNode
     ),
     edges = Set()
   )
@@ -202,3 +206,7 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
   test("destroyedNodes returns only nodes in Destroyed state"):
     val result = topology.destroyedNodes()
     result should contain only destroyedNode
+
+  test("immuneNodes returns only nodes in Immune state"):
+    val result = topology.immuneNodes()
+    result should contain only immuneNode

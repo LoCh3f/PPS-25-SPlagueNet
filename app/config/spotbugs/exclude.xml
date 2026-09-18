@@ -30,6 +30,10 @@
         <Class name="it.unibo.splague.view.form.TopologyForm" />
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     </Match>
+    <Match>
+        <Class name="it.unibo.splague.update.simulation.report.ScenarioReport" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
 
     <!-- Il package view.simulation è composto da componenti Swing (dialog/pannelli),
          che sono per natura mutabili e con stato condiviso: memorizzare o restituire

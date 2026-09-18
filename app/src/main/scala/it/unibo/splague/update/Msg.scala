@@ -14,6 +14,7 @@ enum Msg:
 
   case GoToMenu
   case GoToSimulation
+  case GoToReport
   case SelectScenario(name: String)
 
   case UpdateScenarioName(scenario: ScenarioForm)
