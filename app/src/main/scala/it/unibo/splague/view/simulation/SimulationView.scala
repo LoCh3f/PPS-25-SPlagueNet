@@ -123,11 +123,15 @@ object SimulationView:
       dispatch(Msg.GoToMenu)
     )
 
+    val report = new JButton("Report")
+    report.addActionListener(_ => dispatch(Msg.GoToReport))
+
     left.add(zoomIn)
     left.add(zoomOut)
     left.add(save)
     left.add(run)
     left.add(step)
+    left.add(report)
     left.add(tickLabel)
     right.add(back)
 
