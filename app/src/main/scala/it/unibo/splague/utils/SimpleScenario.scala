@@ -1,8 +1,9 @@
 package it.unibo.splague.utils
 
+import it.unibo.splague.dsl.*
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.Scenario
-import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
+import it.unibo.splague.model.connection.Connection.ChannelType
 import it.unibo.splague.model.malware.{
   Malware,
   MalwareKind,
@@ -10,9 +11,8 @@ import it.unibo.splague.model.malware.{
   PayloadSeverityLevel,
   PropagationVector
 }
-import it.unibo.splague.model.node.NodeState.Healthy
 import it.unibo.splague.model.node.NodeType.Workstation
-import it.unibo.splague.model.node.{Node, NodeId, Topology}
+import it.unibo.splague.model.node.Topology
 
 /** A minimal, easy-to-follow scenario: four workstations chained in a straight line (`n1 -> n2 ->
   * n3 -> n4`), with `n1` as the outbreak's starting node. Meant as a small, predictable alternative
@@ -20,44 +20,24 @@ import it.unibo.splague.model.node.{Node, NodeId, Topology}
   *
   * Nodes have no defense/patch and the malware has maximum infectivity, so the outbreak reliably
   * marches down the chain one hop at a time instead of depending on a coin flip per node. Nodes
-  * also carry the same `NetworkExploit` vector as the malware: infection only ever propagates to a
-  * node that shares at least one propagation vector with the malware, so without this the chain
-  * would never actually spread past the seeded starting node.
+  * also carry the same `NetworkExploit` vector as the malware (the DSL's default), so infection can
+  * actually propagate down the chain: without a shared vector it would never spread past the seeded
+  * starting node.
   */
 object SimpleScenario:
   def linearScenario(): Either[String, Scenario] =
-    val ids: Vector[NodeId.NodeId] =
-      Vector("n1", "n2", "n3", "n4").map(NodeId.of(_).toOption.get)
-
-    val nodes: Map[String, Node] =
-      ids.map { id =>
-        id.value -> Node(
-          id,
-          Workstation,
-          patchLevel = 0.0,
-          defenseLevel = 0.0,
-          state = Healthy,
-          workload = 0.0,
-          vectors = Set(PropagationVector.NetworkExploit)
-        )
-      }.toMap
-
-    val edges: Set[Edge] =
-      ids
-        .sliding(2)
-        .collect { case Vector(from, to) =>
-          Edge(
-            nodes(from.value),
-            nodes(to.value),
-            Channel.default(ChannelType.LAN),
-            protocol = None
-          )
-        }
-        .toSet
-
-    val topology = Topology(nodes, edges)
+    val topologyResult: ValidationResult[Topology] =
+      topology:
+        node("n1", Workstation)
+        node("n2", Workstation)
+        node("n3", Workstation)
+        node("n4", Workstation)
+        "n1" <-> "n2" via ChannelType.LAN
+        "n2" <-> "n3" via ChannelType.LAN
+        "n3" <-> "n4" via ChannelType.LAN
 
     for
+      topo <- topologyResult.left.map(_.mkString("; "))
       malware <- Malware(
         name = "SimpleWorm",
         kind = MalwareKind.Worm,
@@ -72,9 +52,9 @@ object SimpleScenario:
       )
       scenario <- Scenario(
         name = "Linear chain",
-        topology = topology,
+        topology = topo,
         virus = malware,
-        startingNode = nodes(ids.head.value),
+        startingNode = topo.nodes("n1"),
         tick = 0,
         seed = 1,
         maxIterations = 20
