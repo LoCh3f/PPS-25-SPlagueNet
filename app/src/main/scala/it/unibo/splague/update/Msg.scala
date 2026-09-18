@@ -1,9 +1,10 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.{MalwareKind, PayloadSeverityLevel, PropagationVector}
+import it.unibo.splague.persistence.FileFormat
 import it.unibo.splague.view.form.{
-  CountermeasureForm,
   AwarenessForm,
+  CountermeasureForm,
   EdgeForm,
   MalwareForm,
   NodeForm,
@@ -37,4 +38,4 @@ enum Msg:
   case SimulationStep
 
   // export/import scenario
-  case ExportScenario
+  case ExportScenario(format: FileFormat)

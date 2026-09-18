@@ -5,6 +5,8 @@ import it.unibo.splague.persistence.Repository
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.view.form.ScenarioForm
 import it.unibo.splague.view.{Screen, ValidationError}
+import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
+import it.unibo.splague.persistence.codecs.json.JsonCodec.given
 
 // $COVERAGE-OFF$
 final case class AppState(
@@ -21,7 +23,5 @@ object AppState:
     )
 
   def defaultScenarioJsonRepository: Repository[Scenario] =
-    import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
-    import it.unibo.splague.persistence.codecs.json.JsonCodec.given
     Repository.json[Scenario]
 // $COVERAGE-ON$

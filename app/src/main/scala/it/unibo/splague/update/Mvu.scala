@@ -4,7 +4,7 @@ import it.unibo.splague.AppState
 import it.unibo.splague.AppState.defaultScenarioJsonRepository
 import it.unibo.splague.model.node.{NodeId, NodeState}
 import it.unibo.splague.model.Scenario
-import it.unibo.splague.persistence.ExportPaths
+import it.unibo.splague.persistence.{ExportPaths, FileFormat}
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.{SimulationEngine, SimulationState}
 import it.unibo.splague.update.simulation.event.{
@@ -227,21 +227,30 @@ object Mvu:
 
         case _ => state
 
-    case Msg.ExportScenario =>
+    case Msg.ExportScenario(format) =>
       resolveScenarioToExport(state) match
         case Left(error) =>
           state.copy(errors = Vector(ValidationError("export", "Unable to export scenario")))
         case Right(scenario) =>
           val path = ExportPaths.pathFor(scenario.name)
 
-          val res =
-            Try(Files.createDirectory(ExportPaths.baseDirectory)).toEither.left
-              .map(e => s"Impossible to create dir: ${e.getMessage}")
-              .flatMap(_ => defaultScenarioJsonRepository.save(scenario, path).left.map(_.toString))
+          val res: Either[String, Unit] = for
+            _ <- Try(Files.createDirectories(ExportPaths.baseDirectory)).toEither.left.map(e =>
+              s"Impossible to create dir: ${e.getMessage}"
+            )
+
+            _ <- format match
+              case FileFormat.Json =>
+                AppState.defaultScenarioJsonRepository.save(scenario, path).left.map(_.toString)
+              case other =>
+                Left(s"File format not supported yet: $other")
+          yield ()
 
           res match
-            case Left(error) => state.copy(errors = Vector(ValidationError("export", error)))
-            case _           => state
+            case Left(err) =>
+              state.copy(errors = Vector(ValidationError("export", err)))
+            case Right(_) =>
+              state
 
   /** Marks the scenario's starting node as the outbreak's patient zero. A scenario's `startingNode`
     * is only a topology reference; nothing else ever infects it, so without this every node stays
