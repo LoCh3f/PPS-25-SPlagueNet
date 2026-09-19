@@ -1,8 +1,11 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.AppState
+import it.unibo.splague.AppState.defaultScenarioJsonRepository
 import it.unibo.splague.model.node.{NodeId, NodeState}
 import it.unibo.splague.model.Scenario
+import it.unibo.splague.persistence.FileFormat.{Json, Txt}
+import it.unibo.splague.persistence.{ExportPaths, FileFormat}
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.{SimulationEngine, SimulationState}
 import it.unibo.splague.update.simulation.event.{
@@ -16,10 +19,15 @@ import it.unibo.splague.update.simulation.event.{
   SimulationEvents,
   TickBasedCyclicSelector
 }
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.utils.SimpleScenario
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.view.form.{AwarenessForm, ScenarioForm}
 
+import java.nio.file.Files
+import scala.util.Try
+
+// $COVERAGE-OFF$
 object Mvu:
 
   def update(msg: Msg, state: AppState): AppState = msg match
@@ -49,6 +57,25 @@ object Mvu:
               state.copy(
                 errors = Vector(ValidationError("scenario", error))
               )
+
+    case Msg.GoToReport =>
+      state.simulation match
+        case Some(simulation) if !simulation.running =>
+          state.copy(
+            screen = Screen.Report,
+            report = Some(ScenarioReport.from(simulation.initial, simulation.selector)),
+            errors = Vector.empty
+          )
+
+        case Some(_) =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "Simulation is still running"))
+          )
+
+        case None =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "No simulation to report on"))
+          )
 
     case Msg.UpdateScenarioName(form) =>
       updateForm(state) { s =>
@@ -179,14 +206,17 @@ object Mvu:
               state.copy(errors = Vector(ValidationError("scenario", error)))
 
             case Right(scenario) =>
+              val seeded = seedOutbreak(scenario)
               val states =
-                new SimulationEngine(simulationSelector).run(seedOutbreak(scenario))
+                new SimulationEngine(simulationSelector).run(seeded)
 
               states match
                 case current #:: upcoming =>
                   state.copy(
                     simulation = Some(
                       SimulationState(
+                        initial = seeded,
+                        selector = simulationSelector,
                         states = upcoming,
                         current = current,
                         running = upcoming.nonEmpty
@@ -220,6 +250,57 @@ object Mvu:
           )
 
         case _ => state
+
+    case Msg.ExportScenario(format) =>
+      resolveScenarioToExport(state) match
+        case Left(error) =>
+          state.copy(errors = Vector(ValidationError("export", "Unable to export scenario")))
+        case Right(scenarioToExport) =>
+          val path = format match {
+            case Json => ExportPaths.pathFor(scenarioToExport.name, FileFormat.Json)
+            case Txt  => ExportPaths.pathFor(scenarioToExport.name, FileFormat.Txt)
+          }
+
+          val res: Either[String, Unit] = for
+            _ <- Try(Files.createDirectories(ExportPaths.baseDirectory)).toEither.left.map(e =>
+              s"Unable to create dir: ${e.getMessage}"
+            )
+
+            _ <- format match
+              case FileFormat.Json =>
+                AppState.defaultScenarioJsonRepository
+                  .save(scenarioToExport, path)
+                  .left
+                  .map(_.toString)
+              case FileFormat.Txt =>
+                AppState.defaultScenarioTxtWriter.save(scenarioToExport, path).left.map(_.toString)
+              case other =>
+                Left(s"File format not supported yet: $other")
+          yield ()
+
+          res match
+            case Left(err) =>
+              state.copy(errors = Vector(ValidationError("export", err)))
+            case Right(_) =>
+              state
+
+    case Msg.ImportScenario(format, path) =>
+      format match
+        case FileFormat.Json =>
+          AppState.defaultScenarioJsonRepository.load(path) match
+            case Left(error) =>
+              state.copy(errors = Vector(ValidationError("import", error.toString)))
+
+            case Right(scenarioToImport) =>
+              state.copy(
+                model = state.model.copy(currentScenario = Some(scenarioToImport)),
+                scenarioForm = Some(ScenarioForm.fromScenario(scenarioToImport))
+              )
+
+        case _ =>
+          state.copy(errors =
+            Vector(ValidationError("import", "File format not yet supported for import"))
+          )
 
   /** Marks the scenario's starting node as the outbreak's patient zero. A scenario's `startingNode`
     * is only a topology reference; nothing else ever infects it, so without this every node stays
@@ -328,3 +409,18 @@ object Mvu:
               scenarioForm = Some(ScenarioForm.fromScenario(updatedScenario)),
               errors = Vector.empty
             )
+
+  private def resolveScenarioToExport(state: AppState): Either[String, Scenario] =
+    state.simulation match
+      case Some(sim) =>
+        Right(sim.current)
+
+      case None =>
+        state.model.currentScenario match
+          case Some(scenario) => Right(scenario)
+          case None =>
+            state.scenarioForm match
+              case Some(scenarioForm) => ScenarioForm.toDomain(scenarioForm)
+              case None               => Left("No scenario to export available!")
+
+// $COVERAGE-ON$

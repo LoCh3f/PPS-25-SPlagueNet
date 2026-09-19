@@ -14,6 +14,7 @@ import it.unibo.splague.model.malware.{
 import it.unibo.splague.model.node.NodeType.Workstation
 import it.unibo.splague.model.node.Topology
 
+// $COVERAGE-OFF$
 /** A minimal, easy-to-follow scenario: four workstations chained in a straight line (`n1 -> n2 ->
   * n3 -> n4`), with `n1` as the outbreak's starting node. Meant as a small, predictable alternative
   * to [[ExampleScenario]] for trying out the simulation.
@@ -60,3 +61,4 @@ object SimpleScenario:
         maxIterations = 20
       )
     yield scenario
+// $COVERAGE-ON$

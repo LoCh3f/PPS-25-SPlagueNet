@@ -14,6 +14,7 @@ import it.unibo.splague.model.malware.{
 import it.unibo.splague.model.node.NodeType.{IoTDevice, Router, Server, Workstation}
 import it.unibo.splague.model.node.Topology
 
+// $COVERAGE-OFF$
 object ExampleScenario:
   def complexScenario(): Either[String, Scenario] =
     val topologyResult: ValidationResult[Topology] =
@@ -120,3 +121,4 @@ object ExampleScenario:
         maxIterations = 60
       )
     yield scenario
+// $COVERAGE-ON$

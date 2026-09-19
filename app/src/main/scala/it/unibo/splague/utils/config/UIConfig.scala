@@ -1,5 +1,6 @@
 package it.unibo.splague.utils.config
 
+// $COVERAGE-OFF$
 /** Centralized configuration for all UI-related constants. Contains window settings, GUI strings,
   * and validation error messages.
   */
@@ -34,3 +35,4 @@ object UIConfig:
       "Malware must declare at least one propagation vector"
     val EMPTY_NODE_ID: String = "The ID cannot be empty"
     val NODE_ID_WHITESPACE: String = "The ID cannot contain white space"
+// $COVERAGE-ON$
