@@ -5,6 +5,10 @@ package it.unibo.splague.utils.config
   */
 object SimulationConfig:
 
+  /** Default values for scenarios declared without explicit ones (e.g. by the scenario DSL). */
+  object Defaults:
+    val MAX_ITERATIONS: Int = 20
+
   /** Detection coefficients for each node type. Higher values indicate better anomaly detection
     * capabilities.
     */
