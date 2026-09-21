@@ -31,7 +31,7 @@ def scenario(
     seedSource: => Int = Random.nextInt(Int.MaxValue)
 )(block: ScenarioBuilder ?=> Unit): ValidationResult[Scenario] =
   given builder: ScenarioBuilder = new ScenarioBuilder(name)
-  block
+  block(using builder)
   builder.build(seedSource)
 
 /** Declares the scenario's network. Wraps a regular `topology { ... }` block, so every node and
