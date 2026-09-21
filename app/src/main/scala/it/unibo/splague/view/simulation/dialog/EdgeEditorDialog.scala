@@ -5,18 +5,19 @@ import it.unibo.splague.update.Msg
 import it.unibo.splague.view.form.ChannelForm
 import it.unibo.splague.view.form.EdgeForm
 
-import java.awt.BorderLayout
-import java.awt.Dialog
-import java.awt.FlowLayout
-import java.awt.GridLayout
-import java.awt.Window
+import scala.swing.{
+  BorderPanel,
+  Button,
+  ComboBox,
+  Dialog,
+  FlowPanel,
+  GridPanel,
+  Label,
+  TextField,
+  Window
+}
+import scala.swing.event.ButtonClicked
 import javax.swing.BorderFactory
-import javax.swing.JButton
-import javax.swing.JComboBox
-import javax.swing.JDialog
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTextField
 
 /** Dialog responsible only for editing an [[EdgeForm]]: field display, initialization from the
   * received form, validation, and dispatch of the already existing `Msg.AddEdge` / `Msg.UpdateEdge`
@@ -37,173 +38,67 @@ object EdgeEditorDialog:
       isNew: Boolean,
       dispatch: Msg => Unit
   ): Unit =
-    val dialog =
-      new JDialog(
-        owner,
-        if isNew then "Create edge"
-        else s"Edit edge ${initial.from} -> ${initial.to}",
-        Dialog.ModalityType.APPLICATION_MODAL
-      )
-
-    val fromField =
-      new JTextField(
-        initial.from,
-        14
-      )
-
-    fromField.setEnabled(false)
-
-    val toField =
-      new JTextField(
-        initial.to,
-        14
-      )
-
-    toField.setEnabled(false)
-
-    val channelTypeCombo =
-      new JComboBox[ChannelType](ChannelType.values)
-
-    channelTypeCombo.setSelectedItem(initial.channel.channelType)
-
-    val bandwidthField =
-      new JTextField(
-        initial.channel.bandwidth,
-        10
-      )
-
-    val latencyField =
-      new JTextField(
-        initial.channel.latency,
-        10
-      )
-
-    val jitterField =
-      new JTextField(
-        initial.channel.jitter,
-        10
-      )
-
-    val packetLossField =
-      new JTextField(
-        initial.channel.packetLoss,
-        10
-      )
-
-    val fields =
-      new JPanel(
-        new GridLayout(
-          0,
-          2,
-          6,
-          6
-        )
-      )
-
-    fields.setBorder(
-      BorderFactory.createEmptyBorder(
-        8,
-        8,
-        8,
-        8
-      )
+    val dialog = DialogUtils.createModalDialog(
+      owner,
+      if isNew then "Create edge" else s"Edit edge ${initial.from} -> ${initial.to}"
     )
 
-    fields.add(new JLabel("From"))
-    fields.add(fromField)
+    val fromField = new TextField(initial.from, 14):
+      enabled = false
 
-    fields.add(new JLabel("To"))
-    fields.add(toField)
+    val toField = new TextField(initial.to, 14):
+      enabled = false
 
-    fields.add(new JLabel("Channel type"))
-    fields.add(channelTypeCombo)
+    val channelTypeCombo = new ComboBox[ChannelType](ChannelType.values.toSeq):
+      selection.item = initial.channel.channelType
 
-    fields.add(new JLabel("Bandwidth"))
-    fields.add(bandwidthField)
+    val bandwidthField = new TextField(initial.channel.bandwidth, 10)
+    val latencyField = new TextField(initial.channel.latency, 10)
+    val jitterField = new TextField(initial.channel.jitter, 10)
+    val packetLossField = new TextField(initial.channel.packetLoss, 10)
 
-    fields.add(new JLabel("Latency"))
-    fields.add(latencyField)
+    val fields = DialogUtils.createFieldGrid()
+    fields.contents += new Label("From")
+    fields.contents += fromField
 
-    fields.add(new JLabel("Jitter"))
-    fields.add(jitterField)
+    fields.contents += new Label("To")
+    fields.contents += toField
 
-    fields.add(new JLabel("Packet loss"))
-    fields.add(packetLossField)
+    fields.contents += new Label("Channel type")
+    fields.contents += channelTypeCombo
 
-    val save =
-      new JButton("Save")
+    fields.contents += new Label("Bandwidth")
+    fields.contents += bandwidthField
 
-    save.addActionListener(_ =>
-      val updatedChannel =
-        ChannelForm(
-          channelType = channelTypeCombo.getSelectedItem.asInstanceOf[ChannelType],
-          bandwidth = bandwidthField.getText,
-          latency = latencyField.getText,
-          jitter = jitterField.getText,
-          packetLoss = packetLossField.getText
-        )
+    fields.contents += new Label("Latency")
+    fields.contents += latencyField
 
-      val updated =
-        initial.copy(
-          channel = updatedChannel
-        )
+    fields.contents += new Label("Jitter")
+    fields.contents += jitterField
 
-      if isNew then
-        dispatch(
-          Msg.AddEdge(updated)
-        )
-      else
-        dispatch(
-          Msg.UpdateEdge(updated)
-        )
+    fields.contents += new Label("Packet loss")
+    fields.contents += packetLossField
+
+    val save = new Button("Save")
+    val cancel = new Button("Cancel")
+
+    val onSave = () => {
+      val updatedChannel = ChannelForm(
+        channelType = channelTypeCombo.selection.item,
+        bandwidth = bandwidthField.text,
+        latency = latencyField.text,
+        jitter = jitterField.text,
+        packetLoss = packetLossField.text
+      )
+
+      val updated = initial.copy(channel = updatedChannel)
+
+      if isNew then dispatch(Msg.AddEdge(updated))
+      else dispatch(Msg.UpdateEdge(updated))
 
       dialog.dispose()
-    )
+    }
 
-    val cancel =
-      new JButton("Cancel")
+    DialogUtils.setupButtonListeners(save, cancel, onSave, () => dialog.dispose())
 
-    cancel.addActionListener(_ => dialog.dispose())
-
-    val buttons =
-      new JPanel(
-        new FlowLayout(
-          FlowLayout.RIGHT
-        )
-      )
-
-    buttons.add(cancel)
-    buttons.add(save)
-
-    val container =
-      new JPanel(
-        new BorderLayout(
-          8,
-          8
-        )
-      )
-
-    container.setBorder(
-      BorderFactory.createEmptyBorder(
-        8,
-        8,
-        8,
-        8
-      )
-    )
-
-    container.add(
-      fields,
-      BorderLayout.CENTER
-    )
-
-    container.add(
-      buttons,
-      BorderLayout.SOUTH
-    )
-
-    dialog.setContentPane(container)
-    dialog.pack()
-    dialog.setLocation(screenX, screenY)
-    dialog.setResizable(true)
-    dialog.setVisible(true)
+    DialogUtils.displayDialog(dialog, fields, save, cancel, screenX, screenY)

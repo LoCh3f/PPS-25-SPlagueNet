@@ -3,22 +3,35 @@ package it.unibo.splague.view.simulation
 import it.unibo.splague.persistence.FileFormat
 import it.unibo.splague.update.Msg
 
-import javax.swing.{JButton, JMenuItem, JPopupMenu}
+import scala.swing.{Button, Component, MenuItem, PopupMenu}
+import scala.swing.event.ButtonClicked
 
 object ExportButton:
 
-  def apply(dispatch: Msg => Unit): JButton =
-    val exportMenu = new JPopupMenu()
+  def apply(dispatch: Msg => Unit): Component =
+    val exportButton = new Button("Export Scenario \u25be"):
+      focusable = false
 
-    val jsonItem = new JMenuItem("json")
-    jsonItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Json)))
+    val jsonItem = new MenuItem("json")
+    val txtItem = new MenuItem("txt")
 
-    val txtItem = new JMenuItem("txt")
-    txtItem.addActionListener(_ => dispatch(Msg.ExportScenario(FileFormat.Txt)))
+    val exportMenu = new PopupMenu:
+      contents += jsonItem
+      contents += txtItem
 
-    exportMenu.add(jsonItem)
-    exportMenu.add(txtItem)
+    jsonItem.listenTo(jsonItem)
+    jsonItem.reactions += { case ButtonClicked(_) =>
+      dispatch(Msg.ExportScenario(FileFormat.Json))
+    }
 
-    val exportButton = new JButton("Export Scenario ▾")
-    exportButton.addActionListener(_ => exportMenu.show(exportButton, 0, exportButton.getHeight()))
+    txtItem.listenTo(txtItem)
+    txtItem.reactions += { case ButtonClicked(_) =>
+      dispatch(Msg.ExportScenario(FileFormat.Txt))
+    }
+
+    exportButton.listenTo(exportButton)
+    exportButton.reactions += { case ButtonClicked(_) =>
+      exportMenu.show(exportButton, 0, exportButton.bounds.height)
+    }
+
     exportButton

@@ -6,28 +6,25 @@ import it.unibo.splague.view.simulation.dialog.ScenarioConfigDialog
 import it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel
 import it.unibo.splague.view.form.ScenarioForm
 
-import java.awt.{BorderLayout, Dimension, FlowLayout}
-import javax.swing.{
-  BorderFactory,
-  JButton,
-  JLabel,
-  JMenuItem,
-  JPanel,
-  JPopupMenu,
-  JSplitPane,
-  JToolBar,
-  SwingConstants
+import scala.swing.{
+  BorderPanel,
+  Button,
+  Component,
+  FlowPanel,
+  Label,
+  SplitPane,
+  Window,
+  Orientation as SwingOrientation
 }
-import scala.swing.Component
-import it.unibo.splague.view.simulation.{ExportButton, ImportButton}
+import scala.swing.event.ButtonClicked
 
 object SimulationView:
 
   private final case class Session(
       workspace: ScenarioWorkspacePanel,
       configuration: ScenarioConfigDialog,
-      tickLabel: JLabel,
-      reportButton: JButton,
+      tickLabel: Label,
+      reportButton: Button,
       root: Component
   )
 
@@ -35,6 +32,7 @@ object SimulationView:
 
   def render(
       state: AppState,
+      owner: Window,
       dispatch: Msg => Unit
   ): Component =
     state.scenarioForm match
@@ -45,9 +43,8 @@ object SimulationView:
           case Some(session) =>
             session.update(form, reportEnabled)
             session.root
-
           case None =>
-            val session = createSession(form, reportEnabled, dispatch)
+            val session = createSession(form, owner, reportEnabled, dispatch)
             currentSession = Some(session)
             session.root
 
@@ -59,125 +56,113 @@ object SimulationView:
 
   private def createSession(
       form: ScenarioForm,
+      owner: Window,
       reportEnabled: Boolean,
       dispatch: Msg => Unit
   ): Session =
     val workspace =
       new ScenarioWorkspacePanel(
         initialTopology = form.topology,
+        owner = owner,
         dispatch = dispatch
       )
 
     val configuration =
-      new ScenarioConfigDialog(
-        initialForm = form,
-        dispatch = dispatch
-      )
+      new ScenarioConfigDialog(initialForm = form, dispatch = dispatch)
 
-    val tickLabel =
-      new JLabel(s"Tick: ${form.tick}")
+    val tickLabel = new Label(s"Tick: ${form.tick}")
 
-    val reportButton =
-      new JButton("Report")
+    val reportButton = new Button("Report"):
+      enabled = reportEnabled
 
-    reportButton.addActionListener(_ => dispatch(Msg.GoToReport))
-    reportButton.setEnabled(reportEnabled)
+    reportButton.listenTo(reportButton)
+    reportButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToReport) }
 
-    val toolbar =
-      createToolbar(workspace, tickLabel, reportButton, dispatch)
+    val toolbar = createToolbar(workspace, tickLabel, reportButton, dispatch)
 
-    val splitPane =
-      new JSplitPane(
-        JSplitPane.HORIZONTAL_SPLIT,
-        workspace,
-        configuration
-      )
+    val splitPane = new SplitPane(SwingOrientation.Vertical, workspace, configuration):
+      oneTouchExpandable = true
+      resizeWeight = 0.75
 
-    splitPane.setOneTouchExpandable(true)
-    splitPane.setResizeWeight(0.75)
-    splitPane.setDividerLocation(620)
-    splitPane.setBorder(BorderFactory.createEmptyBorder())
+    splitPane.peer.setDividerLocation(620)
 
-    val rootPanel =
-      new JPanel(new BorderLayout())
-
-    rootPanel.add(toolbar, BorderLayout.NORTH)
-    rootPanel.add(splitPane, BorderLayout.CENTER)
+    val rootPanel = new BorderPanel:
+      layout(toolbar) = BorderPanel.Position.North
+      layout(splitPane) = BorderPanel.Position.Center
 
     Session(
       workspace = workspace,
       configuration = configuration,
       tickLabel = tickLabel,
       reportButton = reportButton,
-      root = Component.wrap(rootPanel)
+      root = rootPanel
     )
 
   private def createToolbar(
       workspace: ScenarioWorkspacePanel,
-      tickLabel: JLabel,
-      reportButton: JButton,
+      tickLabel: Label,
+      reportButton: Button,
       dispatch: Msg => Unit
-  ): JToolBar =
-    val toolbar = new JToolBar
-    toolbar.setFloatable(false)
-    toolbar.setPreferredSize(new Dimension(0, 52))
+  ): Component =
+    val zoomIn = new Button("+")
+    zoomIn.listenTo(zoomIn)
+    zoomIn.reactions += { case ButtonClicked(_) => workspace.zoomIn() }
 
-    val left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0))
-    val right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0))
+    val zoomOut = new Button("-")
+    zoomOut.listenTo(zoomOut)
+    zoomOut.reactions += { case ButtonClicked(_) => workspace.zoomOut() }
 
-    val zoomIn = new JButton("+")
-    zoomIn.addActionListener(_ => workspace.zoomIn())
+    val save = new Button("Save")
+    save.listenTo(save)
+    save.reactions += { case ButtonClicked(_) => dispatch(Msg.SaveScenario) }
 
-    val zoomOut = new JButton("-")
-    zoomOut.addActionListener(_ => workspace.zoomOut())
+    val run = new Button("Run")
+    run.listenTo(run)
+    run.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
 
-    val save = new JButton("Save")
-    save.addActionListener(_ => dispatch(Msg.SaveScenario))
+    val step = new Button("Step")
+    step.listenTo(step)
+    step.reactions += { case ButtonClicked(_) => dispatch(Msg.SimulationStep) }
 
-    val run = new JButton("Run")
-    run.addActionListener(_ => dispatch(Msg.StartSimulation))
-
-    val step = new JButton("Step")
-    step.addActionListener(_ => dispatch(Msg.SimulationStep))
-
-    val back = new JButton("Back")
-    back.addActionListener(_ =>
+    val back = new Button("Back")
+    back.listenTo(back)
+    back.reactions += { case ButtonClicked(_) =>
       clearSession()
       dispatch(Msg.GoToMenu)
-    )
+    }
 
-    left.add(zoomIn)
-    left.add(zoomOut)
-    left.add(save)
-    left.add(run)
-    left.add(step)
-    left.add(reportButton)
-    left.add(tickLabel)
-    right.add(back)
-    right.add(ExportButton(dispatch))
-    right.add(ImportButton(dispatch))
+    val left = new FlowPanel(FlowPanel.Alignment.Left)(
+      zoomIn,
+      zoomOut,
+      save,
+      run,
+      step,
+      reportButton,
+      tickLabel
+    ):
+      hGap = 8
+      vGap = 0
 
-    toolbar.setLayout(new BorderLayout())
-    toolbar.add(left, BorderLayout.WEST)
-    toolbar.add(right, BorderLayout.EAST)
-    toolbar
+    val right = new FlowPanel(FlowPanel.Alignment.Right)(
+      back,
+      ExportButton(dispatch),
+      ImportButton(dispatch)
+    ):
+      hGap = 8
+      vGap = 0
+
+    new BorderPanel:
+      preferredSize = new scala.swing.Dimension(0, 52)
+      layout(left) = BorderPanel.Position.West
+      layout(right) = BorderPanel.Position.East
 
   private def emptyView(): Component =
-    Component.wrap(
-      new JPanel(new BorderLayout()) {
-        add(
-          new JLabel(
-            "No scenario form is open",
-            SwingConstants.CENTER
-          ),
-          BorderLayout.CENTER
-        )
-      }
-    )
+    new BorderPanel:
+      layout(new Label("No scenario form is open")) = BorderPanel.Position.Center
 
   extension (session: Session)
     private def update(form: ScenarioForm, reportEnabled: Boolean): Unit =
       session.workspace.setTopology(form.topology)
       session.configuration.updateForm(form)
-      session.tickLabel.setText(s"Tick: ${form.tick}")
-      session.reportButton.setEnabled(reportEnabled)
+      session.tickLabel.text = s"Tick: ${form.tick}"
+      session.reportButton.enabled = reportEnabled

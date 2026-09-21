@@ -4,9 +4,19 @@ import it.unibo.splague.AppState
 import it.unibo.splague.update.Msg
 import it.unibo.splague.update.simulation.report.ScenarioReport
 
-import java.awt.{BorderLayout, FlowLayout, GridLayout}
-import javax.swing.{BorderFactory, JButton, JLabel, JPanel, SwingConstants}
-import scala.swing.Component
+import scala.swing.{
+  Alignment,
+  BorderPanel,
+  BoxPanel,
+  Button,
+  Component,
+  FlowPanel,
+  GridPanel,
+  Label,
+  Orientation
+}
+import scala.swing.event.ButtonClicked
+import javax.swing.BorderFactory
 
 object ReportView:
 
@@ -16,100 +26,93 @@ object ReportView:
       case None         => emptyView()
 
   private def reportPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
-    val root = new JPanel(new BorderLayout(8, 8))
-    root.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12))
+    val root = new BorderPanel:
+      border = BorderFactory.createEmptyBorder(12, 12, 12, 12)
+      layout(headerPanel(report)) = BorderPanel.Position.North
+      layout(summaryPanel(report)) = BorderPanel.Position.Center
+      layout(footerPanel(dispatch)) = BorderPanel.Position.South
 
-    root.add(headerPanel(report), BorderLayout.NORTH)
-    root.add(summaryPanel(report), BorderLayout.CENTER)
-    root.add(footerPanel(dispatch), BorderLayout.SOUTH)
+    root
 
-    Component.wrap(root)
+  private def headerPanel(report: ScenarioReport): Component =
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createTitledBorder("Scenario")
+      contents += new Label(s"Name: ${report.scenarioName}")
+      contents += new Label(s"Seed: ${report.seed}")
+      contents += new Label(s"Malware: ${report.malwareName}")
+      contents += new Label(s"Ticks run: ${report.finalTick.tick}")
 
-  private def headerPanel(report: ScenarioReport): JPanel =
-    val panel = new JPanel(new GridLayout(0, 1, 4, 4))
-    panel.setBorder(BorderFactory.createTitledBorder("Scenario"))
+  private def summaryPanel(report: ScenarioReport): Component =
+    new BoxPanel(Orientation.Horizontal):
+      contents += finalStatePanel(report)
+      contents += activationPanel(report)
+      contents += milestonesPanel(report)
 
-    panel.add(new JLabel(s"Name: ${report.scenarioName}"))
-    panel.add(new JLabel(s"Seed: ${report.seed}"))
-    panel.add(new JLabel(s"Malware: ${report.malwareName}"))
-    panel.add(new JLabel(s"Ticks run: ${report.finalTick.tick}"))
-    panel
-
-  private def summaryPanel(report: ScenarioReport): JPanel =
-    val panel = new JPanel(new GridLayout(1, 2, 12, 0))
-    panel.add(finalStatePanel(report))
-    panel.add(activationPanel(report))
-    panel.add(milestonesPanel(report))
-    panel
-
-  private def finalStatePanel(report: ScenarioReport): JPanel =
-    val panel = new JPanel(new GridLayout(0, 2, 4, 4))
-    panel.setBorder(BorderFactory.createTitledBorder("Final node states"))
-
+  private def finalStatePanel(report: ScenarioReport): Component =
     val finalTick = report.finalTick
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createTitledBorder("Final node states")
+      contents += new GridPanel(3, 2):
+        contents += new Label("Healthy")
+        contents += new Label(finalTick.healthy.toString)
+        contents += new Label("Infected")
+        contents += new Label(finalTick.infected.toString)
+        contents += new Label("Quarantined")
+        contents += new Label(finalTick.quarantined.toString)
+      contents += new GridPanel(3, 2):
+        contents += new Label("Immune")
+        contents += new Label(finalTick.immune.toString)
+        contents += new Label("Destroyed")
+        contents += new Label(finalTick.destroyed.toString)
+        contents += new Label("Final awareness")
+        contents += new Label(f"${finalTick.awareness}%.2f")
 
-    panel.add(new JLabel("Healthy"))
-    panel.add(new JLabel(finalTick.healthy.toString))
-    panel.add(new JLabel("Infected"))
-    panel.add(new JLabel(finalTick.infected.toString))
-    panel.add(new JLabel("Quarantined"))
-    panel.add(new JLabel(finalTick.quarantined.toString))
-    panel.add(new JLabel("Immune"))
-    panel.add(new JLabel(finalTick.immune.toString))
-    panel.add(new JLabel("Destroyed"))
-    panel.add(new JLabel(finalTick.destroyed.toString))
-    panel.add(new JLabel("Final awareness"))
-    panel.add(new JLabel(f"${finalTick.awareness}%.2f"))
-    panel
-
-  private def activationPanel(report: ScenarioReport): JPanel =
-    val panel = new JPanel(new GridLayout(0, 2, 4, 4))
-    panel.setBorder(BorderFactory.createTitledBorder("Countermeasures activated"))
-
+  private def activationPanel(report: ScenarioReport): Component =
     val sortedActivations = report.activationTicks.toVector.sortBy(_._2)
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createTitledBorder("Countermeasures activated")
+      if sortedActivations.isEmpty then
+        contents += new GridPanel(1, 2):
+          contents += new Label("None activated")
+          contents += new Label("")
+      else
+        val panels = sortedActivations.map { case (countermeasure, tick) =>
+          new GridPanel(1, 2):
+            contents += new Label(countermeasure.toString)
+            contents += new Label(s"tick $tick")
+        }
+        contents ++= panels
 
-    if sortedActivations.isEmpty then
-      panel.add(new JLabel("None activated"))
-      panel.add(new JLabel(""))
-    else
-      sortedActivations.foreach { case (countermeasure, tick) =>
-        panel.add(new JLabel(countermeasure.toString))
-        panel.add(new JLabel(s"tick $tick"))
-      }
-
-    panel
-
-  private def milestonesPanel(report: ScenarioReport): JPanel =
-    val panel = new JPanel(new GridLayout(0, 2, 4, 4))
-    panel.setBorder(BorderFactory.createTitledBorder("Key moments"))
-
+  private def milestonesPanel(report: ScenarioReport): Component =
     val milestones = report.milestones
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createTitledBorder("Key moments")
+      contents += new GridPanel(1, 2):
+        contents += new Label("First spread")
+        contents += new Label(milestones.firstSpreadTick.map(t => s"tick $t").getOrElse("never"))
+      contents += new GridPanel(1, 2):
+        contents += new Label("Peak infected")
+        contents += new Label(
+          s"${milestones.peakInfectedCount} at tick ${milestones.peakInfectedTick}"
+        )
+      contents += new GridPanel(1, 2):
+        contents += new Label("First destruction")
+        contents += new Label(
+          milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")
+        )
 
-    panel.add(new JLabel("First spread"))
-    panel.add(new JLabel(milestones.firstSpreadTick.map(t => s"tick $t").getOrElse("never")))
+  private def footerPanel(dispatch: Msg => Unit): Component =
+    val backButton = new Button("Back to simulation")
+    backButton.listenTo(backButton)
+    backButton.reactions += { case ButtonClicked(_) =>
+      dispatch(Msg.GoToSimulation)
+    }
 
-    panel.add(new JLabel("Peak infected"))
-    panel.add(
-      new JLabel(s"${milestones.peakInfectedCount} at tick ${milestones.peakInfectedTick}")
-    )
-
-    panel.add(new JLabel("First destruction"))
-    panel.add(new JLabel(milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")))
-
-    panel
-
-  private def footerPanel(dispatch: Msg => Unit): JPanel =
-    val panel = new JPanel(new FlowLayout(FlowLayout.RIGHT))
-
-    val back = new JButton("Back to simulation")
-    back.addActionListener(_ => dispatch(Msg.GoToSimulation))
-
-    panel.add(back)
-    panel
+    new FlowPanel(FlowPanel.Alignment.Right)(backButton)
 
   private def emptyView(): Component =
-    Component.wrap(
-      new JPanel(new BorderLayout()) {
-        add(new JLabel("No report available", SwingConstants.CENTER), BorderLayout.CENTER)
-      }
-    )
+    new BorderPanel:
+      layout(
+        new Label("No report available"):
+          horizontalAlignment = Alignment.Center
+      ) = BorderPanel.Position.Center

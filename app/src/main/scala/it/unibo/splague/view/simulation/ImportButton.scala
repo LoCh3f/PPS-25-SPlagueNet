@@ -3,29 +3,34 @@ package it.unibo.splague.view.simulation
 import it.unibo.splague.persistence.{ExportPaths, FileFormat}
 import it.unibo.splague.update.Msg
 
-import java.io.File
-import javax.swing.filechooser.FileNameExtensionFilter
-import javax.swing.{JButton, JFileChooser, JMenuItem, JPopupMenu}
+import scala.swing.{Button, Component, FileChooser, MenuItem, PopupMenu}
+import scala.swing.event.ButtonClicked
 
 object ImportButton:
-  def apply(dispatch: Msg => Unit): JButton =
-    val importMenu = new JPopupMenu()
 
-    val jsonItem = new JMenuItem("json")
-    jsonItem.addActionListener(_ =>
-      val fileChooser = new JFileChooser(ExportPaths.baseDirectory.toFile)
+  def apply(dispatch: Msg => Unit): Component =
+    val importButton = new Button("Import Scenario \u25be"):
+      focusable = false
 
-      fileChooser.setFileFilter(new FileNameExtensionFilter("JSON Files", "json"))
+    val jsonItem = new MenuItem("json")
 
-      val result = fileChooser.showOpenDialog(null)
+    val importMenu = new PopupMenu:
+      contents += jsonItem
 
-      if result == JFileChooser.APPROVE_OPTION then
-        val selectedFile: File = fileChooser.getSelectedFile
-        dispatch(Msg.ImportScenario(FileFormat.Json, selectedFile.toPath))
-    )
+    jsonItem.listenTo(jsonItem)
+    jsonItem.reactions += { case ButtonClicked(_) =>
+      val chooser = new FileChooser(ExportPaths.baseDirectory.toFile)
+      chooser.fileFilter = new javax.swing.filechooser.FileNameExtensionFilter("JSON Files", "json")
 
-    importMenu.add(jsonItem)
+      chooser.showOpenDialog(importButton) match
+        case FileChooser.Result.Approve =>
+          dispatch(Msg.ImportScenario(FileFormat.Json, chooser.selectedFile.toPath))
+        case _ => ()
+    }
 
-    val importButton = new JButton("Import Scenario ▾")
-    importButton.addActionListener(_ => importMenu.show(importButton, 0, importButton.getHeight()))
+    importButton.listenTo(importButton)
+    importButton.reactions += { case ButtonClicked(_) =>
+      importMenu.show(importButton, 0, importButton.bounds.height)
+    }
+
     importButton
