@@ -1,6 +1,16 @@
 package it.unibo.splague.view.simulation.dialog
 
-import scala.swing.{BorderPanel, Button, Dialog, FlowPanel, GridPanel, Panel, Window}
+import scala.swing.{
+  BorderPanel,
+  Button,
+  Component,
+  Dialog,
+  FlowPanel,
+  GridPanel,
+  Label,
+  Panel,
+  Window
+}
 import scala.swing.event.ButtonClicked
 import javax.swing.BorderFactory
 
@@ -13,6 +23,11 @@ object DialogUtils:
       hGap = 6
       vGap = 6
       border = BorderFactory.createEmptyBorder(8, 8, 8, 8)
+
+  /** Adds a label/control pair to a standard field grid. */
+  def addField(grid: GridPanel, label: String, field: Component): Unit =
+    grid.contents += new Label(label)
+    grid.contents += field
 
   /** Sets up button listeners for save and cancel buttons. */
   def setupButtonListeners(

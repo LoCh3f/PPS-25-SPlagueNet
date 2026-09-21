@@ -74,30 +74,16 @@ object NodeEditorDialog:
       }
 
     val fields = DialogUtils.createFieldGrid()
-    fields.contents += new Label("ID")
-    fields.contents += idField
-
-    fields.contents += new Label("Type")
-    fields.contents += nodeTypeCombo
-
-    fields.contents += new Label("State")
-    fields.contents += stateCombo
-
-    fields.contents += new Label("Patch level")
-    fields.contents += patchLevelField
-
-    fields.contents += new Label("Defense level")
-    fields.contents += defenseLevelField
-
-    fields.contents += new Label("Workload")
-    fields.contents += workloadField
-
-    fields.contents += new Label("Vectors")
-
+    DialogUtils.addField(fields, "ID", idField)
+    DialogUtils.addField(fields, "Type", nodeTypeCombo)
+    DialogUtils.addField(fields, "State", stateCombo)
+    DialogUtils.addField(fields, "Patch level", patchLevelField)
+    DialogUtils.addField(fields, "Defense level", defenseLevelField)
+    DialogUtils.addField(fields, "Workload", workloadField)
     val vectorsPanel = new GridPanel(0, 1):
       vectorCheckboxes.foreach { case (_, checkbox) => contents += checkbox }
 
-    fields.contents += vectorsPanel
+    DialogUtils.addField(fields, "Vectors", vectorsPanel)
 
     val save = new Button("Save")
     val cancel = new Button("Cancel")

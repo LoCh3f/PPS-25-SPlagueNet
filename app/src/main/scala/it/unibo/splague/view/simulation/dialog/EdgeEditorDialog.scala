@@ -58,26 +58,13 @@ object EdgeEditorDialog:
     val packetLossField = new TextField(initial.channel.packetLoss, 10)
 
     val fields = DialogUtils.createFieldGrid()
-    fields.contents += new Label("From")
-    fields.contents += fromField
-
-    fields.contents += new Label("To")
-    fields.contents += toField
-
-    fields.contents += new Label("Channel type")
-    fields.contents += channelTypeCombo
-
-    fields.contents += new Label("Bandwidth")
-    fields.contents += bandwidthField
-
-    fields.contents += new Label("Latency")
-    fields.contents += latencyField
-
-    fields.contents += new Label("Jitter")
-    fields.contents += jitterField
-
-    fields.contents += new Label("Packet loss")
-    fields.contents += packetLossField
+    DialogUtils.addField(fields, "From", fromField)
+    DialogUtils.addField(fields, "To", toField)
+    DialogUtils.addField(fields, "Channel type", channelTypeCombo)
+    DialogUtils.addField(fields, "Bandwidth", bandwidthField)
+    DialogUtils.addField(fields, "Latency", latencyField)
+    DialogUtils.addField(fields, "Jitter", jitterField)
+    DialogUtils.addField(fields, "Packet loss", packetLossField)
 
     val save = new Button("Save")
     val cancel = new Button("Cancel")
