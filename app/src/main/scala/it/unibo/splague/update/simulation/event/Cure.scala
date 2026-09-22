@@ -16,34 +16,38 @@ object Cure:
   object CureEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val countermeasureConfig = scenario.countermeasureConfig
-      var nodes = scenario.topology.nodes
 
-      if !countermeasureConfig.activeCountermeasures.contains(Patch) then scenario
-      else
-        val rng = new Random(scenario.seed + scenario.tick + 1)
+      if !countermeasureConfig.activeCountermeasures.contains(Patch) then return scenario
 
-        // Try to cure every infected or quarantined node
-        val targets = scenario.topology.infectedNodes() ++ scenario.topology.quarantinedNodes()
+      val rng = new Random(scenario.seed + scenario.tick + 1)
+      val targets = scenario.topology.infectedNodes() ++ scenario.topology.quarantinedNodes()
 
-        val newNodes = targets.foldLeft(scenario.topology.nodes) { (acc, node) =>
-          val curato = DefenseRules.resolveCure(
-            DefenseRules.cureProbability(node, countermeasureConfig),
-            rng.nextDouble()
-          )
-          if curato then acc.updated(node.nodeId.value, node.copy(state = NodeState.Immune))
-          else acc
-        }
+      val updatedTopology = targets.foldLeft(scenario.topology) { (currentTopology, node) =>
+        val curato = DefenseRules.resolveCure(
+          DefenseRules.cureProbability(node, countermeasureConfig),
+          rng.nextDouble()
+        )
 
-        scenario.copy(topology = scenario.topology.copy(nodes = newNodes))
+        if curato then
+          updateNode(currentTopology, node.nodeId) { currentNode =>
+            currentNode.copy(state = NodeState.Immune)
+          }
+        else currentTopology
+      }
 
-  object LowerWorkloadEvent extends SimulationEvents.Event:
+      scenario.copy(topology = updatedTopology)
+
+  object LowerWorkloadEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val immuneNodes = scenario.topology.nodes.values.filter(_.state == NodeState.Immune)
-      val updatedNodes = immuneNodes.foldLeft(scenario.topology.nodes) { (acc, node) =>
-        val baseline = scenario.baselineWorkload.getOrElse(node, 0.0)
 
-        // workload never goes below baseline
-        val newWorkload = math.max(baseline, node.workload - recoveryRate)
-        acc.updated(node.nodeId.value, node.copy(workload = newWorkload))
+      val updatedTopology = immuneNodes.foldLeft(scenario.topology) { (currentTopology, node) =>
+        updateNode(currentTopology, node.nodeId) { currentNode =>
+          val baseline = scenario.baselineWorkload.getOrElse(node, 0.0)
+
+          val newWorkload = math.max(baseline, currentNode.workload - recoveryRate)
+          currentNode.copy(workload = newWorkload)
+        }
       }
-      scenario.copy(topology = scenario.topology.copy(nodes = updatedNodes))
+
+      scenario.copy(topology = updatedTopology)

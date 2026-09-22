@@ -1,20 +1,23 @@
 package it.unibo.splague.view.simulation.dialog
 
+import it.unibo.splague.model.connection.Connection.ChannelType
+import it.unibo.splague.model.connection.Protocol.ApplicationProtocolType
+import it.unibo.splague.model.countermeasures.Countermeasures
 import it.unibo.splague.model.malware.MalwareKind
 import it.unibo.splague.model.malware.PayloadSeverityLevel
 import it.unibo.splague.model.malware.PropagationVector
-import it.unibo.splague.update.Msg
+import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria, Msg}
+import it.unibo.splague.view.form.countermeasure.{CountermeasureForm, FirewallForm, IsolationForm}
 import it.unibo.splague.view.form.ScenarioForm
 
 import javax.swing.{JSpinner, SpinnerNumberModel}
-
 import scala.swing.{
   BorderPanel,
   BoxPanel,
   Button,
   CheckBox,
-  Component,
   ComboBox,
+  Component,
   Dialog,
   FlowPanel,
   GridPanel,
@@ -72,6 +75,59 @@ final class ScenarioConfigDialog(
       .map(vector => vector -> new CheckBox(vector.toString))
       .toMap
 
+  // Countermeasures fields
+  private val patchBoostField = new TextField()
+  private val defenseBoostField = new TextField()
+  private val patchCureProbField = new TextField()
+
+  private val countermeasureRows: Map[String, (CheckBox, TextField)] =
+    CountermeasureForm.allCountermeasureNames.map { cmName =>
+      val check = new CheckBox(cmName)
+      val field = new TextField {
+        columns = 5
+        enabled = false
+      }
+
+      check.reactions += { case scala.swing.event.ButtonClicked(_) =>
+        field.enabled = check.selected
+        if (!check.selected) field.text = ""
+      }
+
+      cmName -> (check, field)
+    }.toMap
+
+  // Firewall Policy
+  private val channelChecks: Map[String, CheckBox] =
+    CountermeasureForm.allChannelNames.map(c => c -> new CheckBox(c)).toMap
+
+  private val nodeTypeChecks: Map[String, CheckBox] =
+    CountermeasureForm.allCountermeasureNames.map(name => name -> new CheckBox(name)).toMap
+
+  private val protocolChecks: Map[String, CheckBox] =
+    CountermeasureForm.allProtocolNames.map(p => p -> new CheckBox(p)).toMap
+
+  // Isolation criteria
+  private val isolationCombo = new ComboBox[String](
+    Seq(
+      "All",
+      "By Min Workload",
+      "By Max Defense"
+      // TODO add by node type
+    )
+  )
+
+  private val isolationThresholdField = new TextField {
+    columns = 5
+    enabled = false // Disabled by default because 'All' doesn't require threshold
+  }
+
+  // Enables/Disables the text field based on the chosen combobox
+  isolationCombo.reactions += { case scala.swing.event.SelectionChanged(_) =>
+    val requiresThreshold = isolationCombo.selection.item != "All"
+    isolationThresholdField.enabled = requiresThreshold
+    if (!requiresThreshold) isolationThresholdField.text = ""
+  }
+
   private val formContent = new BoxPanel(Orientation.Vertical):
     border = BorderFactory.createEmptyBorder(8, 8, 8, 8)
 
@@ -79,6 +135,7 @@ final class ScenarioConfigDialog(
 
   formContent.contents += section("Scenario", scenarioFields())
   formContent.contents += section("Malware", malwareFields())
+  formContent.contents += section("Countermeasures", countermeasureFields())
 
   private val scroll = new ScrollPane(formContent):
     border = BorderFactory.createEmptyBorder()
@@ -154,6 +211,54 @@ final class ScenarioConfigDialog(
       contents += createLabeledField("Payload severity", payloadSeverityCombo)
       contents += createLabeledField("Vectors", createVectorsPanel())
 
+  // Countermeasure fields
+  private def createCountermeasureLevelsPanel(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      countermeasureRows.values.foreach { case (check, field) =>
+        contents += new BoxPanel(Orientation.Horizontal):
+          contents += check
+          contents += scala.swing.Swing.HStrut(10)
+          contents += new Label("Threshold:")
+          contents += field
+
+          maximumSize = new Dimension(Short.MaxValue, 30)
+      }
+
+  private def createFirewallPanel(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      contents += new Label("Blocked Channels:")
+      contents += new GridPanel(0, 2):
+        hGap = 8;
+        vGap = 4
+        channelChecks.values.foreach(contents += _)
+
+      contents += scala.swing.Swing.VStrut(8)
+
+      contents += new Label("Blocked Protocols:")
+      contents += new GridPanel(0, 2):
+        hGap = 8;
+        vGap = 4
+        protocolChecks.values.foreach(contents += _)
+
+  private def createIsolationPanel(): Panel =
+    new BoxPanel(Orientation.Horizontal):
+      contents += isolationCombo
+      contents += scala.swing.Swing.HStrut(10)
+      contents += new Label("Threshold:")
+      contents += isolationThresholdField
+
+  private def countermeasureFields(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createEmptyBorder(6, 6, 6, 6)
+      contents += createCountermeasureLevelsPanel()
+      contents += new scala.swing.Separator()
+      contents += new Label("Firewall Policy")
+      contents += createFirewallPanel()
+
+      contents += new scala.swing.Separator()
+      contents += new Label("Isolation Criteria")
+      contents += createIsolationPanel()
+
   private def createLabeledField(labelText: String, field: Component): Panel =
     val label = new Label(labelText)
     label.preferredSize = new Dimension(120, 30)
@@ -207,6 +312,13 @@ final class ScenarioConfigDialog(
       vectors = updatedVectors
     )
 
+    val updatedCountermeasure = currentForm.countermeasureConfig.copy(
+      activeCountermeasures = buildActiveCountermeasures(),
+      countermeasureLevels = buildCountermeasureLevels(),
+      isolationCriteria = buildIsolationCriteria(),
+      firewallPolicy = buildFirewallPolicy()
+    )
+
     val updatedScenario = currentForm.copy(
       name = scenarioNameField.text.trim,
       seed = seedSpinnerPeer.getValue.toString,
@@ -214,7 +326,8 @@ final class ScenarioConfigDialog(
       startingNodeId = Option(startingNodeCombo.peer.getSelectedItem)
         .map(_.toString)
         .getOrElse(currentForm.startingNodeId),
-      virus = updatedMalware
+      virus = updatedMalware,
+      countermeasureConfig = updatedCountermeasure
     )
 
     ScenarioForm.toDomain(updatedScenario) match
@@ -224,8 +337,63 @@ final class ScenarioConfigDialog(
         currentForm = updatedScenario
         dispatch(Msg.UpdateScenarioName(updatedScenario))
         dispatch(Msg.UpdateMalware(updatedMalware))
+        dispatch(Msg.UpdateCountermeasure(updatedCountermeasure))
         dispatch(Msg.SaveScenario)
 
   private def onCancel(): Unit =
     applyForm(currentForm)
     dispatch(Msg.CancelScenario)
+
+  /** Extracts the set of active countermeasures selected by the user in the UI.
+    *
+    * @return
+    *   a Set containing the names (Strings) of the selected countermeasures
+    */
+  private def buildActiveCountermeasures(): Set[String] =
+    countermeasureRows.collect {
+      case (cmName, (check, _)) if check.selected => cmName
+    }.toSet
+
+  /** Builds a mapping between threshold values and their corresponding active countermeasures,
+    * based on the user input in the enabled text fields.
+    *
+    * @return
+    *   a Map associating the threshold string to the countermeasure name (String)
+    */
+  private def buildCountermeasureLevels(): Map[String, String] =
+    countermeasureRows.collect {
+      case (cmName, (check, field)) if check.selected => field.text.trim -> cmName
+    }.toMap
+
+  /** Constructs a new [[FirewallForm]] based on the selected channels and application protocols
+    * from the UI checkboxes.
+    *
+    * @return
+    *   a [[FirewallForm]] containing the blocked channels and protocols as strings
+    */
+  private def buildFirewallPolicy(): FirewallForm =
+    val blockedChannels = channelChecks.collect {
+      case (chName, chk) if chk.selected => chName
+    }.toSet
+    val blockedProtocols = protocolChecks.collect {
+      case (prName, chk) if chk.selected => prName
+    }.toSet
+
+    FirewallForm(blockedChannels, blockedProtocols)
+
+  /** Creates an [[IsolationForm]] based on the selected strategy from the combo box, the provided
+    * threshold value, and selected node types.
+    *
+    * @return
+    *   the constructed [[IsolationForm]] containing purely string-based configuration
+    */
+  private def buildIsolationCriteria(): IsolationForm =
+    val selectedTypes = nodeTypeChecks.collect {
+      case (typeName, chk) if chk.selected => typeName
+    }.toSet
+
+    IsolationForm(
+      strategy = isolationCombo.selection.item,
+      threshold = isolationThresholdField.text.trim,
+      nodeTypes = selectedTypes
+    )

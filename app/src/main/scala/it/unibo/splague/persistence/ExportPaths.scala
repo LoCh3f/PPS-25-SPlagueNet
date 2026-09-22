@@ -13,6 +13,5 @@ object ExportPaths:
     name.trim.replaceAll("""[\\/:*?"<>|]""", "_")
 
   def pathFor(scenarioName: String, fileFormat: FileFormat): Path = fileFormat match
-    case Json  => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".json")
-    case Txt   => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".txt")
-    case other => throw IllegalArgumentException(s"Unsupported file format: $other")
+    case Json => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".json")
+    case Txt  => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".txt")
