@@ -274,8 +274,6 @@ object Mvu:
                   .map(_.toString)
               case FileFormat.Txt =>
                 AppState.defaultScenarioTxtWriter.save(scenarioToExport, path).left.map(_.toString)
-              case other =>
-                Left(s"File format not supported yet: $other")
           yield ()
 
           res match
