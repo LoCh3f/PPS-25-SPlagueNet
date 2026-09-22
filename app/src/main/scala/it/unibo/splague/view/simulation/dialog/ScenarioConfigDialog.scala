@@ -7,6 +7,7 @@ import it.unibo.splague.model.malware.MalwareKind
 import it.unibo.splague.model.malware.PayloadSeverityLevel
 import it.unibo.splague.model.malware.PropagationVector
 import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria, Msg}
+import it.unibo.splague.view.form.countermeasure.{CountermeasureForm, FirewallForm, IsolationForm}
 import it.unibo.splague.view.form.ScenarioForm
 
 import javax.swing.{JSpinner, SpinnerNumberModel}
@@ -79,9 +80,9 @@ final class ScenarioConfigDialog(
   private val defenseBoostField = new TextField()
   private val patchCureProbField = new TextField()
 
-  private val countermeasureRows: Map[Countermeasures, (CheckBox, TextField)] =
-    Countermeasures.values.map { cm =>
-      val check = new CheckBox(cm.toString)
+  private val countermeasureRows: Map[String, (CheckBox, TextField)] =
+    CountermeasureForm.allCountermeasureNames.map { cmName =>
+      val check = new CheckBox(cmName)
       val field = new TextField {
         columns = 5
         enabled = false
@@ -92,15 +93,18 @@ final class ScenarioConfigDialog(
         if (!check.selected) field.text = ""
       }
 
-      cm -> (check, field)
+      cmName -> (check, field)
     }.toMap
 
   // Firewall Policy
-  private val channelChecks: Map[ChannelType, CheckBox] =
-    ChannelType.values.map(c => c -> new CheckBox(c.toString)).toMap
+  private val channelChecks: Map[String, CheckBox] =
+    CountermeasureForm.allChannelNames.map(c => c -> new CheckBox(c)).toMap
 
-  private val protocolChecks: Map[ApplicationProtocolType, CheckBox] =
-    ApplicationProtocolType.values.map(p => p -> new CheckBox(p.toString)).toMap
+  private val nodeTypeChecks: Map[String, CheckBox] =
+    CountermeasureForm.allCountermeasureNames.map(name => name -> new CheckBox(name)).toMap
+
+  private val protocolChecks: Map[String, CheckBox] =
+    CountermeasureForm.allProtocolNames.map(p => p -> new CheckBox(p)).toMap
 
   // Isolation criteria
   private val isolationCombo = new ComboBox[String](
@@ -343,50 +347,53 @@ final class ScenarioConfigDialog(
   /** Extracts the set of active countermeasures selected by the user in the UI.
     *
     * @return
-    *   a Set containing the selected [[Countermeasures]]
+    *   a Set containing the names (Strings) of the selected countermeasures
     */
-  private def buildActiveCountermeasures(): Set[Countermeasures] =
+  private def buildActiveCountermeasures(): Set[String] =
     countermeasureRows.collect {
-      case (cm, (check, _)) if check.selected => cm
+      case (cmName, (check, _)) if check.selected => cmName
     }.toSet
 
-  /** Builds a mapping between threshold values (as strings) and their corresponding active
-    * countermeasures, based on the user input in the enabled text fields.
+  /** Builds a mapping between threshold values and their corresponding active countermeasures,
+    * based on the user input in the enabled text fields.
     *
     * @return
-    *   a Map associating the threshold string to the [[Countermeasures]]
+    *   a Map associating the threshold string to the countermeasure name (String)
     */
-  private def buildCountermeasureLevels(): Map[String, Countermeasures] =
+  private def buildCountermeasureLevels(): Map[String, String] =
     countermeasureRows.collect {
-      case (cm, (check, field)) if check.selected => field.text.trim -> cm
+      case (cmName, (check, field)) if check.selected => field.text.trim -> cmName
     }.toMap
 
-  /** Constructs a new [[FirewallPolicy]] based on the selected channels and application protocols
+  /** Constructs a new [[FirewallForm]] based on the selected channels and application protocols
     * from the UI checkboxes.
     *
     * @return
-    *   a [[FirewallPolicy]] containing the blocked channels and protocols
+    *   a [[FirewallForm]] containing the blocked channels and protocols as strings
     */
-  private def buildFirewallPolicy(): FirewallPolicy =
+  private def buildFirewallPolicy(): FirewallForm =
     val blockedChannels = channelChecks.collect {
-      case (ch, chk) if chk.selected => ch
+      case (chName, chk) if chk.selected => chName
     }.toSet
     val blockedProtocols = protocolChecks.collect {
-      case (pr, chk) if chk.selected => pr
+      case (prName, chk) if chk.selected => prName
     }.toSet
 
-    FirewallPolicy(blockedChannels, blockedProtocols)
+    FirewallForm(blockedChannels, blockedProtocols)
 
-  /** Creates an [[IsolationCriteria]] based on the selected strategy from the combo box and the
-    * provided threshold value. If the threshold field cannot be parsed to a double, it defaults to
-    * 0.0.
+  /** Creates an [[IsolationForm]] based on the selected strategy from the combo box, the provided
+    * threshold value, and selected node types.
     *
     * @return
-    *   the constructed [[IsolationCriteria]]
+    *   the constructed [[IsolationForm]] containing purely string-based configuration
     */
-  private def buildIsolationCriteria(): IsolationCriteria =
-    val threshold = isolationThresholdField.text.trim.toDoubleOption.getOrElse(0.0)
-    isolationCombo.selection.item match
-      case "By Min Workload" => IsolationCriteria.byMinWorkload(threshold)
-      case "By Max Defense"  => IsolationCriteria.byMaxDefense(threshold)
-      case _                 => IsolationCriteria.all
+  private def buildIsolationCriteria(): IsolationForm =
+    val selectedTypes = nodeTypeChecks.collect {
+      case (typeName, chk) if chk.selected => typeName
+    }.toSet
+
+    IsolationForm(
+      strategy = isolationCombo.selection.item,
+      threshold = isolationThresholdField.text.trim,
+      nodeTypes = selectedTypes
+    )

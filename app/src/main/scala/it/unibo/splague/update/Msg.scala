@@ -2,14 +2,8 @@ package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.{MalwareKind, PayloadSeverityLevel, PropagationVector}
 import it.unibo.splague.persistence.FileFormat
-import it.unibo.splague.view.form.{
-  AwarenessForm,
-  CountermeasureForm,
-  EdgeForm,
-  MalwareForm,
-  NodeForm,
-  ScenarioForm
-}
+import it.unibo.splague.view.form.countermeasure.CountermeasureForm
+import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, MalwareForm, NodeForm, ScenarioForm}
 
 import java.nio.file.Path
 
