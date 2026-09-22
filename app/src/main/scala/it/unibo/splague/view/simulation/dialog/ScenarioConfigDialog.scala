@@ -333,6 +333,7 @@ final class ScenarioConfigDialog(
         currentForm = updatedScenario
         dispatch(Msg.UpdateScenarioName(updatedScenario))
         dispatch(Msg.UpdateMalware(updatedMalware))
+        dispatch(Msg.UpdateCountermeasure(updatedCountermeasure))
         dispatch(Msg.SaveScenario)
 
   private def onCancel(): Unit =
