@@ -279,3 +279,14 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     decodedScenario.seed shouldBe originalScenario.seed
     decodedScenario.tick shouldBe originalScenario.tick
     decodedScenario.startingNode.nodeId shouldBe originalScenario.startingNode.nodeId
+
+  test("Map[Countermeasures, Int] should be correctly encoded and decoded"):
+    val map: Map[Countermeasures, Int] = Map(Countermeasures.Patch -> 3)
+    val encoder = summon[Encoder[Map[Countermeasures, Int], FileFormat.Json.type]]
+    val decoder = summon[Decoder[Map[Countermeasures, Int], FileFormat.Json.type]]
+
+    val json = encoder.encode(map)
+    val result = decoder.decode(json)
+
+    result.isRight shouldBe true
+    result.toOption.get.get(Countermeasures.Patch) shouldBe Some(3)
