@@ -11,9 +11,11 @@ import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeas
 import it.unibo.splague.model.malware.{Malware, MalwareTraits}
 import it.unibo.splague.model.node.*
 import it.unibo.splague.model.node.NodeId.NodeId
+import it.unibo.splague.model.report.{Milestones, TickSummary}
 import it.unibo.splague.model.{Awareness, Probability, Scenario}
 import it.unibo.splague.persistence.*
 import it.unibo.splague.update.IsolationCriteria
+import it.unibo.splague.update.simulation.report.ScenarioReport
 
 case class TestApplicationProtocol(
     kind: ApplicationProtocolType,
@@ -191,6 +193,19 @@ object CodecCatalog:
 
   given mapDoubleCountermeasuresDecoder: CirceDecoder[Map[Double, Countermeasures]] =
     CirceDecoder.decodeList[(Double, Countermeasures)].map(_.toMap)
+
+  // Report
+  given mapCountermeasuresIntEncoder: CirceEncoder[Map[Countermeasures, Int]] =
+    CirceEncoder.encodeList[(Countermeasures, Int)].contramap(_.toList)
+
+  given mapCountermeasuresIntDecoder: CirceDecoder[Map[Countermeasures, Int]] =
+    CirceDecoder.decodeList[(Countermeasures, Int)].map(_.toMap)
+
+  given tickSummaryCirceCodec: CirceCodec[TickSummary] = deriveCodec[TickSummary]
+
+  given milestonesCirceCodec: CirceCodec[Milestones] = deriveCodec[Milestones]
+
+  given scenarioReportCirceCodec: CirceCodec[ScenarioReport] = deriveCodec[ScenarioReport]
 
   // --- INTERMEDIATE MODEL STRUCTURES ------------------------------------
 
