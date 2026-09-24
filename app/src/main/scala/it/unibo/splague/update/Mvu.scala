@@ -192,18 +192,30 @@ object Mvu:
       updateForm(state)(s => s.copy(countermeasureConfig = countermeasure))
 
     case Msg.SelectScenario(name) =>
-      state.model.scenarios.find(_.name == name) match
-        case Some(scenario) =>
-          state.copy(
-            model = state.model.copy(currentScenario = Some(scenario)),
-            scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
-            errors = Vector.empty
+      if state.simulation.exists(_.running) then
+        state.copy(
+          errors = Vector(
+            ValidationError("simulation", "Cannot switch scenario while the simulation is running")
           )
+        )
+      else
+        state.model.scenarios.find(_.name == name) match
+          case Some(scenario) =>
+            // Loading a different scenario discards any run (and report) tied to the previous
+            // one: it belongs to a scenario no longer open, so keeping it around would let Report
+            // or Reset silently act on the wrong scenario.
+            state.copy(
+              model = state.model.copy(currentScenario = Some(scenario)),
+              scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
+              simulation = None,
+              report = None,
+              errors = Vector.empty
+            )
 
-        case None =>
-          state.copy(
-            errors = Vector(ValidationError("scenario", s"No scenario named '$name' found"))
-          )
+          case None =>
+            state.copy(
+              errors = Vector(ValidationError("scenario", s"No scenario named '$name' found"))
+            )
 
     case Msg.SaveScenario =>
       saveScenario(state)
