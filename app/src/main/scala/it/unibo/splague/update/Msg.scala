@@ -7,6 +7,12 @@ import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, MalwareForm, NodeFor
 
 import java.nio.file.Path
 
+/** One of the shape generators in `it.unibo.splague.dsl.TopologyShapes`, referenced by `Msg`
+  * without pulling the `dsl` package into the message set.
+  */
+enum TopologyShape:
+  case Star, Ring, Mesh
+
 enum Msg:
 
   case GoToMenu
@@ -23,6 +29,8 @@ enum Msg:
   case AddEdge(edge: EdgeForm)
   case RemoveEdge(edge: EdgeForm)
   case UpdateEdge(edge: EdgeForm)
+
+  case AddShape(shape: TopologyShape)
 
   case UpdateMalware(malware: MalwareForm)
 

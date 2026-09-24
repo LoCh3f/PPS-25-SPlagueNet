@@ -13,6 +13,7 @@ import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.view.Screen
+import it.unibo.splague.view.form.ScenarioForm
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
@@ -106,5 +107,71 @@ class MvuSuite extends AnyFunSuite:
     val noSimulation = AppState.init(ModelState())
 
     val result = Mvu.update(Msg.GoToReport, noSimulation)
+
+    result.errors should not be Vector.empty
+
+  test("SimulationStep advances the simulation and scenarioForm without touching currentScenario"):
+    val advanced = baseline.copy(tick = 1)
+
+    val stepping = AppState
+      .init(ModelState(currentScenario = Some(baseline)))
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(baseline)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(advanced),
+            current = baseline,
+            running = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.SimulationStep, stepping)
+
+    result.simulation.map(_.current) shouldBe Some(advanced)
+    result.scenarioForm.map(_.tick) shouldBe Some(advanced.tick.toString)
+    // model.currentScenario identifies the scenario this session is working on (set on
+    // open/select/save/cancel/start/reset/import); it must not follow every simulated tick.
+    result.model.currentScenario shouldBe Some(baseline)
+
+  test("ResetSimulation restores the initial scenario and clears the simulation once finished"):
+    val advanced = baseline.copy(tick = 1)
+
+    val finished = AppState
+      .init(ModelState(currentScenario = Some(advanced)))
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(advanced)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = advanced,
+            running = false
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, finished)
+
+    result.simulation shouldBe None
+    result.model.currentScenario shouldBe Some(baseline)
+    result.scenarioForm.map(_.tick) shouldBe Some(baseline.tick.toString)
+    result.errors shouldBe Vector.empty
+
+  test("ResetSimulation is refused while the simulation is still running"):
+    val running = stateWithSimulation(running = true)
+
+    val result = Mvu.update(Msg.ResetSimulation, running)
+
+    result.simulation shouldBe running.simulation
+    result.errors should not be Vector.empty
+
+  test("ResetSimulation is refused when there is no simulation to reset"):
+    val noSimulation = AppState.init(ModelState())
+
+    val result = Mvu.update(Msg.ResetSimulation, noSimulation)
 
     result.errors should not be Vector.empty
