@@ -175,3 +175,63 @@ class MvuSuite extends AnyFunSuite:
     val result = Mvu.update(Msg.ResetSimulation, noSimulation)
 
     result.errors should not be Vector.empty
+
+  test("SaveScenario adds a brand-new scenario, and its malware, to the model state"):
+    val editing = AppState
+      .init(ModelState())
+      .copy(scenarioForm = Some(ScenarioForm.fromScenario(baseline)))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector(baseline.name)
+    result.model.malwares.map(_.name) shouldBe Vector(malware.name)
+    result.model.currentScenario.map(_.name) shouldBe Some(baseline.name)
+    result.errors shouldBe Vector.empty
+
+  test("SaveScenario updates the existing entry sharing its name instead of duplicating it"):
+    val editedForm = ScenarioForm.fromScenario(baseline).copy(seed = "99")
+
+    val editing = AppState
+      .init(ModelState(scenarios = Vector(baseline), malwares = Vector(malware)))
+      .copy(scenarioForm = Some(editedForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector(baseline.name)
+    result.model.scenarios.map(_.seed) shouldBe Vector(99)
+    result.model.malwares.map(_.name) shouldBe Vector(malware.name)
+
+  test("SaveScenario replaces the previously-named entry when the scenario is renamed"):
+    val renamedForm = ScenarioForm.fromScenario(baseline).copy(name = "Renamed Baseline")
+
+    val editing = AppState
+      .init(
+        ModelState(
+          scenarios = Vector(baseline),
+          malwares = Vector(malware),
+          currentScenario = Some(baseline)
+        )
+      )
+      .copy(scenarioForm = Some(renamedForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector("Renamed Baseline")
+
+  test("SaveScenario replaces the previously-named malware entry when the virus is renamed"):
+    val baseForm = ScenarioForm.fromScenario(baseline)
+    val renamedVirusForm = baseForm.copy(virus = baseForm.virus.copy(name = "Renamed Malware"))
+
+    val editing = AppState
+      .init(
+        ModelState(
+          scenarios = Vector(baseline),
+          malwares = Vector(malware),
+          currentScenario = Some(baseline)
+        )
+      )
+      .copy(scenarioForm = Some(renamedVirusForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.malwares.map(_.name) shouldBe Vector("Renamed Malware")

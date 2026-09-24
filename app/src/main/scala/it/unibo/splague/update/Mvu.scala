@@ -491,23 +491,18 @@ object Mvu:
             )
 
           case Right(updatedScenario) =>
+            // Both the scenario and its malware are upserted by name (their previous names, from
+            // the scenario open before this edit, included) so saving a scenario that was edited,
+            // renamed, run, or reset since it was last saved still lands back in the same slots
+            // instead of leaving stale duplicates behind (see ModelState.upsertScenario).
+            val previousScenarioName = state.model.currentScenario.map(_.name)
+            val previousMalwareName = state.model.currentScenario.map(_.virus.name)
+
             val updatedModel =
-              state.model.currentScenario match
-
-                case Some(previousScenario) =>
-                  state.model.copy(
-                    scenarios = state.model.scenarios.map { scenario =>
-                      if scenario == previousScenario then updatedScenario
-                      else scenario
-                    },
-                    currentScenario = Some(updatedScenario)
-                  )
-
-                case None =>
-                  state.model.copy(
-                    scenarios = state.model.scenarios :+ updatedScenario,
-                    currentScenario = Some(updatedScenario)
-                  )
+              state.model
+                .upsertScenario(updatedScenario, previousScenarioName)
+                .upsertMalware(updatedScenario.virus, previousMalwareName)
+                .copy(currentScenario = Some(updatedScenario))
 
             state.copy(
               model = updatedModel,

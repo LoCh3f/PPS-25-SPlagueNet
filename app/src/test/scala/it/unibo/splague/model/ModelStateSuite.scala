@@ -85,6 +85,72 @@ final class ModelStateSuite extends AnyFunSuite with Matchers with EitherValues:
 
     state.malwares shouldBe Vector(dummyVirus)
 
+  test("upsertScenario appends the scenario when no existing one shares its name"):
+    val state = ModelState().upsertScenario(scenarioA)
+
+    state.scenarios shouldBe Vector(scenarioA)
+
+  test("upsertScenario replaces the existing scenario with the same name instead of duplicating"):
+    val editedScenarioA = scenario("Scenario A").copy(seed = 99)
+
+    val state =
+      ModelState().addScenario(scenarioA).addScenario(scenarioB).upsertScenario(editedScenarioA)
+
+    state.scenarios shouldBe Vector(editedScenarioA, scenarioB)
+
+  test("upsertMalware appends the malware when no existing one shares its name"):
+    val state = ModelState().upsertMalware(dummyVirus)
+
+    state.malwares shouldBe Vector(dummyVirus)
+
+  test("upsertMalware replaces the existing malware with the same name instead of duplicating"):
+    val editedVirus =
+      Malware(
+        "dummy",
+        Worm,
+        validTraits.copy(payloadSeverity = PayloadSeverityLevel.High),
+        vectors = Set(PropagationVector.NetworkExploit)
+      ).toOption.get
+
+    val state = ModelState().addMalware(dummyVirus).upsertMalware(editedVirus)
+
+    state.malwares shouldBe Vector(editedVirus)
+
+  test("upsertScenario given previousName replaces the previously-named entry with the rename"):
+    val renamed = scenario("Scenario A renamed")
+
+    val state = ModelState()
+      .addScenario(scenarioA)
+      .addScenario(scenarioB)
+      .upsertScenario(renamed, previousName = Some(scenarioA.name))
+
+    // "Scenario A" is dropped and the rename is appended, so scenarioB (never touched) is first.
+    state.scenarios shouldBe Vector(scenarioB, renamed)
+
+  test("upsertScenario ignores previousName when it already equals the scenario's own name"):
+    val editedScenarioA = scenario("Scenario A").copy(seed = 99)
+
+    val state = ModelState()
+      .addScenario(scenarioA)
+      .upsertScenario(editedScenarioA, previousName = Some(scenarioA.name))
+
+    state.scenarios shouldBe Vector(editedScenarioA)
+
+  test("upsertMalware given previousName replaces the previously-named entry with the rename"):
+    val renamedVirus =
+      Malware(
+        "renamed",
+        Worm,
+        validTraits,
+        vectors = Set(PropagationVector.NetworkExploit)
+      ).toOption.get
+
+    val state = ModelState()
+      .addMalware(dummyVirus)
+      .upsertMalware(renamedVirus, previousName = Some(dummyVirus.name))
+
+    state.malwares shouldBe Vector(renamedVirus)
+
   test("selectScenario selects a scenario that is present in the model state"):
     val state = ModelState().addScenario(scenarioA)
 
