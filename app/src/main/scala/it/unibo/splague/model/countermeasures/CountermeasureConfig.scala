@@ -28,6 +28,22 @@ object CountermeasureConfig:
     defaultFirewallPolicy
   ).toOption.get
 
+  private def validateLevels(
+      levels: Map[Double, Countermeasures]
+  ): Either[String, Map[Double, Countermeasures]] =
+    Either.cond(
+      levels.keys.forall(threshold => threshold >= 0.0 && threshold <= 1.0),
+      levels,
+      "Thresholds in countermeasureLevels must be between 0.0 and 1.0"
+    )
+
+  private def isInRangeZeroOne(field: Double): Either[String, Double] =
+    Either.cond(
+      field >= 0 && field <= 1.0,
+      field,
+      "Boost amounts and cure probability must be between 0.0 and 1.0"
+    )
+
   def apply(
       activeCountermeasures: Set[Countermeasures] = Set.empty,
       countermeasureLevels: Map[Double, Countermeasures] = Map.empty,
@@ -36,22 +52,19 @@ object CountermeasureConfig:
       patchCureProbability: Double = defaultPatchCureProbability,
       isolationCriteria: IsolationCriteria = defaultIsolationCriteria,
       firewallPolicy: FirewallPolicy = defaultFirewallPolicy
-  ): Either[String, CountermeasureConfig] =
-    if countermeasureLevels.keys.exists(threshold => threshold < 0.0 || threshold > 1.0) then
-      Left("Thresholds in countermeasureLevels must be between 0.0 and 1.0")
-    else if defenseBoostAmount < 0.0 || defenseBoostAmount > 1.0 ||
-      patchBoostAmount < 0.0 || patchBoostAmount > 1.0 ||
-      patchCureProbability < 0.0 || patchCureProbability > 1.0
-    then Left("Boost amounts and cure probability must be between 0.0 and 1.0")
-    else
-      Right(
-        new CountermeasureConfig(
-          activeCountermeasures,
-          countermeasureLevels,
-          patchBoostAmount,
-          defenseBoostAmount,
-          patchCureProbability,
-          isolationCriteria,
-          firewallPolicy
-        )
-      )
+  ): Either[String, CountermeasureConfig] = {
+    for
+      validLevels <- validateLevels(countermeasureLevels)
+      validPatchBoostAmount <- isInRangeZeroOne(patchBoostAmount)
+      validDefenseBoostAmount <- isInRangeZeroOne(defenseBoostAmount)
+      validPatchCureProbability <- isInRangeZeroOne(patchCureProbability)
+    yield new CountermeasureConfig(
+      activeCountermeasures,
+      validLevels,
+      validPatchBoostAmount,
+      validDefenseBoostAmount,
+      validPatchCureProbability,
+      isolationCriteria,
+      firewallPolicy
+    )
+  }
