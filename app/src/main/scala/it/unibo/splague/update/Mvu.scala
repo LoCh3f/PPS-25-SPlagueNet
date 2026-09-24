@@ -240,11 +240,11 @@ object Mvu:
           val nextSimulation =
             simulation.next
 
+          // model.currentScenario deliberately stays untouched here: it identifies the scenario
+          // this session is working on (set on open/select/save/cancel/start/reset/import), while
+          // scenarioForm alone drives the live, tick-by-tick view.
           state.copy(
             simulation = Some(nextSimulation),
-            model = state.model.copy(
-              currentScenario = Some(nextSimulation.current)
-            ),
             scenarioForm = Some(ScenarioForm.fromScenario(nextSimulation.current)),
             errors = Vector.empty
           )
