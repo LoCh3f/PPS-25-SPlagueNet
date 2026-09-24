@@ -12,6 +12,7 @@ import it.unibo.splague.model.malware.{
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.view.Screen
 import it.unibo.splague.view.form.ScenarioForm
 import org.junit.runner.RunWith
@@ -235,3 +236,47 @@ class MvuSuite extends AnyFunSuite:
     val result = Mvu.update(Msg.SaveScenario, editing)
 
     result.model.malwares.map(_.name) shouldBe Vector("Renamed Malware")
+
+  test("SelectScenario switches to the picked scenario, clearing any prior simulation and report"):
+    val advanced = baseline.copy(tick = 1)
+
+    val browsing = AppState
+      .init(ModelState(scenarios = Vector(baseline)))
+      .copy(
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = advanced,
+            running = false
+          )
+        ),
+        report = Some(ScenarioReport.from(baseline, noOpSelector))
+      )
+
+    val result = Mvu.update(Msg.SelectScenario(baseline.name), browsing)
+
+    result.model.currentScenario shouldBe Some(baseline)
+    result.scenarioForm.map(_.name) shouldBe Some(baseline.name)
+    // Both belonged to the run of a scenario that is no longer open: keeping them around would
+    // let Report or Reset silently act on the wrong scenario.
+    result.simulation shouldBe None
+    result.report shouldBe None
+    result.errors shouldBe Vector.empty
+
+  test("SelectScenario is refused while the simulation is still running"):
+    val running = stateWithSimulation(running = true)
+      .copy(model = ModelState(scenarios = Vector(baseline)))
+
+    val result = Mvu.update(Msg.SelectScenario(baseline.name), running)
+
+    result.simulation shouldBe running.simulation
+    result.errors should not be Vector.empty
+
+  test("SelectScenario reports an error for an unknown scenario name"):
+    val state = AppState.init(ModelState(scenarios = Vector(baseline)))
+
+    val result = Mvu.update(Msg.SelectScenario("missing"), state)
+
+    result.errors should not be Vector.empty
