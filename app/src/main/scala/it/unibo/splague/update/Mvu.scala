@@ -251,6 +251,26 @@ object Mvu:
 
         case _ => state
 
+    case Msg.ResetSimulation =>
+      state.simulation match
+        case Some(simulation) if !simulation.running =>
+          state.copy(
+            simulation = None,
+            model = state.model.copy(currentScenario = Some(simulation.initial)),
+            scenarioForm = Some(ScenarioForm.fromScenario(simulation.initial)),
+            errors = Vector.empty
+          )
+
+        case Some(_) =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "Simulation is still running"))
+          )
+
+        case None =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "No simulation to reset"))
+          )
+
     case Msg.ExportScenario(format) =>
       resolveScenarioToExport(state) match
         case Left(error) =>

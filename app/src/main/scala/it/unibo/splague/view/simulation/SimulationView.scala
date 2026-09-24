@@ -25,6 +25,7 @@ object SimulationView:
       configuration: ScenarioConfigDialog,
       tickLabel: Label,
       reportButton: Button,
+      resetButton: Button,
       root: Component
   )
 
@@ -37,14 +38,16 @@ object SimulationView:
   ): Component =
     state.scenarioForm match
       case Some(form) =>
-        val reportEnabled = state.simulation.exists(!_.running)
+        // The simulation is over: the "final" state can be inspected in a report, and the
+        // workspace can be reset back to the state the simulation started from.
+        val simulationFinished = state.simulation.exists(!_.running)
 
         currentSession match
           case Some(session) =>
-            session.update(form, reportEnabled)
+            session.update(form, simulationFinished)
             session.root
           case None =>
-            val session = createSession(form, owner, reportEnabled, dispatch)
+            val session = createSession(form, owner, simulationFinished, dispatch)
             currentSession = Some(session)
             session.root
 
@@ -57,7 +60,7 @@ object SimulationView:
   private def createSession(
       form: ScenarioForm,
       owner: Window,
-      reportEnabled: Boolean,
+      simulationFinished: Boolean,
       dispatch: Msg => Unit
   ): Session =
     val workspace =
@@ -73,12 +76,20 @@ object SimulationView:
     val tickLabel = new Label(s"Tick: ${form.tick}")
 
     val reportButton = new Button("Report"):
-      enabled = reportEnabled
+      enabled = simulationFinished
 
     reportButton.listenTo(reportButton)
     reportButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToReport) }
 
-    val toolbar = createToolbar(workspace, tickLabel, reportButton, dispatch)
+    // Only meaningful once the simulation has run to completion, to bring the workspace back to
+    // the state it was in when the simulation started.
+    val resetButton = new Button("Reset"):
+      enabled = simulationFinished
+
+    resetButton.listenTo(resetButton)
+    resetButton.reactions += { case ButtonClicked(_) => dispatch(Msg.ResetSimulation) }
+
+    val toolbar = createToolbar(workspace, tickLabel, reportButton, resetButton, dispatch)
 
     val splitPane = new SplitPane(SwingOrientation.Vertical, workspace, configuration):
       oneTouchExpandable = true
@@ -95,6 +106,7 @@ object SimulationView:
       configuration = configuration,
       tickLabel = tickLabel,
       reportButton = reportButton,
+      resetButton = resetButton,
       root = rootPanel
     )
 
@@ -102,6 +114,7 @@ object SimulationView:
       workspace: ScenarioWorkspacePanel,
       tickLabel: Label,
       reportButton: Button,
+      resetButton: Button,
       dispatch: Msg => Unit
   ): Component =
     val zoomIn = new Button("+")
@@ -120,10 +133,6 @@ object SimulationView:
     run.listenTo(run)
     run.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
 
-    val step = new Button("Step")
-    step.listenTo(step)
-    step.reactions += { case ButtonClicked(_) => dispatch(Msg.SimulationStep) }
-
     val back = new Button("Back")
     back.listenTo(back)
     back.reactions += { case ButtonClicked(_) =>
@@ -136,7 +145,7 @@ object SimulationView:
       zoomOut,
       save,
       run,
-      step,
+      resetButton,
       reportButton,
       tickLabel
     ):
@@ -161,8 +170,9 @@ object SimulationView:
       layout(new Label("No scenario form is open")) = BorderPanel.Position.Center
 
   extension (session: Session)
-    private def update(form: ScenarioForm, reportEnabled: Boolean): Unit =
+    private def update(form: ScenarioForm, simulationFinished: Boolean): Unit =
       session.workspace.setTopology(form.topology)
       session.configuration.updateForm(form)
       session.tickLabel.text = s"Tick: ${form.tick}"
-      session.reportButton.enabled = reportEnabled
+      session.reportButton.enabled = simulationFinished
+      session.resetButton.enabled = simulationFinished
