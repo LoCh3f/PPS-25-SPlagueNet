@@ -40,6 +40,14 @@ def scenario(
 def network(block: TopologyBuilder ?=> Unit)(using scenarioBuilder: ScenarioBuilder): Unit =
   scenarioBuilder.setNetwork(topology(block))
 
+/** Declares the scenario's countermeasures. Wraps a regular `countermeasureConfig { ... }` block.
+  * If omitted, defaults to an empty configuration.
+  */
+def countermeasures(block: CountermeasureConfigBuilder ?=> Unit)(using
+    scenarioBuilder: ScenarioBuilder
+): Unit =
+  scenarioBuilder.setCountermeasures(countermeasureConfig(block))
+
 /** Declares the scenario's malware. The probabilities are validated, not clamped: a value outside
   * `[0,1]` is reported as an error naming the field.
   */
