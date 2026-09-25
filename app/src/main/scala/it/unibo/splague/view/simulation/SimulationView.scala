@@ -1,33 +1,35 @@
 package it.unibo.splague.view.simulation
 
 import it.unibo.splague.AppState
-import it.unibo.splague.update.Msg
+import it.unibo.splague.update.{Msg, TopologyShape}
 import it.unibo.splague.view.simulation.dialog.ScenarioConfigDialog
 import it.unibo.splague.view.simulation.workspace.ScenarioWorkspacePanel
 import it.unibo.splague.view.form.ScenarioForm
 
-import java.awt.{BorderLayout, Dimension, FlowLayout}
-import javax.swing.{
-  BorderFactory,
-  JButton,
-  JLabel,
-  JMenuItem,
-  JPanel,
-  JPopupMenu,
-  JSplitPane,
-  JToolBar,
-  SwingConstants
+import scala.swing.{
+  BorderPanel,
+  Button,
+  ComboBox,
+  Component,
+  FlowPanel,
+  Label,
+  SplitPane,
+  Window,
+  Orientation as SwingOrientation
 }
-import scala.swing.Component
-import it.unibo.splague.view.simulation.{ExportButton, ImportButton}
+import scala.swing.event.ButtonClicked
 
 object SimulationView:
 
   private final case class Session(
       workspace: ScenarioWorkspacePanel,
       configuration: ScenarioConfigDialog,
-      tickLabel: JLabel,
-      reportButton: JButton,
+      tickLabel: Label,
+      reportButton: Button,
+      resetButton: Button,
+      shapeButtons: Seq[Button],
+      scenarioCombo: ComboBox[String],
+      loadScenarioButton: Button,
       root: Component
   )
 
@@ -35,19 +37,26 @@ object SimulationView:
 
   def render(
       state: AppState,
+      owner: Window,
       dispatch: Msg => Unit
   ): Component =
     state.scenarioForm match
       case Some(form) =>
-        val reportEnabled = state.simulation.exists(!_.running)
+        // The simulation is over: the "final" state can be inspected in a report, and the
+        // workspace can be reset back to the state the simulation started from.
+        val simulationFinished = state.simulation.exists(!_.running)
+        // The topology (including the shape-adding buttons and the scenario picker below) can
+        // only be edited while no simulation is actively progressing; it's fine before one has
+        // started, or once it's over.
+        val simulationRunning = state.simulation.exists(_.running)
 
         currentSession match
           case Some(session) =>
-            session.update(form, reportEnabled)
+            session.update(state, form, simulationFinished, simulationRunning)
             session.root
-
           case None =>
-            val session = createSession(form, reportEnabled, dispatch)
+            val session =
+              createSession(state, form, owner, simulationFinished, simulationRunning, dispatch)
             currentSession = Some(session)
             session.root
 
@@ -58,126 +67,217 @@ object SimulationView:
     currentSession = None
 
   private def createSession(
+      state: AppState,
       form: ScenarioForm,
-      reportEnabled: Boolean,
+      owner: Window,
+      simulationFinished: Boolean,
+      simulationRunning: Boolean,
       dispatch: Msg => Unit
   ): Session =
     val workspace =
       new ScenarioWorkspacePanel(
         initialTopology = form.topology,
+        owner = owner,
         dispatch = dispatch
       )
 
     val configuration =
-      new ScenarioConfigDialog(
-        initialForm = form,
-        dispatch = dispatch
-      )
+      new ScenarioConfigDialog(initialForm = form, dispatch = dispatch)
 
-    val tickLabel =
-      new JLabel(s"Tick: ${form.tick}")
+    val tickLabel = new Label(s"Tick: ${form.tick}")
 
-    val reportButton =
-      new JButton("Report")
+    val reportButton = new Button("Report"):
+      enabled = simulationFinished
 
-    reportButton.addActionListener(_ => dispatch(Msg.GoToReport))
-    reportButton.setEnabled(reportEnabled)
+    reportButton.listenTo(reportButton)
+    reportButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToReport) }
 
-    val toolbar =
-      createToolbar(workspace, tickLabel, reportButton, dispatch)
+    // Only meaningful once the simulation has run to completion, to bring the workspace back to
+    // the state it was in when the simulation started.
+    val resetButton = new Button("Reset"):
+      enabled = simulationFinished
 
-    val splitPane =
-      new JSplitPane(
-        JSplitPane.HORIZONTAL_SPLIT,
-        workspace,
-        configuration
-      )
+    resetButton.listenTo(resetButton)
+    resetButton.reactions += { case ButtonClicked(_) => dispatch(Msg.ResetSimulation) }
 
-    splitPane.setOneTouchExpandable(true)
-    splitPane.setResizeWeight(0.75)
-    splitPane.setDividerLocation(620)
-    splitPane.setBorder(BorderFactory.createEmptyBorder())
+    val shapeButtons = createShapeButtons(!simulationRunning, dispatch)
+    val (scenarioCombo, loadScenarioButton) =
+      createScenarioPicker(state, !simulationRunning, dispatch)
 
-    val rootPanel =
-      new JPanel(new BorderLayout())
+    val toolbar = createToolbar(
+      workspace,
+      tickLabel,
+      reportButton,
+      resetButton,
+      shapeButtons,
+      scenarioCombo,
+      loadScenarioButton,
+      dispatch
+    )
 
-    rootPanel.add(toolbar, BorderLayout.NORTH)
-    rootPanel.add(splitPane, BorderLayout.CENTER)
+    val splitPane = new SplitPane(SwingOrientation.Vertical, workspace, configuration):
+      oneTouchExpandable = true
+      resizeWeight = 0.75
+
+    splitPane.peer.setDividerLocation(620)
+
+    val rootPanel = new BorderPanel:
+      layout(toolbar) = BorderPanel.Position.North
+      layout(splitPane) = BorderPanel.Position.Center
 
     Session(
       workspace = workspace,
       configuration = configuration,
       tickLabel = tickLabel,
       reportButton = reportButton,
-      root = Component.wrap(rootPanel)
+      resetButton = resetButton,
+      shapeButtons = shapeButtons,
+      scenarioCombo = scenarioCombo,
+      loadScenarioButton = loadScenarioButton,
+      root = rootPanel
     )
+
+  /** A scenario picker ("switch to a different saved scenario") plus the "Load" button that applies
+    * it (`Msg.SelectScenario`). Lists every scenario in `state.model.scenarios` — the two built-ins
+    * (`SimpleScenario`, `ExampleScenario`) preloaded at startup, plus anything saved since
+    * (`Mvu.saveScenario`) — and is re-synced with that list on every render via
+    * `refreshScenarioItems`, since saving (possibly under a new name) can change it while this view
+    * stays open. Disabled while the simulation is running, like the shape buttons: switching the
+    * scenario out from under a live run would leave `SimulationState` pointing at a topology no
+    * longer shown.
+    */
+  private def createScenarioPicker(
+      state: AppState,
+      enabledNow: Boolean,
+      dispatch: Msg => Unit
+  ): (ComboBox[String], Button) =
+    val combo = new ComboBox(Seq.empty[String]):
+      enabled = enabledNow
+
+    refreshScenarioItems(combo, state)
+
+    val load = new Button("Load"):
+      enabled = enabledNow
+
+    load.listenTo(load)
+    load.reactions += { case ButtonClicked(_) =>
+      Option(combo.peer.getSelectedItem)
+        .map(_.toString)
+        .foreach(name => dispatch(Msg.SelectScenario(name)))
+    }
+
+    (combo, load)
+
+  /** Resets `combo` 's items to `state.model.scenarios` ' current names, keeping a sensible
+    * selection: `state.model.currentScenario` 's name if it's in the list, else whatever was
+    * selected before, if that's still in the list. Replaces the combo box's underlying model
+    * outright rather than diffing it, since the list is short and this only runs on render.
+    */
+  private def refreshScenarioItems(combo: ComboBox[String], state: AppState): Unit =
+    val names = state.model.scenarios.map(_.name)
+    val previousSelection = Option(combo.peer.getSelectedItem).map(_.toString)
+
+    combo.peer.setModel(new javax.swing.DefaultComboBoxModel[String](names.toArray))
+
+    state.model.currentScenario
+      .map(_.name)
+      .filter(names.contains)
+      .orElse(previousSelection.filter(names.contains))
+      .foreach(name => combo.selection.item = name)
+
+  /** One button per shape generator in `it.unibo.splague.dsl.TopologyShapes`, each adding that
+    * shape to the workspace's topology (`Msg.AddShape`). Disabled while the simulation is running,
+    * since the topology it's simulating shouldn't change underneath it.
+    */
+  private def createShapeButtons(enabledNow: Boolean, dispatch: Msg => Unit): Seq[Button] =
+    Seq(
+      "Star" -> TopologyShape.Star,
+      "Ring" -> TopologyShape.Ring,
+      "Mesh" -> TopologyShape.Mesh
+    ).map { case (label, shape) =>
+      val button = new Button(label):
+        enabled = enabledNow
+
+      button.listenTo(button)
+      button.reactions += { case ButtonClicked(_) => dispatch(Msg.AddShape(shape)) }
+      button
+    }
 
   private def createToolbar(
       workspace: ScenarioWorkspacePanel,
-      tickLabel: JLabel,
-      reportButton: JButton,
+      tickLabel: Label,
+      reportButton: Button,
+      resetButton: Button,
+      shapeButtons: Seq[Button],
+      scenarioCombo: ComboBox[String],
+      loadScenarioButton: Button,
       dispatch: Msg => Unit
-  ): JToolBar =
-    val toolbar = new JToolBar
-    toolbar.setFloatable(false)
-    toolbar.setPreferredSize(new Dimension(0, 52))
+  ): Component =
+    val zoomIn = new Button("+")
+    zoomIn.listenTo(zoomIn)
+    zoomIn.reactions += { case ButtonClicked(_) => workspace.zoomIn() }
 
-    val left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0))
-    val right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0))
+    val zoomOut = new Button("-")
+    zoomOut.listenTo(zoomOut)
+    zoomOut.reactions += { case ButtonClicked(_) => workspace.zoomOut() }
 
-    val zoomIn = new JButton("+")
-    zoomIn.addActionListener(_ => workspace.zoomIn())
+    val save = new Button("Save")
+    save.listenTo(save)
+    save.reactions += { case ButtonClicked(_) => dispatch(Msg.SaveScenario) }
 
-    val zoomOut = new JButton("-")
-    zoomOut.addActionListener(_ => workspace.zoomOut())
+    val run = new Button("Run")
+    run.listenTo(run)
+    run.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
 
-    val save = new JButton("Save")
-    save.addActionListener(_ => dispatch(Msg.SaveScenario))
-
-    val run = new JButton("Run")
-    run.addActionListener(_ => dispatch(Msg.StartSimulation))
-
-    val step = new JButton("Step")
-    step.addActionListener(_ => dispatch(Msg.SimulationStep))
-
-    val back = new JButton("Back")
-    back.addActionListener(_ =>
+    val back = new Button("Back")
+    back.listenTo(back)
+    back.reactions += { case ButtonClicked(_) =>
       clearSession()
       dispatch(Msg.GoToMenu)
-    )
+    }
 
-    left.add(zoomIn)
-    left.add(zoomOut)
-    left.add(save)
-    left.add(run)
-    left.add(step)
-    left.add(reportButton)
-    left.add(tickLabel)
-    right.add(back)
-    right.add(ExportButton(dispatch))
-    right.add(ImportButton(dispatch))
+    val left = new FlowPanel(FlowPanel.Alignment.Left)(
+      (Seq(zoomIn, zoomOut, scenarioCombo, loadScenarioButton) ++ shapeButtons ++ Seq(
+        save,
+        run,
+        resetButton,
+        reportButton,
+        tickLabel
+      ))*
+    ):
+      hGap = 8
+      vGap = 0
 
-    toolbar.setLayout(new BorderLayout())
-    toolbar.add(left, BorderLayout.WEST)
-    toolbar.add(right, BorderLayout.EAST)
-    toolbar
+    val right = new FlowPanel(FlowPanel.Alignment.Right)(
+      back,
+      ExportButton(dispatch),
+      ImportButton(dispatch)
+    ):
+      hGap = 8
+      vGap = 0
+
+    new BorderPanel:
+      preferredSize = new scala.swing.Dimension(0, 52)
+      layout(left) = BorderPanel.Position.West
+      layout(right) = BorderPanel.Position.East
 
   private def emptyView(): Component =
-    Component.wrap(
-      new JPanel(new BorderLayout()) {
-        add(
-          new JLabel(
-            "No scenario form is open",
-            SwingConstants.CENTER
-          ),
-          BorderLayout.CENTER
-        )
-      }
-    )
+    new BorderPanel:
+      layout(new Label("No scenario form is open")) = BorderPanel.Position.Center
 
   extension (session: Session)
-    private def update(form: ScenarioForm, reportEnabled: Boolean): Unit =
+    private def update(
+        state: AppState,
+        form: ScenarioForm,
+        simulationFinished: Boolean,
+        simulationRunning: Boolean
+    ): Unit =
       session.workspace.setTopology(form.topology)
       session.configuration.updateForm(form)
-      session.tickLabel.setText(s"Tick: ${form.tick}")
-      session.reportButton.setEnabled(reportEnabled)
+      session.tickLabel.text = s"Tick: ${form.tick}"
+      session.reportButton.enabled = simulationFinished
+      session.resetButton.enabled = simulationFinished
+      session.shapeButtons.foreach(_.enabled = !simulationRunning)
+      session.scenarioCombo.enabled = !simulationRunning
+      session.loadScenarioButton.enabled = !simulationRunning
+      refreshScenarioItems(session.scenarioCombo, state)

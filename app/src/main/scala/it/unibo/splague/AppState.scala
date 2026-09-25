@@ -4,6 +4,7 @@ import it.unibo.splague.model.{ModelState, Scenario}
 import it.unibo.splague.persistence.{Repository, Writer}
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.report.ScenarioReport
+import it.unibo.splague.utils.{ExampleScenario, SimpleScenario}
 import it.unibo.splague.view.form.ScenarioForm
 import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
@@ -25,6 +26,19 @@ object AppState:
     AppState(
       model = model
     )
+
+  /** The `ModelState` a fresh app run starts from: the two built-in scenarios (`SimpleScenario`,
+    * `ExampleScenario`) preloaded via the same by-name upsert `Mvu.saveScenario` uses, so they show
+    * up in the menu's scenario picker exactly like anything the user saves during the session — no
+    * separate "built-in vs. saved" case needed anywhere else. Either one silently failing to build
+    * (neither should, in practice) just means one fewer preloaded entry, not a startup crash.
+    */
+  def initialModel: ModelState =
+    Vector(SimpleScenario.linearScenario(), ExampleScenario.complexScenario())
+      .collect { case Right(scenario) => scenario }
+      .foldLeft(ModelState()) { (model, scenario) =>
+        model.upsertScenario(scenario).upsertMalware(scenario.virus)
+      }
 
   def defaultScenarioJsonRepository: Repository[Scenario] =
     Repository.json[Scenario]

@@ -2,16 +2,16 @@ package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.{MalwareKind, PayloadSeverityLevel, PropagationVector}
 import it.unibo.splague.persistence.FileFormat
-import it.unibo.splague.view.form.{
-  AwarenessForm,
-  CountermeasureForm,
-  EdgeForm,
-  MalwareForm,
-  NodeForm,
-  ScenarioForm
-}
+import it.unibo.splague.view.form.countermeasure.CountermeasureForm
+import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, MalwareForm, NodeForm, ScenarioForm}
 
 import java.nio.file.Path
+
+/** One of the shape generators in `it.unibo.splague.dsl.TopologyShapes`, referenced by `Msg`
+  * without pulling the `dsl` package into the message set.
+  */
+enum TopologyShape:
+  case Star, Ring, Mesh
 
 enum Msg:
 
@@ -30,6 +30,8 @@ enum Msg:
   case RemoveEdge(edge: EdgeForm)
   case UpdateEdge(edge: EdgeForm)
 
+  case AddShape(shape: TopologyShape)
+
   case UpdateMalware(malware: MalwareForm)
 
   case UpdateAwareness(awareness: AwarenessForm)
@@ -39,6 +41,7 @@ enum Msg:
   case CancelScenario
   case StartSimulation
   case SimulationStep
+  case ResetSimulation
 
   // export/import scenario
   case ExportScenario(format: FileFormat)
