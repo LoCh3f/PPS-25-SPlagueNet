@@ -1,5 +1,6 @@
 package it.unibo.splague.dsl
 
+import it.unibo.splague.model.countermeasures.CountermeasureConfig
 import it.unibo.splague.model.{Probability, Scenario}
 import it.unibo.splague.model.malware.{
   Malware,
@@ -34,12 +35,15 @@ private final class ScenarioBuilder(name: String):
 
   private val networks = mutable.ArrayBuffer.empty[ValidationResult[Topology]]
   private val malwares = mutable.ArrayBuffer.empty[MalwareSpec]
+  private val counterConfig = mutable.ArrayBuffer.empty[ValidationResult[CountermeasureConfig]]
   private val startingNodeIds = mutable.ArrayBuffer.empty[String]
   private val seeds = mutable.ArrayBuffer.empty[Int]
   private val maxIterationValues = mutable.ArrayBuffer.empty[Int]
 
   def setNetwork(result: ValidationResult[Topology]): Unit = networks += result
   def setMalware(spec: MalwareSpec): Unit = malwares += spec
+  def setCountermeasures(result: ValidationResult[CountermeasureConfig]): Unit =
+    counterConfig += result
   def setStartingNode(id: String): Unit = startingNodeIds += id
   def setSeed(value: Int): Unit = seeds += value
   def setMaxIterations(value: Int): Unit = maxIterationValues += value
@@ -140,13 +144,23 @@ private final class ScenarioBuilder(name: String):
     val iterationsResult =
       atMostOne(maxIterationValues.toList, "The max iterations are declared more than once")
 
+    val countermeasureConfigResult: ValidationResult[CountermeasureConfig] =
+      atMostOne(
+        counterConfig.toList,
+        "The countermeasures are declared more than once"
+      ).flatMap {
+        case Some(result) => result
+        case None         => Right(CountermeasureConfig.empty)
+      }
+
     val errors = errorsOf(
       topologyResult,
       malwareResult,
       startingIdResult,
       startingNodeResult,
       seedResult,
-      iterationsResult
+      iterationsResult,
+      countermeasureConfigResult
     )
 
     if errors.nonEmpty then Left(errors)
@@ -157,6 +171,7 @@ private final class ScenarioBuilder(name: String):
         startNode <- startingNodeResult
         declaredSeed <- seedResult
         declaredIterations <- iterationsResult
+        config <- countermeasureConfigResult
         built <- Scenario(
           name = name,
           topology = topology,
@@ -164,6 +179,7 @@ private final class ScenarioBuilder(name: String):
           startingNode = startNode,
           tick = 0,
           seed = declaredSeed.getOrElse(defaultSeed),
-          maxIterations = declaredIterations.getOrElse(SimulationConfig.Defaults.MAX_ITERATIONS)
+          maxIterations = declaredIterations.getOrElse(SimulationConfig.Defaults.MAX_ITERATIONS),
+          countermeasureConfig = config
         ).left.map(List(_))
       yield built

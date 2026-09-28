@@ -14,6 +14,7 @@ import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
 import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.view.Screen
+import it.unibo.splague.view.form.ScenarioForm
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -117,3 +118,325 @@ final class MvuSuite extends AnyFunSuite with Matchers:
     result.screen shouldBe Screen.Report
     result.report shouldBe None
     result.errors shouldBe Vector.empty
+
+  test("SimulationStep advances the simulation and scenarioForm without touching currentScenario"):
+    val advanced = baseline.copy(tick = 1)
+
+    val stepping = AppState
+      .init(ModelState(currentScenario = Some(baseline)))
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(baseline)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(advanced),
+            current = baseline,
+            running = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.SimulationStep, stepping)
+
+    result.simulation.map(_.current) shouldBe Some(advanced)
+    result.scenarioForm.map(_.tick) shouldBe Some(advanced.tick.toString)
+    // model.currentScenario identifies the scenario this session is working on (set on
+    // open/select/save/cancel/start/reset/import); it must not follow every simulated tick.
+    result.model.currentScenario shouldBe Some(baseline)
+
+  test("SimulationStep does nothing while the simulation is paused"):
+    val advanced = baseline.copy(tick = 1)
+
+    val paused = AppState
+      .init(ModelState())
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(baseline)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(advanced),
+            current = baseline,
+            running = true,
+            paused = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.SimulationStep, paused)
+
+    // Runtime's Timer still fires every tick regardless of pause state; the handler must no-op.
+    result shouldBe paused
+
+  test("ToggleSimulationPause flips paused back and forth on a running simulation"):
+    val running = stateWithSimulation(running = true)
+
+    val pausedResult = Mvu.update(Msg.ToggleSimulationPause, running)
+    pausedResult.simulation.map(_.paused) shouldBe Some(true)
+    pausedResult.errors shouldBe Vector.empty
+
+    val resumedResult = Mvu.update(Msg.ToggleSimulationPause, pausedResult)
+    resumedResult.simulation.map(_.paused) shouldBe Some(false)
+
+  test("ToggleSimulationPause is refused when the simulation has already finished"):
+    val finished = stateWithSimulation(running = false)
+
+    val result = Mvu.update(Msg.ToggleSimulationPause, finished)
+
+    result.simulation shouldBe finished.simulation
+    result.errors should not be Vector.empty
+
+  test("ToggleSimulationPause is refused when there is no simulation"):
+    val noSimulation = AppState.init(ModelState())
+
+    val result = Mvu.update(Msg.ToggleSimulationPause, noSimulation)
+
+    result.errors should not be Vector.empty
+
+  test("StartSimulation seeds simulation.initial but keeps model.currentScenario pre-seed"):
+    val starting = AppState
+      .init(ModelState())
+      .copy(scenarioForm = Some(ScenarioForm.fromScenario(baseline)))
+
+    val result = Mvu.update(Msg.StartSimulation, starting)
+
+    result.simulation.map(_.initial.topology.nodes(node.nodeId.value).state) shouldBe
+      Some(NodeState.Infected)
+    // model.currentScenario is the scenario's identity, not a run snapshot: it must stay at the
+    // pre-seed, all-Healthy scenario so ResetSimulation can restore a genuinely clean scenario.
+    result.model.currentScenario.map(_.topology.nodes(node.nodeId.value).state) shouldBe
+      Some(NodeState.Healthy)
+    result.errors shouldBe Vector.empty
+
+  test("StartSimulation is refused while a simulation already exists"):
+    val alreadyRunning = stateWithSimulation(running = true)
+      .copy(scenarioForm = Some(ScenarioForm.fromScenario(baseline)))
+
+    val result = Mvu.update(Msg.StartSimulation, alreadyRunning)
+
+    // Re-pressing Run must not discard the existing SimulationState or reseed anything.
+    result.simulation shouldBe alreadyRunning.simulation
+    result.errors should not be Vector.empty
+
+  test(
+    "ResetSimulation restores model.currentScenario, which stays Healthy though simulation.initial was seeded"
+  ):
+    val seededNode = node.copy(state = NodeState.Infected)
+    val seeded = baseline.copy(
+      topology = topology.copy(nodes = topology.nodes.updated(node.nodeId.value, seededNode))
+    )
+
+    val finished = AppState
+      .init(ModelState(currentScenario = Some(baseline))) // pre-seed: patient zero still Healthy
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(seeded)),
+        simulation = Some(
+          SimulationState(
+            initial = seeded, // deliberately different: ScenarioReport needs this one seeded
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = seeded,
+            running = false
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, finished)
+
+    result.simulation shouldBe None
+    result.model.currentScenario shouldBe Some(baseline)
+    result.scenarioForm.get.topology.nodes.map(_.state) shouldBe Vector(NodeState.Healthy)
+    result.errors shouldBe Vector.empty
+
+  test(
+    "ResetSimulation restores model.currentScenario even when it diverged from simulation.initial"
+  ):
+    // Simulates saving mid-run: model.currentScenario was overwritten by SaveScenario with
+    // whatever the form held at that point (here: a different, already-infected scenario), so
+    // Reset should now restore *that*, not simulation.initial.
+    val advanced = baseline.copy(tick = 1)
+    val savedMidRun = baseline.copy(name = "Baseline (saved mid-run)", tick = 1)
+
+    val finished = AppState
+      .init(ModelState(currentScenario = Some(savedMidRun)))
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(advanced)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = advanced,
+            running = false
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, finished)
+
+    result.simulation shouldBe None
+    result.model.currentScenario shouldBe Some(savedMidRun)
+    result.scenarioForm.map(_.name) shouldBe Some(savedMidRun.name)
+    result.errors shouldBe Vector.empty
+
+  test("ResetSimulation is refused when there is a finished simulation but no current scenario"):
+    val finishedNoScenario = AppState
+      .init(ModelState())
+      .copy(
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = baseline,
+            running = false
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, finishedNoScenario)
+
+    result.simulation shouldBe finishedNoScenario.simulation
+    result.errors should not be Vector.empty
+
+  test("ResetSimulation succeeds on a paused simulation, not just a finished one"):
+    val paused = AppState
+      .init(ModelState(currentScenario = Some(baseline)))
+      .copy(
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(baseline), // ticks remain: running stays true while paused
+            current = baseline,
+            running = true,
+            paused = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, paused)
+
+    result.simulation shouldBe None
+    result.model.currentScenario shouldBe Some(baseline)
+    result.errors shouldBe Vector.empty
+
+  test("ResetSimulation is refused while the simulation is still running and not paused"):
+    val running = stateWithSimulation(running = true)
+
+    val result = Mvu.update(Msg.ResetSimulation, running)
+
+    result.simulation shouldBe running.simulation
+    result.errors should not be Vector.empty
+
+  test("ResetSimulation is refused when there is no simulation to reset"):
+    val noSimulation = AppState.init(ModelState())
+
+    val result = Mvu.update(Msg.ResetSimulation, noSimulation)
+
+    result.errors should not be Vector.empty
+
+  test("SaveScenario adds a brand-new scenario, and its malware, to the model state"):
+    val editing = AppState
+      .init(ModelState())
+      .copy(scenarioForm = Some(ScenarioForm.fromScenario(baseline)))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector(baseline.name)
+    result.model.malwares.map(_.name) shouldBe Vector(malware.name)
+    result.model.currentScenario.map(_.name) shouldBe Some(baseline.name)
+    result.errors shouldBe Vector.empty
+
+  test("SaveScenario updates the existing entry sharing its name instead of duplicating it"):
+    val editedForm = ScenarioForm.fromScenario(baseline).copy(seed = "99")
+
+    val editing = AppState
+      .init(ModelState(scenarios = Vector(baseline), malwares = Vector(malware)))
+      .copy(scenarioForm = Some(editedForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector(baseline.name)
+    result.model.scenarios.map(_.seed) shouldBe Vector(99)
+    result.model.malwares.map(_.name) shouldBe Vector(malware.name)
+
+  test("SaveScenario replaces the previously-named entry when the scenario is renamed"):
+    val renamedForm = ScenarioForm.fromScenario(baseline).copy(name = "Renamed Baseline")
+
+    val editing = AppState
+      .init(
+        ModelState(
+          scenarios = Vector(baseline),
+          malwares = Vector(malware),
+          currentScenario = Some(baseline)
+        )
+      )
+      .copy(scenarioForm = Some(renamedForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.scenarios.map(_.name) shouldBe Vector("Renamed Baseline")
+
+  test("SaveScenario replaces the previously-named malware entry when the virus is renamed"):
+    val baseForm = ScenarioForm.fromScenario(baseline)
+    val renamedVirusForm = baseForm.copy(virus = baseForm.virus.copy(name = "Renamed Malware"))
+
+    val editing = AppState
+      .init(
+        ModelState(
+          scenarios = Vector(baseline),
+          malwares = Vector(malware),
+          currentScenario = Some(baseline)
+        )
+      )
+      .copy(scenarioForm = Some(renamedVirusForm))
+
+    val result = Mvu.update(Msg.SaveScenario, editing)
+
+    result.model.malwares.map(_.name) shouldBe Vector("Renamed Malware")
+
+  test("SelectScenario switches to the picked scenario, clearing any prior simulation and report"):
+    val advanced = baseline.copy(tick = 1)
+
+    val browsing = AppState
+      .init(ModelState(scenarios = Vector(baseline)))
+      .copy(
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList.empty,
+            current = advanced,
+            running = false
+          )
+        ),
+        report = Some(ScenarioReport.from(baseline, noOpSelector))
+      )
+
+    val result = Mvu.update(Msg.SelectScenario(baseline.name), browsing)
+
+    result.model.currentScenario shouldBe Some(baseline)
+    result.scenarioForm.map(_.name) shouldBe Some(baseline.name)
+    // Both belonged to the run of a scenario that is no longer open: keeping them around would
+    // let Report or Reset silently act on the wrong scenario.
+    result.simulation shouldBe None
+    result.report shouldBe None
+    result.errors shouldBe Vector.empty
+
+  test("SelectScenario is refused while the simulation is still running"):
+    val running = stateWithSimulation(running = true)
+      .copy(model = ModelState(scenarios = Vector(baseline)))
+
+    val result = Mvu.update(Msg.SelectScenario(baseline.name), running)
+
+    result.simulation shouldBe running.simulation
+    result.errors should not be Vector.empty
+
+  test("SelectScenario reports an error for an unknown scenario name"):
+    val state = AppState.init(ModelState(scenarios = Vector(baseline)))
+
+    val result = Mvu.update(Msg.SelectScenario("missing"), state)
+
+    result.errors should not be Vector.empty

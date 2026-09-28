@@ -2,7 +2,7 @@ package it.unibo.splague.dsl
 
 import it.unibo.splague.model.Scenario
 import it.unibo.splague.model.connection.Connection.ChannelType.LAN
-import it.unibo.splague.model.countermeasures.CountermeasureConfig
+import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.malware.MalwareKind.Worm
 import it.unibo.splague.model.malware.PayloadSeverityLevel.Low
 import it.unibo.splague.model.malware.PropagationVector
@@ -178,3 +178,27 @@ final class ScenarioDslSuite extends AnyFunSuite with Matchers with EitherValues
       startingNode("B")
 
     result.left.value should contain("The starting node is declared more than once")
+
+  test("declaring a scenario with countermeasure config should contain the specified config"):
+    val result = scenario("Outbreak"):
+      network:
+        node("A", Workstation)
+        node("B", Workstation)
+      declareWorm()
+      startingNode("A")
+      countermeasures:
+        0.5 triggers Countermeasures.Isolation
+        patchBoostAmount(0.15)
+
+    result.value.countermeasureConfig.patchBoostAmount shouldBe 0.15
+    result.value.countermeasureConfig.countermeasureLevels should contain only (0.5 -> Countermeasures.Isolation)
+
+  test("declaring a scenario without countermeasure config should contain the default config"):
+    val result = scenario("Outbreak"):
+      network:
+        node("A", Workstation)
+        node("B", Workstation)
+      declareWorm()
+      startingNode("A")
+
+    result.value.countermeasureConfig shouldBe CountermeasureConfig.empty
