@@ -8,7 +8,8 @@ final case class SimulationState(
     selector: EventSelector,
     states: LazyList[Scenario],
     current: Scenario,
-    running: Boolean
+    running: Boolean,
+    paused: Boolean = false
 ):
 
   def currentTick: Int =
@@ -23,3 +24,6 @@ final case class SimulationState(
         copy(states = remaining, current = nextScenario, running = remaining.nonEmpty)
       case _ =>
         copy(running = false)
+
+  def togglePause: SimulationState =
+    copy(paused = !paused)
