@@ -137,6 +137,55 @@ class MvuSuite extends AnyFunSuite:
     // open/select/save/cancel/start/reset/import); it must not follow every simulated tick.
     result.model.currentScenario shouldBe Some(baseline)
 
+  test("SimulationStep does nothing while the simulation is paused"):
+    val advanced = baseline.copy(tick = 1)
+
+    val paused = AppState
+      .init(ModelState())
+      .copy(
+        scenarioForm = Some(ScenarioForm.fromScenario(baseline)),
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(advanced),
+            current = baseline,
+            running = true,
+            paused = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.SimulationStep, paused)
+
+    // Runtime's Timer still fires every tick regardless of pause state; the handler must no-op.
+    result shouldBe paused
+
+  test("ToggleSimulationPause flips paused back and forth on a running simulation"):
+    val running = stateWithSimulation(running = true)
+
+    val pausedResult = Mvu.update(Msg.ToggleSimulationPause, running)
+    pausedResult.simulation.map(_.paused) shouldBe Some(true)
+    pausedResult.errors shouldBe Vector.empty
+
+    val resumedResult = Mvu.update(Msg.ToggleSimulationPause, pausedResult)
+    resumedResult.simulation.map(_.paused) shouldBe Some(false)
+
+  test("ToggleSimulationPause is refused when the simulation has already finished"):
+    val finished = stateWithSimulation(running = false)
+
+    val result = Mvu.update(Msg.ToggleSimulationPause, finished)
+
+    result.simulation shouldBe finished.simulation
+    result.errors should not be Vector.empty
+
+  test("ToggleSimulationPause is refused when there is no simulation"):
+    val noSimulation = AppState.init(ModelState())
+
+    val result = Mvu.update(Msg.ToggleSimulationPause, noSimulation)
+
+    result.errors should not be Vector.empty
+
   test("StartSimulation seeds simulation.initial but keeps model.currentScenario pre-seed"):
     val starting = AppState
       .init(ModelState())
@@ -151,6 +200,16 @@ class MvuSuite extends AnyFunSuite:
     result.model.currentScenario.map(_.topology.nodes(node.nodeId.value).state) shouldBe
       Some(NodeState.Healthy)
     result.errors shouldBe Vector.empty
+
+  test("StartSimulation is refused while a simulation already exists"):
+    val alreadyRunning = stateWithSimulation(running = true)
+      .copy(scenarioForm = Some(ScenarioForm.fromScenario(baseline)))
+
+    val result = Mvu.update(Msg.StartSimulation, alreadyRunning)
+
+    // Re-pressing Run must not discard the existing SimulationState or reseed anything.
+    result.simulation shouldBe alreadyRunning.simulation
+    result.errors should not be Vector.empty
 
   test(
     "ResetSimulation restores model.currentScenario, which stays Healthy though simulation.initial was seeded"
@@ -233,7 +292,29 @@ class MvuSuite extends AnyFunSuite:
     result.simulation shouldBe finishedNoScenario.simulation
     result.errors should not be Vector.empty
 
-  test("ResetSimulation is refused while the simulation is still running"):
+  test("ResetSimulation succeeds on a paused simulation, not just a finished one"):
+    val paused = AppState
+      .init(ModelState(currentScenario = Some(baseline)))
+      .copy(
+        simulation = Some(
+          SimulationState(
+            initial = baseline,
+            selector = noOpSelector,
+            states = LazyList(baseline), // ticks remain: running stays true while paused
+            current = baseline,
+            running = true,
+            paused = true
+          )
+        )
+      )
+
+    val result = Mvu.update(Msg.ResetSimulation, paused)
+
+    result.simulation shouldBe None
+    result.model.currentScenario shouldBe Some(baseline)
+    result.errors shouldBe Vector.empty
+
+  test("ResetSimulation is refused while the simulation is still running and not paused"):
     val running = stateWithSimulation(running = true)
 
     val result = Mvu.update(Msg.ResetSimulation, running)
