@@ -17,8 +17,8 @@ plugins {
 
     alias(libs.plugins.spotbugs)
     alias(libs.plugins.scalafmt)
-//    id("jacoco")
     id("org.scoverage") version "9.1"
+    id("com.gradleup.shadow") version "9.6.1"
 
 
     /*
