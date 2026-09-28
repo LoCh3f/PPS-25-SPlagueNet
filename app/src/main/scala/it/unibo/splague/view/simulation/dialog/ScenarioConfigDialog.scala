@@ -29,6 +29,7 @@ import scala.swing.{
 }
 import javax.swing.BorderFactory
 import java.awt.Dimension
+import scala.swing.event.ButtonClicked
 
 /** Form-only panel for editing the scenario-level fields and the malware configuration of a
   * [[ScenarioForm]]. It works exclusively with `ScenarioForm` / `MalwareForm` / `Msg`, never with
@@ -282,15 +283,13 @@ final class ScenarioConfigDialog(
       layout(content) = BorderPanel.Position.Center
 
   private def buildButtons(): Panel =
-    val save = new Button("Save scenario")
-    val cancel = new Button("Cancel"):
-      preferredSize = Dimension(100, 34)
+    val save = new Button("Save scenario"):
+      preferredSize = Dimension(120, 34)
 
-    save.preferredSize = Dimension(120, 34)
+    save.listenTo(save)
+    save.reactions += { case ButtonClicked(_) => onSave() }
 
-    DialogUtils.setupButtonListeners(save, cancel, onSave, onCancel)
-
-    val buttons = new FlowPanel(FlowPanel.Alignment.Right)(cancel, save):
+    val buttons = new FlowPanel(FlowPanel.Alignment.Right)(save):
       hGap = 10
       vGap = 6
 
@@ -339,10 +338,6 @@ final class ScenarioConfigDialog(
         dispatch(Msg.UpdateMalware(updatedMalware))
         dispatch(Msg.UpdateCountermeasure(updatedCountermeasure))
         dispatch(Msg.SaveScenario)
-
-  private def onCancel(): Unit =
-    applyForm(currentForm)
-    dispatch(Msg.CancelScenario)
 
   /** Extracts the set of active countermeasures selected by the user in the UI.
     *
