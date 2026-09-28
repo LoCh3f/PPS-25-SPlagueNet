@@ -1,18 +1,12 @@
 package it.unibo.splague.utils
 
-import it.unibo.splague.model.Probability
+import it.unibo.splague.dsl.*
 import it.unibo.splague.model.Scenario
-import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
-import it.unibo.splague.model.malware.{
-  Malware,
-  MalwareKind,
-  MalwareTraits,
-  PayloadSeverityLevel,
-  PropagationVector
-}
-import it.unibo.splague.model.node.NodeState.Healthy
+import it.unibo.splague.model.connection.Connection.ChannelType.LAN
+import it.unibo.splague.model.malware.MalwareKind.Worm
+import it.unibo.splague.model.malware.PayloadSeverityLevel.Low
+import it.unibo.splague.model.malware.PropagationVector.NetworkExploit
 import it.unibo.splague.model.node.NodeType.Workstation
-import it.unibo.splague.model.node.{Node, NodeId, Topology}
 
 // $COVERAGE-OFF$
 /** A minimal, easy-to-follow scenario: four workstations chained in a straight line (`n1 -> n2 ->
@@ -21,64 +15,41 @@ import it.unibo.splague.model.node.{Node, NodeId, Topology}
   *
   * Nodes have no defense/patch and the malware has maximum infectivity, so the outbreak reliably
   * marches down the chain one hop at a time instead of depending on a coin flip per node. Nodes
-  * also carry the same `NetworkExploit` vector as the malware: infection only ever propagates to a
-  * node that shares at least one propagation vector with the malware, so without this the chain
-  * would never actually spread past the seeded starting node.
+  * also carry the same `NetworkExploit` vector as the malware (the DSL's default), so infection can
+  * actually propagate down the chain: without a shared vector it would never spread past the seeded
+  * starting node.
+  *
+  * The seed is fixed on purpose: this scenario is meant to be predictable, unlike a DSL scenario
+  * that leaves it undeclared.
   */
 object SimpleScenario:
   def linearScenario(): Either[String, Scenario] =
-    val ids: Vector[NodeId.NodeId] =
-      Vector("n1", "n2", "n3", "n4").map(NodeId.of(_).toOption.get)
+    val result: ValidationResult[Scenario] =
+      scenario("Linear chain"):
+        seed(1)
+        maxIterations(20)
 
-    val nodes: Map[String, Node] =
-      ids.map { id =>
-        id.value -> Node(
-          id,
-          Workstation,
-          patchLevel = 0.0,
-          defenseLevel = 0.0,
-          state = Healthy,
-          workload = 0.0,
-          vectors = Set(PropagationVector.NetworkExploit)
+        network:
+          node("n1", Workstation)
+          node("n2", Workstation)
+          node("n3", Workstation)
+          node("n4", Workstation)
+          "n1" <-> "n2" via LAN
+          "n2" <-> "n3" via LAN
+          "n3" <-> "n4" via LAN
+
+        malware(
+          "SimpleWorm",
+          Worm,
+          infectivity = 1.0,
+          stealth = 0.3,
+          severity = Low,
+          persistence = 0.5,
+          footprint = 0.3,
+          vectors = Set(NetworkExploit)
         )
-      }.toMap
 
-    val edges: Set[Edge] =
-      ids
-        .sliding(2)
-        .collect { case Vector(from, to) =>
-          Edge(
-            nodes(from.value),
-            nodes(to.value),
-            Channel.default(ChannelType.LAN),
-            protocol = None
-          )
-        }
-        .toSet
+        startingNode("n1")
 
-    val topology = Topology(nodes, edges)
-
-    for
-      malware <- Malware(
-        name = "SimpleWorm",
-        kind = MalwareKind.Worm,
-        traits = MalwareTraits(
-          infectivity = Probability.clamped(1.0),
-          stealth = Probability.clamped(0.3),
-          payloadSeverity = PayloadSeverityLevel.Low,
-          persistence = Probability.clamped(0.5),
-          footprint = Probability.clamped(0.3)
-        ),
-        vectors = Set(PropagationVector.NetworkExploit)
-      )
-      scenario <- Scenario(
-        name = "Linear chain",
-        topology = topology,
-        virus = malware,
-        startingNode = nodes(ids.head.value),
-        tick = 0,
-        seed = 1,
-        maxIterations = 20
-      )
-    yield scenario
+    result.left.map(_.mkString("; "))
 // $COVERAGE-ON$

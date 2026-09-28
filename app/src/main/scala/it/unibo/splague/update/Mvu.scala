@@ -2,7 +2,9 @@ package it.unibo.splague.update
 
 import it.unibo.splague.AppState
 import it.unibo.splague.AppState.defaultScenarioJsonRepository
-import it.unibo.splague.model.node.{NodeId, NodeState}
+import it.unibo.splague.dsl.*
+import it.unibo.splague.model.connection.Connection.ChannelType
+import it.unibo.splague.model.node.{Node, NodeId, NodeState, Topology}
 import it.unibo.splague.model.Scenario
 import it.unibo.splague.persistence.FileFormat.{Json, Txt}
 import it.unibo.splague.persistence.{ExportPaths, FileFormat}
@@ -22,7 +24,7 @@ import it.unibo.splague.update.simulation.event.{
 import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.utils.SimpleScenario
 import it.unibo.splague.view.{Screen, ValidationError}
-import it.unibo.splague.view.form.{AwarenessForm, ScenarioForm}
+import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, NodeForm, ScenarioForm}
 
 import java.nio.file.Files
 import scala.util.Try
@@ -137,6 +139,32 @@ object Mvu:
           )
         )
       }
+
+    case Msg.AddShape(shape) =>
+      if state.simulation.exists(_.running) then
+        state.copy(
+          errors = Vector(
+            ValidationError(
+              "simulation",
+              "Cannot edit the topology while the simulation is running"
+            )
+          )
+        )
+      else
+        state.scenarioForm match
+          case None =>
+            state.copy(
+              errors = Vector(ValidationError("scenarioForm", "No scenario form is open"))
+            )
+
+          case Some(form) =>
+            addShape(shape, form) match
+              case Left(errors) =>
+                state.copy(errors = errors.map(ValidationError("topology", _)).toVector)
+
+              case Right(updatedForm) =>
+                state.copy(scenarioForm = Some(updatedForm), errors = Vector.empty)
+
     case Msg.UpdateMalware(malware) =>
       updateForm(state)(s => s.copy(virus = malware))
 
@@ -164,18 +192,30 @@ object Mvu:
       updateForm(state)(s => s.copy(countermeasureConfig = countermeasure))
 
     case Msg.SelectScenario(name) =>
-      state.model.scenarios.find(_.name == name) match
-        case Some(scenario) =>
-          state.copy(
-            model = state.model.copy(currentScenario = Some(scenario)),
-            scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
-            errors = Vector.empty
+      if state.simulation.exists(_.running) then
+        state.copy(
+          errors = Vector(
+            ValidationError("simulation", "Cannot switch scenario while the simulation is running")
           )
+        )
+      else
+        state.model.scenarios.find(_.name == name) match
+          case Some(scenario) =>
+            // Loading a different scenario discards any run (and report) tied to the previous
+            // one: it belongs to a scenario no longer open, so keeping it around would let Report
+            // or Reset silently act on the wrong scenario.
+            state.copy(
+              model = state.model.copy(currentScenario = Some(scenario)),
+              scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
+              simulation = None,
+              report = None,
+              errors = Vector.empty
+            )
 
-        case None =>
-          state.copy(
-            errors = Vector(ValidationError("scenario", s"No scenario named '$name' found"))
-          )
+          case None =>
+            state.copy(
+              errors = Vector(ValidationError("scenario", s"No scenario named '$name' found"))
+            )
 
     case Msg.SaveScenario =>
       saveScenario(state)
@@ -240,16 +280,36 @@ object Mvu:
           val nextSimulation =
             simulation.next
 
+          // model.currentScenario deliberately stays untouched here: it identifies the scenario
+          // this session is working on (set on open/select/save/cancel/start/reset/import), while
+          // scenarioForm alone drives the live, tick-by-tick view.
           state.copy(
             simulation = Some(nextSimulation),
-            model = state.model.copy(
-              currentScenario = Some(nextSimulation.current)
-            ),
             scenarioForm = Some(ScenarioForm.fromScenario(nextSimulation.current)),
             errors = Vector.empty
           )
 
         case _ => state
+
+    case Msg.ResetSimulation =>
+      state.simulation match
+        case Some(simulation) if !simulation.running =>
+          state.copy(
+            simulation = None,
+            model = state.model.copy(currentScenario = Some(simulation.initial)),
+            scenarioForm = Some(ScenarioForm.fromScenario(simulation.initial)),
+            errors = Vector.empty
+          )
+
+        case Some(_) =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "Simulation is still running"))
+          )
+
+        case None =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "No simulation to reset"))
+          )
 
     case Msg.ExportScenario(format) =>
       resolveScenarioToExport(state) match
@@ -274,8 +334,6 @@ object Mvu:
                   .map(_.toString)
               case FileFormat.Txt =>
                 AppState.defaultScenarioTxtWriter.save(scenarioToExport, path).left.map(_.toString)
-              case other =>
-                Left(s"File format not supported yet: $other")
           yield ()
 
           res match
@@ -342,6 +400,65 @@ object Mvu:
   private def combine(events: Event*): Event =
     (scenario: Scenario) => events.foldLeft(scenario)((acc, event) => event(acc))
 
+  private val shapeNodeCount =
+    5 // 5 nodes total for every shape, so the three buttons feel comparable
+  private val shapeChannelType = ChannelType.LAN
+
+  /** Generates a small `star` /`ring`/`mesh` shape (`it.unibo.splague.dsl.TopologyShapes`) and
+    * merges it into `form` 's topology. Shape ids are namespaced with an incrementing generation
+    * suffix (`star1`, `star2`, ...) so pressing the same button more than once never collides with
+    * a shape added by an earlier click; a collision with a node the user named by hand is
+    * vanishingly unlikely, but still surfaces as an ordinary validation error rather than silently
+    * overwriting anything.
+    */
+  private def addShape(shape: TopologyShape, form: ScenarioForm): ValidationResult[ScenarioForm] =
+    val existingIds = form.topology.nodes.map(_.id).toSet
+    val nodeType = Node.defaultNodeType
+
+    val shapeResult: ValidationResult[Topology] = shape match
+      case TopologyShape.Star =>
+        val leafCount = shapeNodeCount - 1
+        val base = freshShapeBase("star", existingIds) { b =>
+          Set(s"$b-hub") ++ (0 until leafCount).map(i => s"$b-leaf$i")
+        }
+        topology:
+          star(s"$base-hub", nodeType, s"$base-leaf", leafCount, nodeType, shapeChannelType)
+
+      case TopologyShape.Ring =>
+        val base = freshShapeBase("ring", existingIds) { b =>
+          (0 until shapeNodeCount).map(i => s"$b-$i").toSet
+        }
+        topology:
+          ring(s"$base-", shapeNodeCount, nodeType, shapeChannelType)
+
+      case TopologyShape.Mesh =>
+        val base = freshShapeBase("mesh", existingIds) { b =>
+          (0 until shapeNodeCount).map(i => s"$b-$i").toSet
+        }
+        topology:
+          mesh(s"$base-", shapeNodeCount, nodeType, shapeChannelType)
+
+    shapeResult.map { shapeTopology =>
+      form.copy(
+        topology = form.topology.copy(
+          nodes = form.topology.nodes ++ shapeTopology.nodes.values.toVector.map(NodeForm.fromNode),
+          edges = form.topology.edges ++ shapeTopology.edges.toVector.map(EdgeForm.fromEdge)
+        )
+      )
+    }
+
+  /** The first `"$kind$generation"` (`generation` starting at 1) whose `idsFor` ids don't collide
+    * with `existingIds`.
+    */
+  private def freshShapeBase(kind: String, existingIds: Set[String])(
+      idsFor: String => Set[String]
+  ): String =
+    Iterator
+      .from(1)
+      .map(generation => s"$kind$generation")
+      .find(base => (idsFor(base) & existingIds).isEmpty)
+      .get
+
   private def updateForm(
       state: AppState
   )(change: ScenarioForm => ScenarioForm): AppState =
@@ -386,23 +503,18 @@ object Mvu:
             )
 
           case Right(updatedScenario) =>
+            // Both the scenario and its malware are upserted by name (their previous names, from
+            // the scenario open before this edit, included) so saving a scenario that was edited,
+            // renamed, run, or reset since it was last saved still lands back in the same slots
+            // instead of leaving stale duplicates behind (see ModelState.upsertScenario).
+            val previousScenarioName = state.model.currentScenario.map(_.name)
+            val previousMalwareName = state.model.currentScenario.map(_.virus.name)
+
             val updatedModel =
-              state.model.currentScenario match
-
-                case Some(previousScenario) =>
-                  state.model.copy(
-                    scenarios = state.model.scenarios.map { scenario =>
-                      if scenario == previousScenario then updatedScenario
-                      else scenario
-                    },
-                    currentScenario = Some(updatedScenario)
-                  )
-
-                case None =>
-                  state.model.copy(
-                    scenarios = state.model.scenarios :+ updatedScenario,
-                    currentScenario = Some(updatedScenario)
-                  )
+              state.model
+                .upsertScenario(updatedScenario, previousScenarioName)
+                .upsertMalware(updatedScenario.virus, previousMalwareName)
+                .copy(currentScenario = Some(updatedScenario))
 
             state.copy(
               model = updatedModel,

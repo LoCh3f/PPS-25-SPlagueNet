@@ -1,5 +1,6 @@
 package it.unibo.splague.model.countermeasures
 
+import it.unibo.splague.model.countermeasures.Countermeasures.{DefenseBoost, Firewall, Isolation}
 import it.unibo.splague.update.FirewallPolicy
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

@@ -3,6 +3,7 @@ package it.unibo.splague.view.form
 import it.unibo.splague.model.*
 import it.unibo.splague.model.Awareness.*
 import it.unibo.splague.model.node.{NodeId, Topology}
+import it.unibo.splague.view.form.countermeasure.CountermeasureForm
 
 final case class ScenarioForm(
     name: String,

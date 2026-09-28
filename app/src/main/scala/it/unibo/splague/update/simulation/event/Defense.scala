@@ -30,13 +30,15 @@ object Defense:
         if targets.isEmpty then scenario
         else
           val updatedActive = config.activeCountermeasures + Isolation
-          val updatedNodes = targets.foldLeft(scenario.topology.nodes) { (acc, node) =>
-            acc.updated(node.nodeId.value, node.copy(state = NodeState.Quarantined))
+
+          val updatedTopology = targets.foldLeft(scenario.topology) { (currentTopology, node) =>
+            updateNode(currentTopology, node.nodeId) { currentNode =>
+              currentNode.copy(state = NodeState.Quarantined)
+            }
           }
 
-          // Remove connections
-          val topologyWithoutEdges =
-            cutEdgesOf(scenario.topology.copy(nodes = updatedNodes), targets)
+          val topologyWithoutEdges = cutEdgesOf(updatedTopology, targets)
+
           scenario.copy(
             topology = topologyWithoutEdges,
             countermeasureConfig = config.copy(activeCountermeasures = updatedActive)

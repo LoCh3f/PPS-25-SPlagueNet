@@ -21,7 +21,7 @@ import scala.annotation.targetName
   */
 def topology(block: TopologyBuilder ?=> Unit): ValidationResult[Topology] =
   given builder: TopologyBuilder = new TopologyBuilder()
-  block
+  block(using builder)
   builder.build()
 
 /** Declares a node in an enclosing `topology { ... }` block.

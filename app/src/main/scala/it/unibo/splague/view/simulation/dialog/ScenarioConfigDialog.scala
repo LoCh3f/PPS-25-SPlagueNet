@@ -1,34 +1,34 @@
 package it.unibo.splague.view.simulation.dialog
 
+import it.unibo.splague.model.connection.Connection.ChannelType
+import it.unibo.splague.model.connection.Protocol.ApplicationProtocolType
+import it.unibo.splague.model.countermeasures.Countermeasures
 import it.unibo.splague.model.malware.MalwareKind
 import it.unibo.splague.model.malware.PayloadSeverityLevel
 import it.unibo.splague.model.malware.PropagationVector
-import it.unibo.splague.update.Msg
-import it.unibo.splague.view.form.MalwareForm
+import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria, Msg}
+import it.unibo.splague.view.form.countermeasure.{CountermeasureForm, FirewallForm, IsolationForm}
 import it.unibo.splague.view.form.ScenarioForm
 
-import java.awt.event.ComponentAdapter
-import java.awt.event.ComponentEvent
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.FlowLayout
-import java.awt.Font
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.GridLayout
-import java.awt.Insets
+import javax.swing.{JSpinner, SpinnerNumberModel}
+import scala.swing.{
+  BorderPanel,
+  BoxPanel,
+  Button,
+  CheckBox,
+  ComboBox,
+  Component,
+  Dialog,
+  FlowPanel,
+  GridPanel,
+  Label,
+  Orientation,
+  Panel,
+  ScrollPane,
+  TextField
+}
 import javax.swing.BorderFactory
-import javax.swing.JButton
-import javax.swing.JCheckBox
-import javax.swing.JComboBox
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JOptionPane
-import javax.swing.JPanel
-import javax.swing.JScrollPane
-import javax.swing.JSpinner
-import javax.swing.JTextField
-import javax.swing.SpinnerNumberModel
+import java.awt.Dimension
 
 /** Form-only panel for editing the scenario-level fields and the malware configuration of a
   * [[ScenarioForm]]. It works exclusively with `ScenarioForm` / `MalwareForm` / `Msg`, never with
@@ -43,458 +43,357 @@ import javax.swing.SpinnerNumberModel
 final class ScenarioConfigDialog(
     initialForm: ScenarioForm,
     dispatch: Msg => Unit
-) extends JPanel(new BorderLayout(8, 8)):
+) extends BorderPanel:
 
-  private var currentForm: ScenarioForm =
-    initialForm
+  private var currentForm: ScenarioForm = initialForm
 
-  private val scenarioNameField =
-    new JTextField()
+  private val scenarioNameField = new TextField()
 
-  private val seedSpinner =
-    new JSpinner(
-      new SpinnerNumberModel(0, 0, Int.MaxValue, 1)
-    )
+  private val seedSpinnerPeer =
+    new JSpinner(new SpinnerNumberModel(0, 0, Int.MaxValue, 1))
+  private val seedSpinner = Component.wrap(seedSpinnerPeer)
 
-  private val maxIterSpinner =
-    new JSpinner(
-      new SpinnerNumberModel(1, 1, Int.MaxValue, 1)
-    )
+  private val maxIterSpinnerPeer =
+    new JSpinner(new SpinnerNumberModel(1, 1, Int.MaxValue, 1))
+  private val maxIterSpinner = Component.wrap(maxIterSpinnerPeer)
 
-  private val startingNodeCombo =
-    new JComboBox[String]()
+  private val startingNodeCombo = new ComboBox[String](Seq.empty)
 
-  private val malwareNameField =
-    new JTextField()
+  private val malwareNameField = new TextField()
+  private val malwareKindCombo = new ComboBox[MalwareKind](MalwareKind.values.toSeq)
 
-  private val malwareKindCombo =
-    new JComboBox[MalwareKind](MalwareKind.values)
-
-  private val infectivityField =
-    new JTextField()
-
-  private val stealthField =
-    new JTextField()
-
-  private val persistenceField =
-    new JTextField()
-
-  private val footprintField =
-    new JTextField()
+  private val infectivityField = new TextField()
+  private val stealthField = new TextField()
+  private val persistenceField = new TextField()
+  private val footprintField = new TextField()
 
   private val payloadSeverityCombo =
-    new JComboBox[PayloadSeverityLevel](PayloadSeverityLevel.values)
+    new ComboBox[PayloadSeverityLevel](PayloadSeverityLevel.values.toSeq)
 
-  private val vectorChecks: Map[PropagationVector, JCheckBox] =
+  private val vectorChecks: Map[PropagationVector, CheckBox] =
     PropagationVector.values
-      .map(vector => vector -> new JCheckBox(vector.toString))
+      .map(vector => vector -> new CheckBox(vector.toString))
       .toMap
 
-  private val formContent =
-    new JPanel(
-      new GridLayout(0, 1, 10, 10)
+  // Countermeasures fields
+  private val patchBoostField = new TextField()
+  private val defenseBoostField = new TextField()
+  private val patchCureProbField = new TextField()
+
+  private val countermeasureRows: Map[String, (CheckBox, TextField)] =
+    CountermeasureForm.allCountermeasureNames.map { cmName =>
+      val check = new CheckBox(cmName)
+      val field = new TextField {
+        columns = 5
+        enabled = false
+      }
+
+      check.reactions += { case scala.swing.event.ButtonClicked(_) =>
+        field.enabled = check.selected
+        if (!check.selected) field.text = ""
+      }
+
+      cmName -> (check, field)
+    }.toMap
+
+  // Firewall Policy
+  private val channelChecks: Map[String, CheckBox] =
+    CountermeasureForm.allChannelNames.map(c => c -> new CheckBox(c)).toMap
+
+  private val nodeTypeChecks: Map[String, CheckBox] =
+    CountermeasureForm.allCountermeasureNames.map(name => name -> new CheckBox(name)).toMap
+
+  private val protocolChecks: Map[String, CheckBox] =
+    CountermeasureForm.allProtocolNames.map(p => p -> new CheckBox(p)).toMap
+
+  // Isolation criteria
+  private val isolationCombo = new ComboBox[String](
+    Seq(
+      "All",
+      "By Min Workload",
+      "By Max Defense"
+      // TODO add by node type
     )
-
-  setBorder(
-    BorderFactory.createEmptyBorder()
   )
 
-  formContent.setBorder(
-    BorderFactory.createEmptyBorder(8, 8, 8, 8)
-  )
+  private val isolationThresholdField = new TextField {
+    columns = 5
+    enabled = false // Disabled by default because 'All' doesn't require threshold
+  }
 
-  formContent.add(
-    section("Scenario", scenarioFields())
-  )
+  // Enables/Disables the text field based on the chosen combobox
+  isolationCombo.reactions += { case scala.swing.event.SelectionChanged(_) =>
+    val requiresThreshold = isolationCombo.selection.item != "All"
+    isolationThresholdField.enabled = requiresThreshold
+    if (!requiresThreshold) isolationThresholdField.text = ""
+  }
 
-  formContent.add(
-    section("Malware", malwareFields())
-  )
+  private val formContent = new BoxPanel(Orientation.Vertical):
+    border = BorderFactory.createEmptyBorder(8, 8, 8, 8)
 
-  val scroll =
-    new JScrollPane(formContent)
+  border = BorderFactory.createEmptyBorder()
 
-  scroll.setBorder(
-    BorderFactory.createEmptyBorder()
-  )
+  formContent.contents += section("Scenario", scenarioFields())
+  formContent.contents += section("Malware", malwareFields())
+  formContent.contents += section("Countermeasures", countermeasureFields())
 
-  scroll.getVerticalScrollBar.setUnitIncrement(16)
-  scroll.getHorizontalScrollBar.setUnitIncrement(16)
+  private val scroll = new ScrollPane(formContent):
+    border = BorderFactory.createEmptyBorder()
+    peer.getVerticalScrollBar.setUnitIncrement(16)
+    peer.getHorizontalScrollBar.setUnitIncrement(16)
 
-  add(
-    scroll,
-    BorderLayout.CENTER
-  )
+  layout(scroll) = BorderPanel.Position.Center
+  layout(buildButtons()) = BorderPanel.Position.South
 
-  add(
-    buildButtons(),
-    BorderLayout.SOUTH
-  )
-
-  applyResponsiveSizing(formContent)
   applyForm(initialForm)
 
   /** Re-syncs the panel with an updated [[ScenarioForm]] coming from the state, e.g. after a
     * topology change elsewhere in the workspace.
     */
-  def updateForm(
-      form: ScenarioForm
-  ): Unit =
+  def updateForm(form: ScenarioForm): Unit =
     currentForm = form
-
     applyForm(form)
 
-  private def applyForm(
-      form: ScenarioForm
-  ): Unit =
-    scenarioNameField.setText(form.name)
+  private def applyForm(form: ScenarioForm): Unit =
+    scenarioNameField.text = form.name
 
-    form.seed.toIntOption.foreach(
-      seedSpinner.setValue
-    )
-
-    form.maxIterations.toIntOption.foreach(
-      maxIterSpinner.setValue
-    )
+    form.seed.toIntOption.foreach(seedSpinnerPeer.setValue)
+    form.maxIterations.toIntOption.foreach(maxIterSpinnerPeer.setValue)
 
     refreshStartingNodes(form)
 
-    malwareNameField.setText(form.virus.name)
-    malwareKindCombo.setSelectedItem(form.virus.kind)
-    infectivityField.setText(form.virus.infectivity)
-    stealthField.setText(form.virus.stealth)
-    persistenceField.setText(form.virus.persistence)
-    footprintField.setText(form.virus.footprint)
-    payloadSeverityCombo.setSelectedItem(form.virus.payloadSeverity)
+    malwareNameField.text = form.virus.name
+    malwareKindCombo.selection.item = form.virus.kind
+    infectivityField.text = form.virus.infectivity
+    stealthField.text = form.virus.stealth
+    persistenceField.text = form.virus.persistence
+    footprintField.text = form.virus.footprint
+    payloadSeverityCombo.selection.item = form.virus.payloadSeverity
 
     vectorChecks.foreach { case (vector, checkbox) =>
-      checkbox.setSelected(
-        form.virus.vectors.contains(vector)
-      )
+      checkbox.selected = form.virus.vectors.contains(vector)
     }
 
-  private def refreshStartingNodes(
-      form: ScenarioForm
-  ): Unit =
-    val previous =
-      Option(startingNodeCombo.getSelectedItem).map(_.toString)
+  private def refreshStartingNodes(form: ScenarioForm): Unit =
+    val previous = Option(startingNodeCombo.selection.item)
+    val nodeIds = form.topology.nodes.map(_.id).sorted
+    val availableIds = nodeIds.toSet
 
-    startingNodeCombo.removeAllItems()
+    // Create and set a mutable DefaultComboBoxModel
+    val model = new javax.swing.DefaultComboBoxModel[String]()
+    nodeIds.foreach(model.addElement)
+    startingNodeCombo.peer.setModel(model)
 
-    form.topology.nodes
-      .map(_.id)
-      .sorted
-      .foreach(startingNodeCombo.addItem)
-
-    val availableIds =
-      form.topology.nodes.map(_.id).toSet
-
+    // Restore previous selection or set to first available
     previous
       .filter(availableIds.contains)
       .orElse(Some(form.startingNodeId).filter(availableIds.contains))
-      .orElse(form.topology.nodes.map(_.id).sorted.headOption)
-      .foreach(startingNodeCombo.setSelectedItem)
+      .orElse(nodeIds.headOption)
+      .foreach(id => startingNodeCombo.selection.item = id)
 
-  private def scenarioFields(): JPanel =
-    val panel =
-      new JPanel(new GridBagLayout())
+  private def scenarioFields(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createEmptyBorder(6, 6, 6, 6)
+      contents += createLabeledField("Scenario name", scenarioNameField)
+      contents += createLabeledField("Seed", seedSpinner)
+      contents += createLabeledField("Max iterations", maxIterSpinner)
+      contents += createLabeledField("Starting node", startingNodeCombo)
 
-    panel.setBorder(
-      BorderFactory.createEmptyBorder(6, 6, 6, 6)
-    )
+  private def malwareFields(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createEmptyBorder(6, 6, 6, 6)
+      contents += createLabeledField("Malware name", malwareNameField)
+      contents += createLabeledField("Kind", malwareKindCombo)
+      contents += createLabeledField("Infectivity [0..1]", infectivityField)
+      contents += createLabeledField("Stealth [0..1]", stealthField)
+      contents += createLabeledField("Persistence [0..1]", persistenceField)
+      contents += createLabeledField("Footprint [0..1]", footprintField)
+      contents += createLabeledField("Payload severity", payloadSeverityCombo)
+      contents += createLabeledField("Vectors", createVectorsPanel())
 
-    val gbc =
-      new GridBagConstraints()
+  // Countermeasure fields
+  private def createCountermeasureLevelsPanel(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      countermeasureRows.values.foreach { case (check, field) =>
+        contents += new BoxPanel(Orientation.Horizontal):
+          contents += check
+          contents += scala.swing.Swing.HStrut(10)
+          contents += new Label("Threshold:")
+          contents += field
 
-    gbc.insets = new Insets(5, 5, 5, 5)
-    gbc.fill = GridBagConstraints.HORIZONTAL
-    gbc.anchor = GridBagConstraints.LINE_START
+          maximumSize = new Dimension(Short.MaxValue, 30)
+      }
 
-    addField(panel, gbc, 0, "Scenario name", scenarioNameField)
-    addField(panel, gbc, 1, "Seed", seedSpinner)
-    addField(panel, gbc, 2, "Max iterations", maxIterSpinner)
-    addField(panel, gbc, 3, "Starting node", startingNodeCombo)
-    panel
+  private def createFirewallPanel(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      contents += new Label("Blocked Channels:")
+      contents += new GridPanel(0, 2):
+        hGap = 8;
+        vGap = 4
+        channelChecks.values.foreach(contents += _)
 
-  private def malwareFields(): JPanel =
-    val panel =
-      new JPanel(new GridBagLayout())
+      contents += scala.swing.Swing.VStrut(8)
 
-    panel.setBorder(
-      BorderFactory.createEmptyBorder(6, 6, 6, 6)
-    )
+      contents += new Label("Blocked Protocols:")
+      contents += new GridPanel(0, 2):
+        hGap = 8;
+        vGap = 4
+        protocolChecks.values.foreach(contents += _)
 
-    val gbc =
-      new GridBagConstraints()
+  private def createIsolationPanel(): Panel =
+    new BoxPanel(Orientation.Horizontal):
+      contents += isolationCombo
+      contents += scala.swing.Swing.HStrut(10)
+      contents += new Label("Threshold:")
+      contents += isolationThresholdField
 
-    gbc.insets = new Insets(5, 5, 5, 5)
-    gbc.fill = GridBagConstraints.HORIZONTAL
-    gbc.anchor = GridBagConstraints.LINE_START
+  private def countermeasureFields(): Panel =
+    new BoxPanel(Orientation.Vertical):
+      border = BorderFactory.createEmptyBorder(6, 6, 6, 6)
+      contents += createCountermeasureLevelsPanel()
+      contents += new scala.swing.Separator()
+      contents += new Label("Firewall Policy")
+      contents += createFirewallPanel()
 
-    addField(panel, gbc, 0, "Malware name", malwareNameField)
-    addField(panel, gbc, 1, "Kind", malwareKindCombo)
-    addField(panel, gbc, 2, "Infectivity [0..1]", infectivityField)
-    addField(panel, gbc, 3, "Stealth [0..1]", stealthField)
-    addField(panel, gbc, 4, "Persistence [0..1]", persistenceField)
-    addField(panel, gbc, 5, "Footprint [0..1]", footprintField)
-    addField(panel, gbc, 6, "Payload severity", payloadSeverityCombo)
+      contents += new scala.swing.Separator()
+      contents += new Label("Isolation Criteria")
+      contents += createIsolationPanel()
 
-    val label =
-      new JLabel("Vectors")
+  private def createLabeledField(labelText: String, field: Component): Panel =
+    val label = new Label(labelText)
+    label.preferredSize = new Dimension(120, 30)
+    val fieldCopy = field
+    fieldCopy.preferredSize = new Dimension(200, 30)
+    new BoxPanel(Orientation.Horizontal):
+      contents += label
+      contents += fieldCopy
 
-    label.setFont(
-      label.getFont.deriveFont(Font.BOLD)
-    )
+  private def createVectorsPanel(): Panel =
+    new GridPanel(0, 2):
+      hGap = 8
+      vGap = 4
+      vectorChecks.values.foreach { checkbox =>
+        contents += checkbox
+      }
 
-    gbc.gridx = 0
-    gbc.gridy = 7
-    gbc.weightx = 0.35
-    gbc.gridwidth = 1
-    panel.add(label, gbc)
+  private def section(title: String, content: Panel): Panel =
+    new BorderPanel:
+      border = BorderFactory.createTitledBorder(title)
+      layout(content) = BorderPanel.Position.Center
 
-    gbc.gridx = 1
-    gbc.weightx = 0.65
+  private def buildButtons(): Panel =
+    val save = new Button("Save scenario")
+    val cancel = new Button("Cancel"):
+      preferredSize = Dimension(100, 34)
 
-    val vectorsPanel =
-      new JPanel(new GridLayout(0, 2, 8, 4))
+    save.preferredSize = Dimension(120, 34)
 
-    vectorChecks.values.foreach { checkbox =>
-      checkbox.setFont(
-        checkbox.getFont.deriveFont(Font.PLAIN, 13f)
-      )
+    DialogUtils.setupButtonListeners(save, cancel, onSave, onCancel)
 
-      vectorsPanel.add(checkbox)
-    }
+    val buttons = new FlowPanel(FlowPanel.Alignment.Right)(cancel, save):
+      hGap = 10
+      vGap = 6
 
-    panel.add(vectorsPanel, gbc)
-    panel
-
-  private def section(
-      title: String,
-      content: JPanel
-  ): JPanel =
-    val wrapper =
-      new JPanel(new BorderLayout(8, 8))
-
-    wrapper.setBorder(
-      BorderFactory.createTitledBorder(title)
-    )
-
-    wrapper.add(content, BorderLayout.CENTER)
-    wrapper
-
-  private def addField(
-      panel: JPanel,
-      gbc: GridBagConstraints,
-      row: Int,
-      labelText: String,
-      field: JComponent
-  ): Unit =
-    val label =
-      new JLabel(labelText)
-
-    label.setFont(
-      label.getFont.deriveFont(Font.BOLD)
-    )
-
-    gbc.gridx = 0
-    gbc.gridy = row
-    gbc.weightx = 0.35
-    gbc.gridwidth = 1
-    panel.add(label, gbc)
-
-    gbc.gridx = 1
-    gbc.weightx = 0.65
-    field.setPreferredSize(new Dimension(120, 30))
-    field.setMinimumSize(new Dimension(100, 28))
-    panel.add(field, gbc)
-
-  private def buildButtons(): JPanel =
-    val panel =
-      new JPanel(new BorderLayout())
-
-    val save =
-      new JButton("Save scenario")
-
-    val cancel =
-      new JButton("Cancel")
-
-    save.addActionListener(_ => onSave())
-    cancel.addActionListener(_ => onCancel())
-
-    save.setPreferredSize(new Dimension(120, 34))
-    cancel.setPreferredSize(new Dimension(100, 34))
-
-    val buttons =
-      new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 6))
-
-    buttons.add(save)
-    buttons.add(cancel)
-    panel.add(buttons, BorderLayout.EAST)
-    panel
+    new BorderPanel:
+      layout(buttons) = BorderPanel.Position.East
 
   private def onSave(): Unit =
     val updatedVectors =
-      vectorChecks.collect {
-        case (vector, checkbox) if checkbox.isSelected => vector
-      }.toSet
+      vectorChecks.collect { case (vector, checkbox) if checkbox.selected => vector }.toSet
 
-    val updatedMalware =
-      currentForm.virus.copy(
-        name = malwareNameField.getText.trim,
-        kind = malwareKindCombo.getSelectedItem.asInstanceOf[MalwareKind],
-        infectivity = infectivityField.getText,
-        stealth = stealthField.getText,
-        payloadSeverity = payloadSeverityCombo.getSelectedItem.asInstanceOf[PayloadSeverityLevel],
-        persistence = persistenceField.getText,
-        footprint = footprintField.getText,
-        vectors = updatedVectors
-      )
+    val updatedMalware = currentForm.virus.copy(
+      name = malwareNameField.text.trim,
+      kind = malwareKindCombo.selection.item,
+      infectivity = infectivityField.text,
+      stealth = stealthField.text,
+      payloadSeverity = payloadSeverityCombo.selection.item,
+      persistence = persistenceField.text,
+      footprint = footprintField.text,
+      vectors = updatedVectors
+    )
 
-    val updatedScenario =
-      currentForm.copy(
-        name = scenarioNameField.getText.trim,
-        seed = seedSpinner.getValue.toString,
-        maxIterations = maxIterSpinner.getValue.toString,
-        startingNodeId = Option(startingNodeCombo.getSelectedItem)
-          .map(_.toString)
-          .getOrElse(currentForm.startingNodeId),
-        virus = updatedMalware
-      )
+    val updatedCountermeasure = currentForm.countermeasureConfig.copy(
+      activeCountermeasures = buildActiveCountermeasures(),
+      countermeasureLevels = buildCountermeasureLevels(),
+      isolationCriteria = buildIsolationCriteria(),
+      firewallPolicy = buildFirewallPolicy()
+    )
+
+    val updatedScenario = currentForm.copy(
+      name = scenarioNameField.text.trim,
+      seed = seedSpinnerPeer.getValue.toString,
+      maxIterations = maxIterSpinnerPeer.getValue.toString,
+      startingNodeId = Option(startingNodeCombo.peer.getSelectedItem)
+        .map(_.toString)
+        .getOrElse(currentForm.startingNodeId),
+      virus = updatedMalware,
+      countermeasureConfig = updatedCountermeasure
+    )
 
     ScenarioForm.toDomain(updatedScenario) match
       case Left(error) =>
-        JOptionPane.showMessageDialog(
-          this,
-          error,
-          "Errore",
-          JOptionPane.ERROR_MESSAGE
-        )
-
+        Dialog.showMessage(this, error, title = "Errore", messageType = Dialog.Message.Error)
       case Right(_) =>
         currentForm = updatedScenario
-
-        dispatch(
-          Msg.UpdateScenarioName(updatedScenario)
-        )
-
-        dispatch(
-          Msg.UpdateMalware(updatedMalware)
-        )
-
-        dispatch(
-          Msg.SaveScenario
-        )
+        dispatch(Msg.UpdateScenarioName(updatedScenario))
+        dispatch(Msg.UpdateMalware(updatedMalware))
+        dispatch(Msg.UpdateCountermeasure(updatedCountermeasure))
+        dispatch(Msg.SaveScenario)
 
   private def onCancel(): Unit =
     applyForm(currentForm)
+    dispatch(Msg.CancelScenario)
 
-    dispatch(
-      Msg.CancelScenario
+  /** Extracts the set of active countermeasures selected by the user in the UI.
+    *
+    * @return
+    *   a Set containing the names (Strings) of the selected countermeasures
+    */
+  private def buildActiveCountermeasures(): Set[String] =
+    countermeasureRows.collect {
+      case (cmName, (check, _)) if check.selected => cmName
+    }.toSet
+
+  /** Builds a mapping between threshold values and their corresponding active countermeasures,
+    * based on the user input in the enabled text fields.
+    *
+    * @return
+    *   a Map associating the threshold string to the countermeasure name (String)
+    */
+  private def buildCountermeasureLevels(): Map[String, String] =
+    countermeasureRows.collect {
+      case (cmName, (check, field)) if check.selected => field.text.trim -> cmName
+    }.toMap
+
+  /** Constructs a new [[FirewallForm]] based on the selected channels and application protocols
+    * from the UI checkboxes.
+    *
+    * @return
+    *   a [[FirewallForm]] containing the blocked channels and protocols as strings
+    */
+  private def buildFirewallPolicy(): FirewallForm =
+    val blockedChannels = channelChecks.collect {
+      case (chName, chk) if chk.selected => chName
+    }.toSet
+    val blockedProtocols = protocolChecks.collect {
+      case (prName, chk) if chk.selected => prName
+    }.toSet
+
+    FirewallForm(blockedChannels, blockedProtocols)
+
+  /** Creates an [[IsolationForm]] based on the selected strategy from the combo box, the provided
+    * threshold value, and selected node types.
+    *
+    * @return
+    *   the constructed [[IsolationForm]] containing purely string-based configuration
+    */
+  private def buildIsolationCriteria(): IsolationForm =
+    val selectedTypes = nodeTypeChecks.collect {
+      case (typeName, chk) if chk.selected => typeName
+    }.toSet
+
+    IsolationForm(
+      strategy = isolationCombo.selection.item,
+      threshold = isolationThresholdField.text.trim,
+      nodeTypes = selectedTypes
     )
-
-  private def applyResponsiveSizing(
-      container: java.awt.Container
-  ): Unit =
-    container.addComponentListener(
-      new ComponentAdapter:
-        override def componentResized(
-            event: ComponentEvent
-        ): Unit =
-          val width =
-            math.max(1, event.getComponent.getWidth)
-
-          val base =
-            responsiveFontSize(width)
-
-          setFontSizeRecursively(container, base)
-          resizeControls(container, width)
-    )
-
-    val width =
-      math.max(1, container.getWidth)
-
-    setFontSizeRecursively(container, responsiveFontSize(width))
-    resizeControls(container, width)
-
-  private def responsiveFontSize(
-      width: Int
-  ): Int =
-    math.max(13, math.min(18, 13 + (width - 260) / 35))
-
-  private def resizeControls(
-      container: java.awt.Container,
-      width: Int
-  ): Unit =
-    val baseHeight =
-      math.max(26, math.min(34, 26 + (width - 220) / 18))
-
-    setComponentSizeRecursively(container, baseHeight)
-
-  private def setComponentSizeRecursively(
-      component: java.awt.Component,
-      baseHeight: Int
-  ): Unit =
-    component match
-      case c: JComponent =>
-        c match
-          case field: JTextField =>
-            field.setPreferredSize(
-              new Dimension(math.max(120, c.getWidth), baseHeight)
-            )
-
-          case combo: JComboBox[?] =>
-            combo.setPreferredSize(
-              new Dimension(math.max(120, c.getWidth), baseHeight)
-            )
-
-          case spinner: JSpinner =>
-            spinner.setPreferredSize(
-              new Dimension(math.max(120, c.getWidth), baseHeight)
-            )
-
-          case button: JButton =>
-            button.setPreferredSize(
-              new Dimension(
-                math.max(100, button.getWidth),
-                math.max(30, baseHeight)
-              )
-            )
-
-          case checkBox: JCheckBox =>
-            checkBox.setPreferredSize(
-              new Dimension(math.max(140, c.getWidth), baseHeight)
-            )
-
-          case _ =>
-            ()
-
-        c match
-          case panel: JPanel =>
-            panel.getComponents.foreach(child => setComponentSizeRecursively(child, baseHeight))
-
-          case _ =>
-            ()
-
-      case _ =>
-        ()
-
-  private def setFontSizeRecursively(
-      component: java.awt.Component,
-      size: Int
-  ): Unit =
-    component match
-      case c: JComponent =>
-        c.setFont(
-          c.getFont.deriveFont(size.toFloat)
-        )
-
-        c match
-          case panel: JPanel =>
-            panel.getComponents.foreach(child => setFontSizeRecursively(child, size))
-
-          case _ =>
-            ()
-
-      case _ =>
-        ()

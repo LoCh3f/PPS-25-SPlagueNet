@@ -7,21 +7,20 @@ import it.unibo.splague.update.Msg
 import it.unibo.splague.view.simulation.dialog.{EdgeEditorDialog, NodeEditorDialog}
 import it.unibo.splague.view.form.{ChannelForm, EdgeForm, NodeForm, TopologyForm}
 
-import java.awt.Color
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.RenderingHints
-import java.awt.event.FocusAdapter
-import java.awt.event.FocusEvent
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
-import java.awt.event.MouseWheelEvent
-import javax.swing.JPanel
-import javax.swing.SwingUtilities
+import java.awt.{Color, Graphics2D, RenderingHints}
 
 import scala.collection.mutable
+import scala.swing.{Component, Window}
+import scala.swing.event.{
+  Key,
+  KeyPressed,
+  MouseClicked,
+  MouseDragged,
+  MouseEvent as SwingMouseEvent,
+  MousePressed,
+  MouseReleased,
+  MouseWheelMoved
+}
 
 final case class ViewNode(
     form: NodeForm,
@@ -42,342 +41,244 @@ final case class ViewNode(
   */
 final class ScenarioWorkspacePanel(
     initialTopology: TopologyForm,
+    owner: Window,
     dispatch: Msg => Unit
-) extends JPanel:
+) extends Component:
 
-  private val nodeRadius =
-    18.0
+  private val nodeRadius = 18.0
 
-  private var topology =
-    initialTopology
+  private var topology = initialTopology
 
-  private val nodeViews =
-    mutable.LinkedHashMap.empty[String, ViewNode]
+  private val nodeViews = mutable.LinkedHashMap.empty[String, ViewNode]
 
-  private var selectedNodeId: Option[String] =
-    None
+  private var selectedNodeId: Option[String] = None
+  private var selectedEdgeKey: Option[(String, String)] = None
 
-  private var selectedEdgeKey: Option[(String, String)] =
-    None
+  private var dragStartScreenX = 0
+  private var dragStartScreenY = 0
+  private var nodeStartX = 0.0
+  private var nodeStartY = 0.0
 
-  private var dragStartScreenX =
-    0
+  private var panning = false
 
-  private var dragStartScreenY =
-    0
+  private var connectionStartNodeId: Option[String] = None
+  private var creatingConnection = false
 
-  private var nodeStartX =
-    0.0
+  private var zoom = 1.0
+  private var offsetX = 0
+  private var offsetY = 0
 
-  private var nodeStartY =
-    0.0
-
-  private var panning =
-    false
-
-  private var connectionStartNodeId: Option[String] =
-    None
-
-  private var creatingConnection =
-    false
-
-  private var zoom =
-    1.0
-
-  private var offsetX =
-    0
-
-  private var offsetY =
-    0
-
-  setBackground(Color.WHITE)
-  setFocusable(true)
+  background = Color.WHITE
+  focusable = true
 
   rebuildNodeViews()
   installMouseHandler()
   installKeyboardHandler()
 
-  def setTopology(
-      newTopology: TopologyForm
-  ): Unit =
+  def setTopology(newTopology: TopologyForm): Unit =
     topology = newTopology
-
     rebuildNodeViews()
     repaint()
 
   def zoomIn(): Unit =
     zoom = math.min(4.0, zoom * 1.1)
-
     repaint()
 
   def zoomOut(): Unit =
     zoom = math.max(0.2, zoom / 1.1)
-
     repaint()
 
-  def pan(
-      dx: Int,
-      dy: Int
-  ): Unit =
+  def pan(dx: Int, dy: Int): Unit =
     offsetX += dx
     offsetY += dy
     repaint()
 
+  private def toScreenPoint(local: java.awt.Point): java.awt.Point =
+    val screenPoint = new java.awt.Point(local)
+    javax.swing.SwingUtilities.convertPointToScreen(screenPoint, peer)
+    screenPoint
+
+  /** Converts a screen-space point to model coordinates and resolves the node (if any) under it in
+    * one step, since this pair of operations is needed at every mouse-interaction entry point
+    * (press, popup-click, release).
+    */
+  private def modelPointAndNodeAt(point: java.awt.Point): (Double, Double, Option[String]) =
+    val (modelX, modelY) =
+      WorkspaceGeometry.screenToModel(point.x, point.y, offsetX, offsetY, zoom)
+    val nodeId = WorkspaceGeometry.pickNode(modelX, modelY, nodeViews, nodeRadius)
+    (modelX, modelY, nodeId)
+
   private def installMouseHandler(): Unit =
-    val handler =
-      new MouseAdapter:
+    listenTo(mouse.clicks, mouse.moves, mouse.wheel)
 
-        override def mousePressed(
-            event: MouseEvent
-        ): Unit =
-          requestFocusInWindow()
+    reactions += {
+      case e @ MousePressed(_, point, modifiers, _, _) =>
+        requestFocusInWindow()
 
-          val (modelX, modelY) =
-            WorkspaceGeometry.screenToModel(
-              event.getX,
-              event.getY,
-              offsetX,
-              offsetY,
-              zoom
-            )
+        val (modelX, modelY, selectedNode) = modelPointAndNodeAt(point)
 
-          val selectedNode =
-            WorkspaceGeometry.pickNode(
-              modelX,
-              modelY,
-              nodeViews,
-              nodeRadius
-            )
+        val ctrlDown = (modifiers & Key.Modifier.Control) != 0
+        val shiftDown = (modifiers & Key.Modifier.Shift) != 0
 
-          if event.isControlDown && selectedNode.isEmpty then
-            NodeEditorDialog.show(
-              owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
-              initial = newNodeFormTemplate(),
-              screenX = event.getXOnScreen,
-              screenY = event.getYOnScreen,
-              isNew = true,
-              dispatch = dispatch
-            )
+        if ctrlDown && selectedNode.isEmpty then
+          val screenPoint = toScreenPoint(point)
 
-            return
-
+          NodeEditorDialog.show(
+            owner = owner,
+            initial = newNodeFormTemplate(),
+            screenX = screenPoint.x,
+            screenY = screenPoint.y,
+            isNew = true,
+            dispatch = dispatch
+          )
+        else
           selectedNodeId = selectedNode
-
           selectedEdgeKey = None
-
-          dragStartScreenX = event.getX
-
-          dragStartScreenY = event.getY
+          dragStartScreenX = point.x
+          dragStartScreenY = point.y
 
           selectedNode match
-            case Some(nodeId) if event.isShiftDown =>
+            case Some(nodeId) if shiftDown =>
               connectionStartNodeId = Some(nodeId)
-
               creatingConnection = true
-
               panning = false
 
             case Some(nodeId) =>
               nodeViews.get(nodeId).foreach { nodeView =>
                 nodeStartX = nodeView.x
-
                 nodeStartY = nodeView.y
               }
-
               panning = false
 
             case None =>
-              selectedEdgeKey = WorkspaceGeometry.pickEdge(
-                modelX,
-                modelY,
-                topology.edges,
-                nodeViews
-              )
-
+              selectedEdgeKey =
+                WorkspaceGeometry.pickEdge(modelX, modelY, topology.edges, nodeViews)
               panning = true
 
           repaint()
 
-        override def mouseClicked(
-            event: MouseEvent
-        ): Unit =
-          if SwingUtilities.isRightMouseButton(event) then
-            val (modelX, modelY) =
-              WorkspaceGeometry.screenToModel(
-                event.getX,
-                event.getY,
-                offsetX,
-                offsetY,
-                zoom
-              )
+      case MouseClicked(_, point, _, _, triggersPopup) if triggersPopup =>
+        val (modelX, modelY, pickedNode) = modelPointAndNodeAt(point)
 
-            WorkspaceGeometry.pickNode(modelX, modelY, nodeViews, nodeRadius) match
-              case Some(nodeId) =>
-                selectedNodeId = Some(nodeId)
+        val screenPoint = toScreenPoint(point)
 
-                selectedEdgeKey = None
+        pickedNode match
+          case Some(nodeId) =>
+            selectedNodeId = Some(nodeId)
+            selectedEdgeKey = None
 
-                nodeViews.get(nodeId).foreach { nodeView =>
-                  NodeEditorDialog.show(
-                    owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
-                    initial = nodeView.form,
-                    screenX = event.getXOnScreen,
-                    screenY = event.getYOnScreen,
-                    isNew = false,
-                    dispatch = dispatch
-                  )
-                }
-
-              case None =>
-                WorkspaceGeometry.pickEdge(modelX, modelY, topology.edges, nodeViews).foreach {
-                  key =>
-                    selectedNodeId = None
-
-                    selectedEdgeKey = Some(key)
-
-                    findEdge(key).foreach { edge =>
-                      EdgeEditorDialog.show(
-                        owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
-                        initial = edge,
-                        screenX = event.getXOnScreen,
-                        screenY = event.getYOnScreen,
-                        isNew = false,
-                        dispatch = dispatch
-                      )
-                    }
-                }
-
-            repaint()
-
-        override def mouseDragged(
-            event: MouseEvent
-        ): Unit =
-          selectedNodeId match
-            case Some(nodeId) if !creatingConnection =>
-              nodeViews.get(nodeId).foreach { nodeView =>
-                val dx =
-                  (event.getX - dragStartScreenX) / zoom
-
-                val dy =
-                  (event.getY - dragStartScreenY) / zoom
-
-                nodeView.x = nodeStartX + dx
-
-                nodeView.y = nodeStartY + dy
-
-                repaint()
-              }
-
-            case None if panning =>
-              val dx =
-                event.getX - dragStartScreenX
-
-              val dy =
-                event.getY - dragStartScreenY
-
-              pan(dx, dy)
-
-              dragStartScreenX = event.getX
-
-              dragStartScreenY = event.getY
-
-            case _ =>
-              ()
-
-        override def mouseReleased(
-            event: MouseEvent
-        ): Unit =
-          if creatingConnection then
-            val (modelX, modelY) =
-              WorkspaceGeometry.screenToModel(
-                event.getX,
-                event.getY,
-                offsetX,
-                offsetY,
-                zoom
-              )
-
-            val targetNode =
-              WorkspaceGeometry.pickNode(modelX, modelY, nodeViews, nodeRadius)
-
-            for
-              sourceId <- connectionStartNodeId
-              targetId <- targetNode
-              if sourceId != targetId
-              if !WorkspaceGeometry.connectionExists(topology.edges, sourceId, targetId)
-            do
-              val edge =
-                EdgeForm(
-                  from = sourceId,
-                  to = targetId,
-                  channel = defaultChannelForm(),
-                  protocol = None
-                )
-
-              EdgeEditorDialog.show(
-                owner = SwingUtilities.getWindowAncestor(ScenarioWorkspacePanel.this),
-                initial = edge,
-                screenX = event.getXOnScreen,
-                screenY = event.getYOnScreen,
-                isNew = true,
+            nodeViews.get(nodeId).foreach { nodeView =>
+              NodeEditorDialog.show(
+                owner = owner,
+                initial = nodeView.form,
+                screenX = screenPoint.x,
+                screenY = screenPoint.y,
+                isNew = false,
                 dispatch = dispatch
-              )
-
-          panning = false
-
-          creatingConnection = false
-
-          connectionStartNodeId = None
-
-        override def mouseWheelMoved(
-            event: MouseWheelEvent
-        ): Unit =
-          if event.getPreciseWheelRotation < 0 then zoomIn()
-          else zoomOut()
-
-    addMouseListener(handler)
-    addMouseMotionListener(handler)
-    addMouseWheelListener(handler)
-
-    addFocusListener(
-      new FocusAdapter:
-        override def focusLost(
-            event: FocusEvent
-        ): Unit =
-          panning = false
-
-          creatingConnection = false
-
-          connectionStartNodeId = None
-    )
-
-  private def installKeyboardHandler(): Unit =
-    addKeyListener(
-      new KeyAdapter:
-        override def keyPressed(
-            event: KeyEvent
-        ): Unit =
-          if event.getKeyCode == KeyEvent.VK_DELETE then
-            selectedNodeId.foreach { nodeId =>
-              dispatch(
-                Msg.RemoveNode(nodeId)
               )
             }
 
-            selectedEdgeKey
-              .flatMap(findEdge)
-              .foreach { edge =>
-                dispatch(
-                  Msg.RemoveEdge(edge)
+          case None =>
+            WorkspaceGeometry.pickEdge(modelX, modelY, topology.edges, nodeViews).foreach { key =>
+              selectedNodeId = None
+              selectedEdgeKey = Some(key)
+
+              findEdge(key).foreach { edge =>
+                EdgeEditorDialog.show(
+                  owner = owner,
+                  initial = edge,
+                  screenX = screenPoint.x,
+                  screenY = screenPoint.y,
+                  isNew = false,
+                  dispatch = dispatch
                 )
               }
+            }
 
-            selectedNodeId = None
+        repaint()
 
-            selectedEdgeKey = None
+      case MouseDragged(_, point, _) =>
+        selectedNodeId match
+          case Some(nodeId) if !creatingConnection =>
+            nodeViews.get(nodeId).foreach { nodeView =>
+              val dx = (point.x - dragStartScreenX) / zoom
+              val dy = (point.y - dragStartScreenY) / zoom
 
-            repaint()
-    )
+              nodeView.x = nodeStartX + dx
+              nodeView.y = nodeStartY + dy
+
+              repaint()
+            }
+
+          case None if panning =>
+            val dx = point.x - dragStartScreenX
+            val dy = point.y - dragStartScreenY
+
+            pan(dx, dy)
+
+            dragStartScreenX = point.x
+            dragStartScreenY = point.y
+
+          case _ => ()
+
+      case MouseReleased(_, point, _, _, _) =>
+        if creatingConnection then
+          val (_, _, targetNode) = modelPointAndNodeAt(point)
+          val screenPoint = toScreenPoint(point)
+
+          for
+            sourceId <- connectionStartNodeId
+            targetId <- targetNode
+            if sourceId != targetId
+            if !WorkspaceGeometry.connectionExists(topology.edges, sourceId, targetId)
+          do
+            val edge = EdgeForm(
+              from = sourceId,
+              to = targetId,
+              channel = defaultChannelForm(),
+              protocol = None
+            )
+
+            EdgeEditorDialog.show(
+              owner = owner,
+              initial = edge,
+              screenX = screenPoint.x,
+              screenY = screenPoint.y,
+              isNew = true,
+              dispatch = dispatch
+            )
+
+        panning = false
+        creatingConnection = false
+        connectionStartNodeId = None
+
+      case MouseWheelMoved(_, _, _, rotation) =>
+        if rotation < 0 then zoomIn()
+        else zoomOut()
+    }
+
+    listenTo(this)
+    reactions += { case scala.swing.event.FocusLost(_, _, _) =>
+      panning = false
+      creatingConnection = false
+      connectionStartNodeId = None
+    }
+
+  private def installKeyboardHandler(): Unit =
+    listenTo(keys)
+
+    reactions += { case KeyPressed(_, Key.Delete, _, _) =>
+      selectedNodeId.foreach(nodeId => dispatch(Msg.RemoveNode(nodeId)))
+
+      selectedEdgeKey
+        .flatMap(findEdge)
+        .foreach(edge => dispatch(Msg.RemoveEdge(edge)))
+
+      selectedNodeId = None
+      selectedEdgeKey = None
+
+      repaint()
+    }
 
   /** Initial values for a brand-new node: derived from the domain's own default constants
     * (`Node.defaultXxx`), since `NodeForm` provides no `empty` /factory of its own. The new node is
@@ -399,52 +300,23 @@ final class ScenarioWorkspacePanel(
     * initial channel type.
     */
   private def defaultChannelForm(): ChannelForm =
-    ChannelForm.fromChannel(
-      Channel.default(ChannelType.LAN)
-    )
+    ChannelForm.fromChannel(Channel.default(ChannelType.LAN))
 
-  private def findEdge(
-      key: (String, String)
-  ): Option[EdgeForm] =
-    topology.edges.find { edge =>
-      (edge.from, edge.to) == key
-    }
+  private def findEdge(key: (String, String)): Option[EdgeForm] =
+    topology.edges.find(edge => (edge.from, edge.to) == key)
 
-  override def paintComponent(
-      graphics: Graphics
-  ): Unit =
-    super.paintComponent(graphics)
+  override def paintComponent(g: Graphics2D): Unit =
+    super.paintComponent(g)
 
-    val g2 =
-      graphics.asInstanceOf[Graphics2D]
+    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-    g2.setRenderingHint(
-      RenderingHints.KEY_ANTIALIASING,
-      RenderingHints.VALUE_ANTIALIAS_ON
-    )
+    g.translate(offsetX, offsetY)
+    g.scale(zoom, zoom)
 
-    g2.translate(
-      offsetX,
-      offsetY
-    )
-
-    g2.scale(
-      zoom,
-      zoom
-    )
-
-    WorkspaceRenderer.draw(
-      g2,
-      topology,
-      nodeViews,
-      nodeRadius,
-      selectedNodeId,
-      selectedEdgeKey
-    )
+    WorkspaceRenderer.draw(g, topology, nodeViews, nodeRadius, selectedNodeId, selectedEdgeKey)
 
   private def rebuildNodeViews(): Unit =
-    val previous =
-      nodeViews.toMap
+    val previous = nodeViews.toMap
 
     nodeViews.clear()
 
@@ -452,30 +324,13 @@ final class ScenarioWorkspacePanel(
       .sortBy(_.id)
       .zipWithIndex
       .foreach { case (node, index) =>
-        val row =
-          index / 6
+        val row = index / 6
+        val column = index % 6
 
-        val column =
-          index % 6
+        val view = previous.get(node.id) match
+          case Some(old) => ViewNode(form = node, x = old.x, y = old.y)
+          case None =>
+            ViewNode(form = node, x = 80.0 + column * 130.0, y = 80.0 + row * 130.0)
 
-        val view =
-          previous.get(node.id) match
-            case Some(old) =>
-              ViewNode(
-                form = node,
-                x = old.x,
-                y = old.y
-              )
-
-            case None =>
-              ViewNode(
-                form = node,
-                x = 80.0 + column * 130.0,
-                y = 80.0 + row * 130.0
-              )
-
-        nodeViews.put(
-          node.id,
-          view
-        )
+        nodeViews.put(node.id, view)
       }

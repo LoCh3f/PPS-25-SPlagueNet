@@ -2,8 +2,6 @@ package it.unibo.splague.view.menu
 
 import it.unibo.splague.update.Msg
 
-import java.awt.event.{ComponentAdapter, ComponentEvent}
-import java.awt.{Dimension, Font}
 import scala.swing.*
 
 object MenuView:
@@ -18,11 +16,6 @@ object MenuView:
     val exitButton = fullWidthButton("Exit") {
       sys.exit(0)
     }
-
-    panel.peer.addComponentListener(new ComponentAdapter {
-      override def componentResized(event: ComponentEvent): Unit =
-        MenuView.updateTextSizes(event.getSource.asInstanceOf[java.awt.Container])
-    })
 
     val labelConstraints = new panel.Constraints:
       gridx = 0
@@ -73,5 +66,5 @@ object MenuView:
       val child = children(i)
       if child != null then
         val fontSize = if i == 0 then labelFontSize else buttonFontSize
-        child.setFont(new Font(Font.SANS_SERIF, Font.BOLD, fontSize))
+        child.setFont(new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.BOLD, fontSize))
       i += 1

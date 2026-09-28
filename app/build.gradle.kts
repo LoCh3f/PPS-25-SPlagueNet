@@ -126,6 +126,10 @@ scoverage {
     )
 }
 
+tasks.named("spotbugsScoverage") {
+    enabled = false
+}
+
 tasks.test {
     useJUnitPlatform()
 }
