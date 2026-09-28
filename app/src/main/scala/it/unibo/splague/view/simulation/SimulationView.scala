@@ -37,7 +37,7 @@ object SimulationView:
   ): Component =
     state.scenarioForm match
       case Some(form) =>
-        val reportEnabled = state.simulation.exists(!_.running)
+        val reportEnabled = state.simulation.forall(!_.running)
 
         currentSession match
           case Some(session) =>

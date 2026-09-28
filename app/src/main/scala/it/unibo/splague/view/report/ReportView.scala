@@ -17,20 +17,57 @@ import scala.swing.{
 }
 import scala.swing.event.ButtonClicked
 import javax.swing.BorderFactory
+import it.unibo.splague.persistence.{ExportPaths, Repository}
+import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
+import it.unibo.splague.persistence.codecs.json.JsonCodec.given
+import javax.swing.{JFileChooser, JOptionPane}
+import java.awt.Component as AwtComponent
+import javax.swing.SwingUtilities
 
 object ReportView:
+
+  private val reportRepo = Repository.json[ScenarioReport]
+
+  private def saveReport(report: ScenarioReport, owner: AwtComponent): Unit =
+    val path = ExportPaths.reportPathFor(report.scenarioName)
+    reportRepo.save(report, path) match
+      case Right(_) =>
+        JOptionPane.showMessageDialog(
+          SwingUtilities.getWindowAncestor(owner),
+          s"Report saved to $path"
+        )
+      case Left(error) =>
+        JOptionPane.showMessageDialog(
+          SwingUtilities.getWindowAncestor(owner),
+          error.toString,
+          "Save failed",
+          JOptionPane.ERROR_MESSAGE
+        )
+
+  private def importReport(dispatch: Msg => Unit, owner: AwtComponent): Unit =
+    val chooser = new JFileChooser(ExportPaths.baseDirectory.toFile)
+    if chooser.showOpenDialog(owner) == JFileChooser.APPROVE_OPTION then
+      reportRepo.load(chooser.getSelectedFile.toPath) match
+        case Right(report) => dispatch(Msg.ImportReport(report))
+        case Left(error) =>
+          JOptionPane.showMessageDialog(
+            owner,
+            error.toString,
+            "Import failed",
+            JOptionPane.ERROR_MESSAGE
+          )
 
   def render(state: AppState, dispatch: Msg => Unit): Component =
     state.report match
       case Some(report) => reportPanel(report, dispatch)
-      case None         => emptyView()
+      case None         => emptyView(dispatch)
 
   private def reportPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
     val root = new BorderPanel:
       border = BorderFactory.createEmptyBorder(12, 12, 12, 12)
       layout(headerPanel(report)) = BorderPanel.Position.North
       layout(summaryPanel(report)) = BorderPanel.Position.Center
-      layout(footerPanel(dispatch)) = BorderPanel.Position.South
+      layout(footerPanel(report, dispatch)) = BorderPanel.Position.South
 
     root
 
@@ -101,18 +138,37 @@ object ReportView:
           milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")
         )
 
-  private def footerPanel(dispatch: Msg => Unit): Component =
+  private def footerPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
     val backButton = new Button("Back to simulation")
     backButton.listenTo(backButton)
     backButton.reactions += { case ButtonClicked(_) =>
       dispatch(Msg.GoToSimulation)
     }
+    val saveButton = new Button("Save report")
+    saveButton.listenTo(saveButton)
+    saveButton.reactions += { case ButtonClicked(_) => saveReport(report, saveButton.peer) }
 
-    new FlowPanel(FlowPanel.Alignment.Right)(backButton)
+    val importButton = new Button("Import report")
+    importButton.listenTo(importButton)
+    importButton.reactions += { case ButtonClicked(_) => importReport(dispatch, importButton.peer) }
 
-  private def emptyView(): Component =
+    new FlowPanel(FlowPanel.Alignment.Right)(importButton, saveButton, backButton)
+
+  private def emptyView(dispatch: Msg => Unit): Component =
     new BorderPanel:
       layout(
         new Label("No report available"):
           horizontalAlignment = Alignment.Center
       ) = BorderPanel.Position.Center
+      layout(emptyFooterPanel(dispatch)) = BorderPanel.Position.South
+
+  private def emptyFooterPanel(dispatch: Msg => Unit): Component =
+    val backButton = new Button("Back to simulation")
+    backButton.listenTo(backButton)
+    backButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToSimulation) }
+
+    val importButton = new Button("Import report")
+    importButton.listenTo(importButton)
+    importButton.reactions += { case ButtonClicked(_) => importReport(dispatch, importButton.peer) }
+
+    new FlowPanel(FlowPanel.Alignment.Right)(importButton, backButton)

@@ -2,6 +2,7 @@ package it.unibo.splague.update
 
 import it.unibo.splague.model.malware.{MalwareKind, PayloadSeverityLevel, PropagationVector}
 import it.unibo.splague.persistence.FileFormat
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.view.form.countermeasure.CountermeasureForm
 import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, MalwareForm, NodeForm, ScenarioForm}
 
@@ -37,3 +38,5 @@ enum Msg:
   // export/import scenario
   case ExportScenario(format: FileFormat)
   case ImportScenario(format: FileFormat, path: Path)
+
+  case ImportReport(report: ScenarioReport)
