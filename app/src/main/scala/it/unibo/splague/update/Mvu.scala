@@ -232,51 +232,72 @@ object Mvu:
           state.copy(errors = Vector.empty)
 
     case Msg.StartSimulation =>
-      state.scenarioForm match
-        case None =>
-          state.copy(
-            errors = Vector(
-              ValidationError("scenarioForm", "No scenario form is open")
+      // Re-pressing Run while a simulation already exists would treat whatever's currently in
+      // scenarioForm (a live mid-run/paused/finished snapshot) as a brand-new scenario to seed
+      // and run, silently discarding the existing SimulationState and corrupting the pre-seed
+      // model.currentScenario ResetSimulation depends on. Reset must happen first.
+      if state.simulation.isDefined then
+        state.copy(
+          errors = Vector(
+            ValidationError(
+              "simulation",
+              "A simulation is already in progress; reset it before starting a new one"
             )
           )
+        )
+      else
+        state.scenarioForm match
+          case None =>
+            state.copy(
+              errors = Vector(
+                ValidationError("scenarioForm", "No scenario form is open")
+              )
+            )
 
-        case Some(form) =>
-          ScenarioForm.toDomain(form) match
-            case Left(error) =>
-              state.copy(errors = Vector(ValidationError("scenario", error)))
+          case Some(form) =>
+            ScenarioForm.toDomain(form) match
+              case Left(error) =>
+                state.copy(errors = Vector(ValidationError("scenario", error)))
 
-            case Right(scenario) =>
-              val seeded = seedOutbreak(scenario)
-              val states =
-                new SimulationEngine(simulationSelector).run(seeded)
+              case Right(scenario) =>
+                val seeded = seedOutbreak(scenario)
+                val states =
+                  new SimulationEngine(simulationSelector).run(seeded)
 
-              states match
-                case current #:: upcoming =>
-                  state.copy(
-                    simulation = Some(
-                      SimulationState(
-                        initial = seeded,
-                        selector = simulationSelector,
-                        states = upcoming,
-                        current = current,
-                        running = upcoming.nonEmpty
-                      )
-                    ),
-                    model = state.model.copy(currentScenario = Some(current)),
-                    errors = Vector.empty
-                  )
-
-                case _ =>
-                  state.copy(
-                    errors = Vector(
-                      ValidationError("scenario", "Unable to start the simulation")
+                states match
+                  case current #:: upcoming =>
+                    state.copy(
+                      simulation = Some(
+                        SimulationState(
+                          initial = seeded,
+                          selector = simulationSelector,
+                          states = upcoming,
+                          current = current,
+                          running = upcoming.nonEmpty
+                        )
+                      ),
+                      // model.currentScenario keeps the pre-seed scenario (patient zero still
+                      // Healthy), not `current`/`seeded` — it's the identity of the scenario this
+                      // session is working on, not a snapshot of the run. This is what
+                      // ResetSimulation restores: without it, Reset would bring back patient zero
+                      // already infected instead of a clean, all-Healthy scenario.
+                      model = state.model.copy(currentScenario = Some(scenario)),
+                      errors = Vector.empty
                     )
-                  )
+
+                  case _ =>
+                    state.copy(
+                      errors = Vector(
+                        ValidationError("scenario", "Unable to start the simulation")
+                      )
+                    )
 
     case Msg.SimulationStep =>
       state.simulation match
 
-        case Some(simulation) if simulation.running =>
+        // Paused simulations still receive this message every tick (Runtime's Timer never
+        // stops), it just does nothing with it until resumed — same as an already-finished one.
+        case Some(simulation) if simulation.running && !simulation.paused =>
           val nextSimulation =
             simulation.next
 
@@ -291,15 +312,44 @@ object Mvu:
 
         case _ => state
 
+    case Msg.ToggleSimulationPause =>
+      state.simulation match
+        case Some(simulation) if simulation.running =>
+          state.copy(simulation = Some(simulation.togglePause), errors = Vector.empty)
+
+        case Some(_) =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "Simulation has already finished"))
+          )
+
+        case None =>
+          state.copy(
+            errors = Vector(ValidationError("simulation", "No simulation to pause or resume"))
+          )
+
     case Msg.ResetSimulation =>
       state.simulation match
-        case Some(simulation) if !simulation.running =>
-          state.copy(
-            simulation = None,
-            model = state.model.copy(currentScenario = Some(simulation.initial)),
-            scenarioForm = Some(ScenarioForm.fromScenario(simulation.initial)),
-            errors = Vector.empty
-          )
+        // A paused simulation can also be reset, not just a finished one: otherwise pausing
+        // would be a dead end, forcing it to be resumed to completion before it could be reset.
+        case Some(simulation) if !simulation.running || simulation.paused =>
+          // Restores model.currentScenario, not simulation.initial: the latter is deliberately
+          // the *seeded* scenario (patient zero already Infected), since ScenarioReport.from
+          // replays it through the engine to reconstruct the run's timeline and would show no
+          // outbreak at all if it weren't seeded. model.currentScenario, by contrast, is kept at
+          // the pre-seed scenario by StartSimulation, so Reset brings back a genuinely clean,
+          // all-Healthy scenario instead of one with patient zero already infected.
+          state.model.currentScenario match
+            case Some(scenario) =>
+              state.copy(
+                simulation = None,
+                scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
+                errors = Vector.empty
+              )
+
+            case None =>
+              state.copy(
+                errors = Vector(ValidationError("scenario", "No scenario to reset to"))
+              )
 
         case Some(_) =>
           state.copy(
