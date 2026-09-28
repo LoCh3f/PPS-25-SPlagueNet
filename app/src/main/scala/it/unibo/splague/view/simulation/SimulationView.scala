@@ -221,10 +221,6 @@ object SimulationView:
     zoomOut.listenTo(zoomOut)
     zoomOut.reactions += { case ButtonClicked(_) => workspace.zoomOut() }
 
-    val save = new Button("Save")
-    save.listenTo(save)
-    save.reactions += { case ButtonClicked(_) => dispatch(Msg.SaveScenario) }
-
     val run = new Button("Run")
     run.listenTo(run)
     run.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
@@ -238,7 +234,6 @@ object SimulationView:
 
     val left = new FlowPanel(FlowPanel.Alignment.Left)(
       (Seq(zoomIn, zoomOut, scenarioCombo, loadScenarioButton) ++ shapeButtons ++ Seq(
-        save,
         run,
         resetButton,
         reportButton,
