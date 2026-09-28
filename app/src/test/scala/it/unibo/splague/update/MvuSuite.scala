@@ -12,16 +12,15 @@ import it.unibo.splague.model.malware.{
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
+import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.view.Screen
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.must.Matchers.not
-import org.scalatest.matchers.should.Matchers.{should, shouldBe}
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class MvuSuite extends AnyFunSuite:
+final class MvuSuite extends AnyFunSuite with Matchers:
 
   private val validTraits = (for
     infectivity <- Probability(0.6)
@@ -86,25 +85,35 @@ class MvuSuite extends AnyFunSuite:
         )
       )
 
-  test("GoToReport switches to the Report screen once the simulation has finished"):
+  test(
+    "GoToReport switches to the Report screen and computes a report once the simulation has finished"
+  ):
     val finished = stateWithSimulation(running = false)
 
     val result = Mvu.update(Msg.GoToReport, finished)
 
     result.screen shouldBe Screen.Report
+    result.report shouldBe Some(ScenarioReport.from(baseline, noOpSelector))
     result.errors shouldBe Vector.empty
 
-  test("GoToReport is refused while the simulation is still running"):
+  test(
+    "GoToReport switches to the Report screen without computing a report while the simulation is still running"
+  ):
     val running = stateWithSimulation(running = true)
 
     val result = Mvu.update(Msg.GoToReport, running)
 
-    result.screen shouldBe running.screen
-    result.errors should not be Vector.empty
+    result.screen shouldBe Screen.Report
+    result.report shouldBe running.report
+    result.errors shouldBe Vector.empty
 
-  test("GoToReport is refused when there is no simulation to report on"):
+  test(
+    "GoToReport switches to the Report screen without computing a report when there is no simulation"
+  ):
     val noSimulation = AppState.init(ModelState())
 
     val result = Mvu.update(Msg.GoToReport, noSimulation)
 
-    result.errors should not be Vector.empty
+    result.screen shouldBe Screen.Report
+    result.report shouldBe None
+    result.errors shouldBe Vector.empty
