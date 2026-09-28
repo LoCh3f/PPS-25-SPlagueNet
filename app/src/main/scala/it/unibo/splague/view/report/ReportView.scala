@@ -138,21 +138,28 @@ object ReportView:
           milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")
         )
 
+  private def backButton(dispatch: Msg => Unit): Button =
+    val button = new Button("Back to simulation")
+    button.listenTo(button)
+    button.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToSimulation) }
+    button
+
+  private def importButton(dispatch: Msg => Unit): Button =
+    val button = new Button("Import report")
+    button.listenTo(button)
+    button.reactions += { case ButtonClicked(_) => importReport(dispatch, button.peer) }
+    button
+
   private def footerPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
-    val backButton = new Button("Back to simulation")
-    backButton.listenTo(backButton)
-    backButton.reactions += { case ButtonClicked(_) =>
-      dispatch(Msg.GoToSimulation)
-    }
     val saveButton = new Button("Save report")
     saveButton.listenTo(saveButton)
     saveButton.reactions += { case ButtonClicked(_) => saveReport(report, saveButton.peer) }
 
-    val importButton = new Button("Import report")
-    importButton.listenTo(importButton)
-    importButton.reactions += { case ButtonClicked(_) => importReport(dispatch, importButton.peer) }
-
-    new FlowPanel(FlowPanel.Alignment.Right)(importButton, saveButton, backButton)
+    new FlowPanel(FlowPanel.Alignment.Right)(
+      importButton(dispatch),
+      saveButton,
+      backButton(dispatch)
+    )
 
   private def emptyView(dispatch: Msg => Unit): Component =
     new BorderPanel:
@@ -163,12 +170,4 @@ object ReportView:
       layout(emptyFooterPanel(dispatch)) = BorderPanel.Position.South
 
   private def emptyFooterPanel(dispatch: Msg => Unit): Component =
-    val backButton = new Button("Back to simulation")
-    backButton.listenTo(backButton)
-    backButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToSimulation) }
-
-    val importButton = new Button("Import report")
-    importButton.listenTo(importButton)
-    importButton.reactions += { case ButtonClicked(_) => importReport(dispatch, importButton.peer) }
-
-    new FlowPanel(FlowPanel.Alignment.Right)(importButton, backButton)
+    new FlowPanel(FlowPanel.Alignment.Right)(importButton(dispatch), backButton(dispatch))
