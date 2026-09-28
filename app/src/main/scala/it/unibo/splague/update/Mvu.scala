@@ -262,7 +262,12 @@ object Mvu:
                         running = upcoming.nonEmpty
                       )
                     ),
-                    model = state.model.copy(currentScenario = Some(current)),
+                    // model.currentScenario keeps the pre-seed scenario (patient zero still
+                    // Healthy), not `current`/`seeded` — it's the identity of the scenario this
+                    // session is working on, not a snapshot of the run. This is what
+                    // ResetSimulation restores: without it, Reset would bring back patient zero
+                    // already infected instead of a clean, all-Healthy scenario.
+                    model = state.model.copy(currentScenario = Some(scenario)),
                     errors = Vector.empty
                   )
 
@@ -294,12 +299,24 @@ object Mvu:
     case Msg.ResetSimulation =>
       state.simulation match
         case Some(simulation) if !simulation.running =>
-          state.copy(
-            simulation = None,
-            model = state.model.copy(currentScenario = Some(simulation.initial)),
-            scenarioForm = Some(ScenarioForm.fromScenario(simulation.initial)),
-            errors = Vector.empty
-          )
+          // Restores model.currentScenario, not simulation.initial: the latter is deliberately
+          // the *seeded* scenario (patient zero already Infected), since ScenarioReport.from
+          // replays it through the engine to reconstruct the run's timeline and would show no
+          // outbreak at all if it weren't seeded. model.currentScenario, by contrast, is kept at
+          // the pre-seed scenario by StartSimulation, so Reset brings back a genuinely clean,
+          // all-Healthy scenario instead of one with patient zero already infected.
+          state.model.currentScenario match
+            case Some(scenario) =>
+              state.copy(
+                simulation = None,
+                scenarioForm = Some(ScenarioForm.fromScenario(scenario)),
+                errors = Vector.empty
+              )
+
+            case None =>
+              state.copy(
+                errors = Vector(ValidationError("scenario", "No scenario to reset to"))
+              )
 
         case Some(_) =>
           state.copy(
