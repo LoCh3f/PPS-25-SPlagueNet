@@ -69,15 +69,11 @@ object Mvu:
             errors = Vector.empty
           )
 
-        case Some(_) =>
-          state.copy(
-            errors = Vector(ValidationError("simulation", "Simulation is still running"))
-          )
+        case _ =>
+          state.copy(screen = Screen.Report, errors = Vector.empty)
 
-        case None =>
-          state.copy(
-            errors = Vector(ValidationError("simulation", "No simulation to report on"))
-          )
+    case Msg.ImportReport(report) =>
+      state.copy(report = Some(report), errors = Vector.empty)
 
     case Msg.UpdateScenarioName(form) =>
       updateForm(state) { s =>

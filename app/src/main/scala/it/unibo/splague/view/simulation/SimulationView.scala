@@ -47,23 +47,23 @@ object SimulationView:
         // A simulation can be reset once it's either run to completion or been paused midway —
         // pausing must not be a dead end that only resuming-to-completion can escape.
         val canResetSimulation = state.simulation.exists(s => !s.running || s.paused)
-        // The report only covers a completed run.
-        val simulationFinished = state.simulation.exists(!_.running)
         val simulationPaused = state.simulation.exists(_.paused)
         // The topology (including the shape-adding buttons and the scenario picker below) can
         // only be edited while no simulation is actively progressing; it's fine before one has
         // started, or once it's over.
-        val simulationRunning = state.simulation.exists(_.running)
+        val simulationRunning = state.simulation.forall(_.running)
         // The dialog is blocked for as long as any simulation object exists at all — running,
         // paused, or finished-but-not-yet-reset — and only usable again once Reset clears it.
         val dialogInteractive = state.simulation.isEmpty
+        // Reachable any time except mid-run — before a simulation exists, while paused, or once finished.
+        val reportAccessible = state.simulation.forall(!_.running)
 
         currentSession match
           case Some(session) =>
             session.update(
               state,
               form,
-              simulationFinished,
+              reportAccessible,
               simulationRunning,
               simulationPaused,
               canResetSimulation,
@@ -75,7 +75,7 @@ object SimulationView:
               state,
               form,
               owner,
-              simulationFinished,
+              reportAccessible,
               simulationRunning,
               simulationPaused,
               canResetSimulation,
@@ -95,7 +95,7 @@ object SimulationView:
       state: AppState,
       form: ScenarioForm,
       owner: Window,
-      simulationFinished: Boolean,
+      reportAccessible: Boolean,
       simulationRunning: Boolean,
       simulationPaused: Boolean,
       canResetSimulation: Boolean,
@@ -126,7 +126,7 @@ object SimulationView:
     runButton.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
 
     val reportButton = new Button("Report"):
-      enabled = simulationFinished
+      enabled = reportAccessible
 
     reportButton.listenTo(reportButton)
     reportButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToReport) }
@@ -319,7 +319,7 @@ object SimulationView:
     private def update(
         state: AppState,
         form: ScenarioForm,
-        simulationFinished: Boolean,
+        reportAccessible: Boolean,
         simulationRunning: Boolean,
         simulationPaused: Boolean,
         canResetSimulation: Boolean,
@@ -330,7 +330,7 @@ object SimulationView:
       session.configuration.setInteractive(dialogInteractive)
       session.tickLabel.text = s"Tick: ${form.tick}"
       session.runButton.enabled = dialogInteractive
-      session.reportButton.enabled = simulationFinished
+      session.reportButton.enabled = reportAccessible
       session.resetButton.enabled = canResetSimulation
       session.pauseToggleButton.text = pauseToggleLabel(simulationPaused)
       session.pauseToggleButton.enabled = simulationRunning
