@@ -155,6 +155,21 @@ final class ScenarioConfigDialog(
     currentForm = form
     applyForm(form)
 
+  /** Enables or disables every field and the Save button, so the dialog can be blocked while a
+    * simulation is running/paused/finished-but-not-reset, without having to enumerate every widget
+    * here by hand (and risk missing one added later). Plain Swing doesn't cascade `enabled` from a
+    * container to its children on its own, so this walks the component tree itself.
+    */
+  def setInteractive(interactive: Boolean): Unit =
+    setEnabledRecursively(peer, interactive)
+
+  private def setEnabledRecursively(component: java.awt.Component, enabled: Boolean): Unit =
+    component.setEnabled(enabled)
+    component match
+      case container: java.awt.Container =>
+        container.getComponents.foreach(setEnabledRecursively(_, enabled))
+      case _ => ()
+
   private def applyForm(form: ScenarioForm): Unit =
     scenarioNameField.text = form.name
 
