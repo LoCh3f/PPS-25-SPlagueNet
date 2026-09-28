@@ -29,13 +29,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build distribution package
-        run: ./gradlew app:installDist
-
-      - name: Archive distribution into a zip (if needed) or grab default zip
-        run: |
-          cd app/build/install
-          zip -r ../../../app-distribution.zip app/
+      - name: Build executable fat jar
+        run: ./gradlew app:shadowJar
 
       - name: Run Semantic Release
         uses: cycjimmy/semantic-release-action@v4
@@ -43,5 +38,6 @@ jobs:
           extra_plugins: |
             @semantic-release/changelog
             @semantic-release/git
+            @semantic-release/github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
