@@ -51,12 +51,12 @@ object SimulationView:
         // The topology (including the shape-adding buttons and the scenario picker below) can
         // only be edited while no simulation is actively progressing; it's fine before one has
         // started, or once it's over.
-        val simulationRunning = state.simulation.forall(_.running)
+        val simulationRunning = state.simulation.exists(_.running)
         // The dialog is blocked for as long as any simulation object exists at all — running,
         // paused, or finished-but-not-yet-reset — and only usable again once Reset clears it.
         val dialogInteractive = state.simulation.isEmpty
         // Reachable any time except mid-run — before a simulation exists, while paused, or once finished.
-        val reportAccessible = state.simulation.forall(!_.running)
+        val reportAccessible = state.simulation.forall(s => !s.running || s.paused)
 
         currentSession match
           case Some(session) =>
