@@ -25,6 +25,7 @@ object SimulationView:
       workspace: ScenarioWorkspacePanel,
       configuration: ScenarioConfigDialog,
       tickLabel: Label,
+      awarenessLabel: Label,
       runButton: Button,
       reportButton: Button,
       resetButton: Button,
@@ -114,6 +115,7 @@ object SimulationView:
     configuration.setInteractive(dialogInteractive)
 
     val tickLabel = new Label(s"Tick: ${form.tick}")
+    val awarenessLabel = new Label(formatAwareness(form.awareness)) // NEW
 
     // Disabled whenever a simulation already exists (running, paused, or finished-but-not-reset):
     // re-pressing Run in that state would treat the live/paused/final snapshot in scenarioForm as
@@ -156,6 +158,7 @@ object SimulationView:
     val toolbar = createToolbar(
       workspace,
       tickLabel,
+      awarenessLabel, // NEW
       runButton,
       reportButton,
       resetButton,
@@ -180,6 +183,7 @@ object SimulationView:
       workspace = workspace,
       configuration = configuration,
       tickLabel = tickLabel,
+      awarenessLabel = awarenessLabel, // NEW
       runButton = runButton,
       reportButton = reportButton,
       resetButton = resetButton,
@@ -192,6 +196,12 @@ object SimulationView:
 
   private def pauseToggleLabel(paused: Boolean): String =
     if paused then "Go" else "Stop"
+
+  /** Formats a scenario's awareness level (a `Double` in `[0.0, 1.0]`) as a percentage for display,
+    * e.g. `0.42` -> `"Awareness: 42%"`.
+    */
+  private def formatAwareness(value: Double): String = // NEW
+    f"Awareness: ${value * 100}%.0f%%"
 
   /** A scenario picker ("switch to a different saved scenario") plus the "Load" button that applies
     * it (`Msg.SelectScenario`). Lists every scenario in `state.model.scenarios` — the two built-ins
@@ -262,6 +272,7 @@ object SimulationView:
   private def createToolbar(
       workspace: ScenarioWorkspacePanel,
       tickLabel: Label,
+      awarenessLabel: Label, // NEW
       runButton: Button,
       reportButton: Button,
       resetButton: Button,
@@ -292,7 +303,8 @@ object SimulationView:
         pauseToggleButton,
         resetButton,
         reportButton,
-        tickLabel
+        tickLabel,
+        awarenessLabel // NEW
       ))*
     ):
       hGap = 8
@@ -329,6 +341,7 @@ object SimulationView:
       session.configuration.updateForm(form)
       session.configuration.setInteractive(dialogInteractive)
       session.tickLabel.text = s"Tick: ${form.tick}"
+      session.awarenessLabel.text = formatAwareness(form.awareness) // NEW
       session.runButton.enabled = dialogInteractive
       session.reportButton.enabled = reportAccessible
       session.resetButton.enabled = canResetSimulation
