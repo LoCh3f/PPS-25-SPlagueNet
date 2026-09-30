@@ -29,39 +29,60 @@
   },"4": {
     "doc": "Introduzione",
     "title": "Introduzione",
-    "content": " ",
+    "content": "Il progetto SplagueNet si pone l’obiettivo di realizzare un simulatore in Scala 3, ispirato alle meccaniche di gioco di Plague Inc., per modellare e studiare la propagazione di malware all’interno di topologie di rete definite dall’utente, adottando i principi della programmazione funzionale. ",
     "url": "/PPS-25-SPlagueNet/report/introduzione.html",
     
     "relUrl": "/report/introduzione.html"
   },"5": {
+    "doc": "Introduzione",
+    "title": "Dinamiche dell’infezione su rete",
+    "content": "A differenza dei tradizionali sistemi di sicurezza basati su firme o analisi statiche, SplagueNet adotta un approccio dinamico. La rete viene modellata come un grafo in cui i nodi rappresentano dispositivi (es. workstation, server, router) e gli archi rappresentano i canali di comunicazione. Il malware si diffonde attraverso la rete sfruttando vulnerabilità locali, muovendosi da un nodo all’altro in base a tratti evolutivi configurabili (es. infectivity, stealth, payload severity, etc…). Parallelamente, il sistema reagisce attivando contromisure automatizzate al superamento di determinate soglie di awareness (consapevolezza del rischio). ",
+    "url": "/PPS-25-SPlagueNet/report/introduzione.html#dinamiche-dellinfezione-su-rete",
+    
+    "relUrl": "/report/introduzione.html#dinamiche-dellinfezione-su-rete"
+  },"6": {
+    "doc": "Introduzione",
+    "title": "Finalità del simulatore",
+    "content": "SplagueNet si propone di costruire un ambiente flessibile e componibile per valutare l’interazione tra strategie offensive (il malware e le sue caratteristiche) e difensive (le contromisure di rete). Le astrazioni fondamentali offerte dal simulatore sono: . | Network Topology: la struttura a grafo che definisce la connettività e le dipendenze tra i nodi della rete. | Malware/Virus: un’entità caratterizzata da un insieme di tratti che ne definiscono la probabilità d’infezione, la velocità di propagazione, la tracciabilità e l’impatto causato sulla topologia. | Countermeasures: un insieme di contromisure reattive (es. patching d’emergenza, isolamento dei nodi critici, attivazione firewall) che si attivano dinamicamente al variare dell’indice di awareness globale del sistema. | Scenario: entità che rappresenta uno scenario di esecuzione, formata dalla topology, malware e set di contromisure con la relativa configurazione. | . L’obiettivo principale dell’osservatore è analizzare l’esito della simulazione (compromissione totale del sistema vs. contenimento) in funzione della topologia di rete, dei tratti del malware e delle policy di difesa adottate. ",
+    "url": "/PPS-25-SPlagueNet/report/introduzione.html#finalit%C3%A0-del-simulatore",
+    
+    "relUrl": "/report/introduzione.html#finalità-del-simulatore"
+  },"7": {
+    "doc": "Introduzione",
+    "title": "Guida alla lettura",
+    "content": "Il testo è organizzato per guidare il lettore attraverso le diverse fasi ingegneristiche del progetto SplagueNet . I capitoli successivi affronteranno i seguenti temi: . | Processo di sviluppo | Specifica dei requisiti | Design Architetturale | Design di Dettaglio | Implementazione | Testing | Retrospettiva | . ",
+    "url": "/PPS-25-SPlagueNet/report/introduzione.html#guida-alla-lettura",
+    
+    "relUrl": "/report/introduzione.html#guida-alla-lettura"
+  },"8": {
     "doc": "Paradisi Giovanni",
     "title": "Paradisi Giovanni",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/implementazione/paradisi_giovanni.html",
     
     "relUrl": "/report/implementazione/paradisi_giovanni.html"
-  },"6": {
+  },"9": {
     "doc": "Processo di Sviluppo",
     "title": "Processo di Sviluppo",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/processo_di_sviluppo.html",
     
     "relUrl": "/report/processo_di_sviluppo.html"
-  },"7": {
+  },"10": {
     "doc": "Retrospettiva",
     "title": "Retrospettiva",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/retrospettiva.html",
     
     "relUrl": "/report/retrospettiva.html"
-  },"8": {
+  },"11": {
     "doc": "Specifica dei requisiti",
     "title": "Specifica dei requisiti",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html",
     
     "relUrl": "/report/specifica_dei_requisiti.html"
-  },"9": {
+  },"12": {
     "doc": "Testing",
     "title": "Testing",
     "content": " ",
