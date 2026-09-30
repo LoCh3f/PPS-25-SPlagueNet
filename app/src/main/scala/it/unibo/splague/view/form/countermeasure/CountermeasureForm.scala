@@ -58,7 +58,6 @@ object CountermeasureForm:
       firewall <- parseFirewall(form.firewallPolicy)
 
       config <- CountermeasureConfig(
-        activeCountermeasures = activeCMs,
         countermeasureLevels = levels,
         patchBoostAmount = patchBoost,
         defenseBoostAmount = defenseBoost,
