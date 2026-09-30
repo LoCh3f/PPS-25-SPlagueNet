@@ -36,10 +36,10 @@ contenimento) in funzione della topologia di rete, dei tratti del malware e dell
 ## Guida alla lettura
 Il testo è organizzato per guidare il lettore attraverso le diverse fasi ingegneristiche del progetto SplagueNet
 . I capitoli successivi affronteranno i seguenti temi:
-- [Processo di sviluppo](processo_di_sviluppo.md)
-- [Specifica dei requisiti](specifica_dei_requisiti.md)
-- [Design Architetturale](design_architetturale.md)
-- [Design di Dettaglio](design_di_dettaglio.md)
-- [Implementazione](implementazione.md)
-- [Testing](testing.md)
-- [Retrospettiva](retrospettiva.md)
+- [Processo di sviluppo](processo_di_sviluppo.html)
+- [Specifica dei requisiti](specifica_dei_requisiti.html)
+- [Design Architetturale](design_architetturale.html)
+- [Design di Dettaglio](design_di_dettaglio.html)
+- [Implementazione](implementazione.html)
+- [Testing](testing.html)
+- [Retrospettiva](retrospettiva.html)
