@@ -49,7 +49,6 @@ object CountermeasureForm:
       form: CountermeasureForm
   ): Either[String, CountermeasureConfig] =
     for
-      activeCMs <- parseSet(form.activeCountermeasures, parseCountermeasure)
       levels <- parseLevels(form.countermeasureLevels)
       patchBoost <- parseDouble(form.patchBoostAmount, "patchBoostAmount")
       defenseBoost <- parseDouble(form.defenseBoostAmount, "defenseBoostAmount")
