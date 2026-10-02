@@ -3,6 +3,7 @@ package it.unibo.splague.view.form
 import it.unibo.splague.model.*
 import it.unibo.splague.model.Awareness.*
 import it.unibo.splague.model.node.{NodeId, Topology}
+import it.unibo.splague.view.form.FormParsing.*
 import it.unibo.splague.view.form.countermeasure.CountermeasureForm
 
 final case class ScenarioForm(
@@ -36,18 +37,15 @@ object ScenarioForm:
     for
       topology <- TopologyForm.toDomain(form.topology)
       malware <- MalwareForm.toDomain(form.virus)
-
       startingId <- NodeId.of(form.startingNodeId)
       startingNode <- topology.nodes
         .get(startingId.value)
         .toRight(s"Starting node '${form.startingNodeId}' not found in topology")
-
       tick <- parseInt(form.tick, "tick")
       seed <- parseInt(form.seed, "seed")
       maxIterations <- parseInt(form.maxIterations, "maxIterations")
       awareness <- Awareness(form.awareness)
       counter <- CountermeasureForm.toDomain(form.countermeasureConfig)
-
       scenario <- Scenario(
         name = form.name,
         topology = topology,
@@ -60,6 +58,3 @@ object ScenarioForm:
         countermeasureConfig = counter
       )
     yield scenario
-
-  private def parseInt(s: String, field: String): Either[String, Int] =
-    s.trim.toIntOption.toRight(s"$field must be an integer, got '$s'")

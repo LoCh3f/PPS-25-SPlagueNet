@@ -3,6 +3,7 @@ package it.unibo.splague.view.form
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.connection.Connection.Channel
 import it.unibo.splague.model.connection.Connection.ChannelType
+import it.unibo.splague.view.form.FormParsing.*
 
 final case class ChannelForm(
     channelType: ChannelType,
@@ -36,6 +37,3 @@ object ChannelForm:
       jitter = jit,
       packetLoss = Probability.clamped(loss)
     )
-
-  private def parseDouble(s: String, field: String): Either[String, Double] =
-    s.trim.toDoubleOption.toRight(s"$field must be a number, got '$s'")
