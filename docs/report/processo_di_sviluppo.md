@@ -10,9 +10,9 @@ Come metodologia di sviluppo, è stata adottata la metodologia SCRUM, proposta d
 
 ### Ruoli
 
-- **Product Owner** - 
-- **Esperto di dominio** - 
-- **Scrum Master** - 
+- **Product Owner** - Aldo Visconti
+- **Esperto di dominio** - Eduard Toni Alexandru
+- **Scrum Master** - Giovanni Paradisi
 
 Tutti i membri ricoprono il ruolo di **Development Team** e contribuiscono in modo
 equilibrato all'implementazione del progetto.
@@ -20,7 +20,7 @@ equilibrato all'implementazione del progetto.
 ## Gestione e Pianificazione del Lavoro
 
 Le attività di progetto sono strutturate in cicli iterativi **(Sprint)** della durata di una settimana, con un impegno stimato
-di 20 ore per ciascun membro.
+di 15 ore per ciascun membro.
 
 Ciascuno Sprint prevede tre fasi principali:
 
