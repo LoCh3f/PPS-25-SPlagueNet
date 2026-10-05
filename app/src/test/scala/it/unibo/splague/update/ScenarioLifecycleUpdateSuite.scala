@@ -110,7 +110,9 @@ final class ScenarioLifecycleUpdateSuite extends AnyFunSuite with Matchers:
     result.model.scenarios.map(_.seed) shouldBe Vector(99)
     result.model.malwares.map(_.name) shouldBe Vector(malware.name)
 
-  test("SaveScenario replaces the previously-named entry when the scenario is renamed"):
+  test(
+    "SaveScenario adds a new entry under the new name when the scenario is renamed, keeping the old one"
+  ):
     val renamedForm = ScenarioForm.fromScenario(baseline).copy(name = "Renamed Baseline")
 
     val editing = AppState
@@ -125,9 +127,12 @@ final class ScenarioLifecycleUpdateSuite extends AnyFunSuite with Matchers:
 
     val result = ScenarioLifecycleUpdate.update(Msg.SaveScenario, editing)
 
-    result.model.scenarios.map(_.name) shouldBe Vector("Renamed Baseline")
+    result.model.scenarios.map(_.name) shouldBe Vector(baseline.name, "Renamed Baseline")
+    result.model.currentScenario.map(_.name) shouldBe Some("Renamed Baseline")
 
-  test("SaveScenario replaces the previously-named malware entry when the virus is renamed"):
+  test(
+    "SaveScenario adds a new malware entry under the new name when the virus is renamed, keeping the old one"
+  ):
     val baseForm = ScenarioForm.fromScenario(baseline)
     val renamedVirusForm = baseForm.copy(virus = baseForm.virus.copy(name = "Renamed Malware"))
 
@@ -143,7 +148,7 @@ final class ScenarioLifecycleUpdateSuite extends AnyFunSuite with Matchers:
 
     val result = ScenarioLifecycleUpdate.update(Msg.SaveScenario, editing)
 
-    result.model.malwares.map(_.name) shouldBe Vector("Renamed Malware")
+    result.model.malwares.map(_.name) shouldBe Vector(malware.name, "Renamed Malware")
 
   test("SaveScenario reports an error when no scenario form is open"):
     val state = AppState.init(ModelState())
