@@ -1,5 +1,7 @@
 # PPS-25-SPlagueNet
 
+![SPlagueNet preview](assets/preview.jpeg)
+
 This project is a Scala application built with Gradle. The following steps explain how to build it, create a runnable distribution, and run it locally.
 
 ## Requirements

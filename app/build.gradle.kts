@@ -118,6 +118,15 @@ application {
     mainClass = "it.unibo.splague.App"
 }
 
+base {
+    // Name the built jars "SPlagueNet(-all).jar" instead of the default "app(-all).jar".
+    archivesName.set("SPlagueNet")
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveClassifier.set("all")
+}
+
 scoverage {
     excludedPackages.set(
         listOf(
