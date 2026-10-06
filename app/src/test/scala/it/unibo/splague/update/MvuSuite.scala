@@ -11,6 +11,18 @@ import it.unibo.splague.model.malware.{
 }
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
 import it.unibo.splague.persistence.FileFormat
+import it.unibo.splague.update.messages.{
+  NavigationUpdate,
+  NavigationUpdateSuite,
+  ScenarioFormUpdate,
+  ScenarioFormUpdateSuite,
+  ScenarioIOUpdate,
+  ScenarioIOUpdateSuite,
+  ScenarioLifecycleUpdate,
+  ScenarioLifecycleUpdateSuite,
+  SimulationUpdate,
+  SimulationUpdateSuite
+}
 import it.unibo.splague.view.form.ScenarioForm
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

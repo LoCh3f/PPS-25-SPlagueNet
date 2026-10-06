@@ -1,9 +1,10 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
 import it.unibo.splague.dsl.*
 import it.unibo.splague.model.connection.Connection.ChannelType
 import it.unibo.splague.model.node.{Node, NodeId, Topology}
+import it.unibo.splague.update.{Msg, TopologyShape}
 import it.unibo.splague.view.ValidationError
 import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, NodeForm, ScenarioForm}
 

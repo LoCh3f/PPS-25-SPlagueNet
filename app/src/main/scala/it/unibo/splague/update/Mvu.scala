@@ -1,6 +1,13 @@
 package it.unibo.splague.update
 
 import it.unibo.splague.AppState
+import it.unibo.splague.update.messages.{
+  NavigationUpdate,
+  ScenarioFormUpdate,
+  ScenarioIOUpdate,
+  ScenarioLifecycleUpdate,
+  SimulationUpdate
+}
 
 /** The single entry point for every `AppState` transition (MVU's `update`). Dispatches each `Msg`
   * to the handler object responsible for its category, so each handler stays focused on one concern

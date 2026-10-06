@@ -1,20 +1,12 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
 import it.unibo.splague.model.Scenario
 import it.unibo.splague.model.node.NodeState
+import it.unibo.splague.update.Msg
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
+import it.unibo.splague.update.simulation.event.*
 import it.unibo.splague.update.simulation.{SimulationEngine, SimulationState}
-import it.unibo.splague.update.simulation.event.{
-  CountermeasureActivation,
-  Cure,
-  Defense,
-  Destroy,
-  Detection,
-  Infection,
-  Prevention,
-  TickBasedCyclicSelector
-}
 import it.unibo.splague.view.ValidationError
 import it.unibo.splague.view.form.ScenarioForm
 

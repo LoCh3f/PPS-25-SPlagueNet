@@ -1,6 +1,7 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
+import it.unibo.splague.update.Msg
 import it.unibo.splague.view.ValidationError
 import it.unibo.splague.view.form.ScenarioForm
 
