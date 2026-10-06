@@ -16,7 +16,7 @@ import it.unibo.splague.view.form.ScenarioForm
 // $COVERAGE-OFF$
 object SimulationUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.StartSimulation =>
       // Re-pressing Run while a simulation already exists would treat whatever's currently in

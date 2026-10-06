@@ -17,7 +17,7 @@ import scala.util.Try
 // $COVERAGE-OFF$
 object ScenarioIOUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.ExportScenario(format) =>
       resolveScenarioToExport(state) match

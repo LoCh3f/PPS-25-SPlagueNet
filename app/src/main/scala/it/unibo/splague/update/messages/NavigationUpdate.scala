@@ -13,7 +13,7 @@ import it.unibo.splague.view.{Screen, ValidationError}
 // $COVERAGE-OFF$
 object NavigationUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.GoToMenu =>
       state.copy(screen = Screen.Menu)

@@ -16,7 +16,7 @@ import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, NodeForm, ScenarioFo
 // $COVERAGE-OFF$
 object ScenarioFormUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.UpdateScenarioName(form) =>
       updateForm(state) { s =>
