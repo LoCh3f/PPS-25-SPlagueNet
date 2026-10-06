@@ -5,6 +5,7 @@ import it.unibo.splague.model.connection.Protocol.ApplicationProtocolType
 import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.node.NodeType
 import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria}
+import it.unibo.splague.view.form.FormParsing.parseDouble
 
 final case class CountermeasureForm(
     activeCountermeasures: Set[String],
@@ -49,7 +50,6 @@ object CountermeasureForm:
       form: CountermeasureForm
   ): Either[String, CountermeasureConfig] =
     for
-      activeCMs <- parseSet(form.activeCountermeasures, parseCountermeasure)
       levels <- parseLevels(form.countermeasureLevels)
       patchBoost <- parseDouble(form.patchBoostAmount, "patchBoostAmount")
       defenseBoost <- parseDouble(form.defenseBoostAmount, "defenseBoostAmount")
@@ -58,7 +58,6 @@ object CountermeasureForm:
       firewall <- parseFirewall(form.firewallPolicy)
 
       config <- CountermeasureConfig(
-        activeCountermeasures = activeCMs,
         countermeasureLevels = levels,
         patchBoostAmount = patchBoost,
         defenseBoostAmount = defenseBoost,
@@ -102,8 +101,6 @@ object CountermeasureForm:
     yield FirewallPolicy(blockedChannels = channels, blockedApplicationProtocols = protocols)
 
   // Parsing utilities
-  private def parseDouble(rawValue: String, field: String): Either[String, Double] =
-    rawValue.trim.toDoubleOption.toRight(s"$field must be a valid number, got '$rawValue'")
 
   private def parseSet[A](
       rawSet: Set[String],

@@ -15,3 +15,6 @@ object ExportPaths:
   def pathFor(scenarioName: String, fileFormat: FileFormat): Path = fileFormat match
     case Json => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".json")
     case Txt  => baseDirectory.resolve(sanitizeFileName(scenarioName) + ".txt")
+
+  def reportPathFor(scenarioName: String): Path =
+    baseDirectory.resolve(sanitizeFileName(scenarioName) + "-report.json")

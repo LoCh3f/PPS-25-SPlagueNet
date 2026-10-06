@@ -43,7 +43,7 @@ case class Node(
 object Node:
   val defaultNodeType: NodeType = NodeType.Server
   val defaultPatchLevel: Double = 0.0
-  val defaultDefenseLevel: Double = 1.0
+  val defaultDefenseLevel: Double = 0.0
   val defaultState: NodeState = NodeState.Healthy
   val defaultWorkload: Double = 0.0
   val defaultVectors: Set[PropagationVector] = Set.empty

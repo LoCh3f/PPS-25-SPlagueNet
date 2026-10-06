@@ -25,8 +25,11 @@ object SimulationView:
       workspace: ScenarioWorkspacePanel,
       configuration: ScenarioConfigDialog,
       tickLabel: Label,
+      awarenessLabel: Label,
+      runButton: Button,
       reportButton: Button,
       resetButton: Button,
+      pauseToggleButton: Button,
       shapeButtons: Seq[Button],
       scenarioCombo: ComboBox[String],
       loadScenarioButton: Button,
@@ -42,21 +45,44 @@ object SimulationView:
   ): Component =
     state.scenarioForm match
       case Some(form) =>
-        // The simulation is over: the "final" state can be inspected in a report, and the
-        // workspace can be reset back to the state the simulation started from.
-        val simulationFinished = state.simulation.exists(!_.running)
+        // A simulation can be reset once it's either run to completion or been paused midway —
+        // pausing must not be a dead end that only resuming-to-completion can escape.
+        val canResetSimulation = state.simulation.exists(s => !s.running || s.paused)
+        val simulationPaused = state.simulation.exists(_.paused)
         // The topology (including the shape-adding buttons and the scenario picker below) can
         // only be edited while no simulation is actively progressing; it's fine before one has
         // started, or once it's over.
         val simulationRunning = state.simulation.exists(_.running)
+        // The dialog is blocked for as long as any simulation object exists at all — running,
+        // paused, or finished-but-not-yet-reset — and only usable again once Reset clears it.
+        val dialogInteractive = state.simulation.isEmpty
+        // Reachable any time except mid-run — before a simulation exists, while paused, or once finished.
+        val reportAccessible = state.simulation.forall(s => !s.running || s.paused)
 
         currentSession match
           case Some(session) =>
-            session.update(state, form, simulationFinished, simulationRunning)
+            session.update(
+              state,
+              form,
+              reportAccessible,
+              simulationRunning,
+              simulationPaused,
+              canResetSimulation,
+              dialogInteractive
+            )
             session.root
           case None =>
-            val session =
-              createSession(state, form, owner, simulationFinished, simulationRunning, dispatch)
+            val session = createSession(
+              state,
+              form,
+              owner,
+              reportAccessible,
+              simulationRunning,
+              simulationPaused,
+              canResetSimulation,
+              dialogInteractive,
+              dispatch
+            )
             currentSession = Some(session)
             session.root
 
@@ -70,8 +96,11 @@ object SimulationView:
       state: AppState,
       form: ScenarioForm,
       owner: Window,
-      simulationFinished: Boolean,
+      reportAccessible: Boolean,
       simulationRunning: Boolean,
+      simulationPaused: Boolean,
+      canResetSimulation: Boolean,
+      dialogInteractive: Boolean,
       dispatch: Msg => Unit
   ): Session =
     val workspace =
@@ -83,22 +112,44 @@ object SimulationView:
 
     val configuration =
       new ScenarioConfigDialog(initialForm = form, dispatch = dispatch)
+    configuration.setInteractive(dialogInteractive)
 
     val tickLabel = new Label(s"Tick: ${form.tick}")
+    val awarenessLabel = new Label(formatAwareness(form.awareness)) // NEW
+
+    // Disabled whenever a simulation already exists (running, paused, or finished-but-not-reset):
+    // re-pressing Run in that state would treat the live/paused/final snapshot in scenarioForm as
+    // a brand-new scenario, discarding the existing SimulationState and corrupting the pre-seed
+    // model.currentScenario ResetSimulation depends on. Reset must happen first.
+    val runButton = new Button("Run"):
+      enabled = dialogInteractive
+
+    runButton.listenTo(runButton)
+    runButton.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
 
     val reportButton = new Button("Report"):
-      enabled = simulationFinished
+      enabled = reportAccessible
 
     reportButton.listenTo(reportButton)
     reportButton.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToReport) }
 
-    // Only meaningful once the simulation has run to completion, to bring the workspace back to
-    // the state it was in when the simulation started.
+    // Enabled once the simulation has either run to completion or been paused, to bring the
+    // workspace back to the state it was in when the simulation started.
     val resetButton = new Button("Reset"):
-      enabled = simulationFinished
+      enabled = canResetSimulation
 
     resetButton.listenTo(resetButton)
     resetButton.reactions += { case ButtonClicked(_) => dispatch(Msg.ResetSimulation) }
+
+    // Pauses/resumes an already-started simulation; starting a new one is Run's job. Enabled
+    // whenever there's a simulation with ticks left to give, regardless of paused state.
+    val pauseToggleButton = new Button(pauseToggleLabel(simulationPaused)):
+      enabled = simulationRunning
+
+    pauseToggleButton.listenTo(pauseToggleButton)
+    pauseToggleButton.reactions += { case ButtonClicked(_) =>
+      dispatch(Msg.ToggleSimulationPause)
+    }
 
     val shapeButtons = createShapeButtons(!simulationRunning, dispatch)
     val (scenarioCombo, loadScenarioButton) =
@@ -107,8 +158,11 @@ object SimulationView:
     val toolbar = createToolbar(
       workspace,
       tickLabel,
+      awarenessLabel, // NEW
+      runButton,
       reportButton,
       resetButton,
+      pauseToggleButton,
       shapeButtons,
       scenarioCombo,
       loadScenarioButton,
@@ -129,13 +183,25 @@ object SimulationView:
       workspace = workspace,
       configuration = configuration,
       tickLabel = tickLabel,
+      awarenessLabel = awarenessLabel, // NEW
+      runButton = runButton,
       reportButton = reportButton,
       resetButton = resetButton,
+      pauseToggleButton = pauseToggleButton,
       shapeButtons = shapeButtons,
       scenarioCombo = scenarioCombo,
       loadScenarioButton = loadScenarioButton,
       root = rootPanel
     )
+
+  private def pauseToggleLabel(paused: Boolean): String =
+    if paused then "Go" else "Stop"
+
+  /** Formats a scenario's awareness level (a `Double` in `[0.0, 1.0]`) as a percentage for display,
+    * e.g. `0.42` -> `"Awareness: 42%"`.
+    */
+  private def formatAwareness(value: Double): String = // NEW
+    f"Awareness: ${value * 100}%.0f%%"
 
   /** A scenario picker ("switch to a different saved scenario") plus the "Load" button that applies
     * it (`Msg.SelectScenario`). Lists every scenario in `state.model.scenarios` — the two built-ins
@@ -206,8 +272,11 @@ object SimulationView:
   private def createToolbar(
       workspace: ScenarioWorkspacePanel,
       tickLabel: Label,
+      awarenessLabel: Label, // NEW
+      runButton: Button,
       reportButton: Button,
       resetButton: Button,
+      pauseToggleButton: Button,
       shapeButtons: Seq[Button],
       scenarioCombo: ComboBox[String],
       loadScenarioButton: Button,
@@ -221,14 +290,6 @@ object SimulationView:
     zoomOut.listenTo(zoomOut)
     zoomOut.reactions += { case ButtonClicked(_) => workspace.zoomOut() }
 
-    val save = new Button("Save")
-    save.listenTo(save)
-    save.reactions += { case ButtonClicked(_) => dispatch(Msg.SaveScenario) }
-
-    val run = new Button("Run")
-    run.listenTo(run)
-    run.reactions += { case ButtonClicked(_) => dispatch(Msg.StartSimulation) }
-
     val back = new Button("Back")
     back.listenTo(back)
     back.reactions += { case ButtonClicked(_) =>
@@ -238,11 +299,12 @@ object SimulationView:
 
     val left = new FlowPanel(FlowPanel.Alignment.Left)(
       (Seq(zoomIn, zoomOut, scenarioCombo, loadScenarioButton) ++ shapeButtons ++ Seq(
-        save,
-        run,
+        runButton,
+        pauseToggleButton,
         resetButton,
         reportButton,
-        tickLabel
+        tickLabel,
+        awarenessLabel // NEW
       ))*
     ):
       hGap = 8
@@ -269,14 +331,22 @@ object SimulationView:
     private def update(
         state: AppState,
         form: ScenarioForm,
-        simulationFinished: Boolean,
-        simulationRunning: Boolean
+        reportAccessible: Boolean,
+        simulationRunning: Boolean,
+        simulationPaused: Boolean,
+        canResetSimulation: Boolean,
+        dialogInteractive: Boolean
     ): Unit =
       session.workspace.setTopology(form.topology)
       session.configuration.updateForm(form)
+      session.configuration.setInteractive(dialogInteractive)
       session.tickLabel.text = s"Tick: ${form.tick}"
-      session.reportButton.enabled = simulationFinished
-      session.resetButton.enabled = simulationFinished
+      session.awarenessLabel.text = formatAwareness(form.awareness) // NEW
+      session.runButton.enabled = dialogInteractive
+      session.reportButton.enabled = reportAccessible
+      session.resetButton.enabled = canResetSimulation
+      session.pauseToggleButton.text = pauseToggleLabel(simulationPaused)
+      session.pauseToggleButton.enabled = simulationRunning
       session.shapeButtons.foreach(_.enabled = !simulationRunning)
       session.scenarioCombo.enabled = !simulationRunning
       session.loadScenarioButton.enabled = !simulationRunning
