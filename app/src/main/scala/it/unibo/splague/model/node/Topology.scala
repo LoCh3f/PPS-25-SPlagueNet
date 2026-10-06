@@ -15,7 +15,6 @@ object Topology:
     def edgesOf(node: Node): Set[Edge] =
       topology.edges
         .filter(edge => edge.source.nodeId == node.nodeId || edge.target.nodeId == node.nodeId)
-        .map(edge => edge.copy())
 
     def neighbors(node: Node): Set[Node] =
       topology.edges.flatMap { edge =>
