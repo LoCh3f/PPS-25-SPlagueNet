@@ -9,10 +9,15 @@ import it.unibo.splague.view.simulation.SimulationView
 
 import scala.swing.{BoxPanel, Component, MainFrame, Orientation}
 import java.awt.Dimension
+import javax.imageio.ImageIO
 
 final class MainView extends MainFrame with Renderer:
 
   title = "SPlagueNet"
+
+  Option(getClass.getResource("/images/logo.jpg")).foreach { logo =>
+    iconImage = ImageIO.read(logo)
+  }
 
   private val contentPanel =
     new BoxPanel(Orientation.Vertical)
