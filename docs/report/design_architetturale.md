@@ -34,7 +34,7 @@ Invece di aggiornare puntualmente i singoli controlli grafici, ricostruisce l'al
 3. **Update**:
 Rappresenta l'unico punto dell'applicazione in cui avviene la trasformazione dello stato.
 Accetta in ingresso lo **stato corrente** e un **messaggio**, e restituisce il **nuovo stato**.
-Concentra dentro di la logica di aggiornamento dello stato, ed è strutturata come un *dispatcher* che indirizza il messaggio verso handler specializzati in base alla categoria dell'evento.
+Concentra dentro di se la logica di aggiornamento dello stato, ed è strutturato come un *dispatcher* che indirizza il messaggio verso handler specializzati in base alla categoria dell'evento.
 
 ### Il ciclo in sintesi
 
