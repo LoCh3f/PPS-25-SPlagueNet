@@ -69,7 +69,9 @@ tasks.named<Test>("test") {
         showStandardStreams = true
     }
 }
-
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 dependencies {
     // Use Scala 3 in our library project
     implementation(libs.scala3library)
