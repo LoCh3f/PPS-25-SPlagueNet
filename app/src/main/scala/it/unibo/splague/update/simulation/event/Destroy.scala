@@ -28,7 +28,7 @@ object Destroy:
   object DestroyEvent extends Event with TopologyUpdateMixin:
     override def apply(scenario: Scenario): Scenario =
       val infectedNodes = scenario.topology.infectedNodes()
-      val rng = new Random(scenario.seed + scenario.tick + 1)
+      val rng = new Random(scenario.seed + scenario.tick + "destroy".hashCode)
 
       val updatedTopology = infectedNodes.foldLeft(scenario.topology) { (currentTopology, node) =>
         val destroyed = DestructionRules.resolveDestruction(

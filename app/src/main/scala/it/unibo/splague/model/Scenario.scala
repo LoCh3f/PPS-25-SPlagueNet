@@ -5,7 +5,7 @@ import it.unibo.splague.model.countermeasures.CountermeasureConfig
 import it.unibo.splague.model.malware.Malware
 import it.unibo.splague.model.node.{Node, Topology}
 
-final case class Scenario(
+final case class Scenario private (
     name: String,
     topology: Topology,
     virus: Malware,
@@ -16,7 +16,30 @@ final case class Scenario(
     awareness: Awareness,
     countermeasureConfig: CountermeasureConfig,
     baselineWorkload: Map[Node, Double]
-)
+):
+  def copy(
+      name: String = this.name,
+      topology: Topology = this.topology,
+      virus: Malware = this.virus,
+      startingNode: Node = this.startingNode,
+      tick: Int = this.tick,
+      seed: Int = this.seed,
+      maxIterations: Int = this.maxIterations,
+      awareness: Awareness = this.awareness,
+      countermeasureConfig: CountermeasureConfig = this.countermeasureConfig,
+      baselineWorkload: Map[Node, Double] = this.baselineWorkload
+  ) = new Scenario(
+    name,
+    topology,
+    virus,
+    startingNode,
+    tick,
+    seed,
+    maxIterations,
+    awareness,
+    countermeasureConfig,
+    baselineWorkload
+  )
 
 object Scenario:
   private def validateName(name: String): Either[String, String] =
