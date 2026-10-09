@@ -24,9 +24,13 @@ class CureSuite extends AnyFunSuite:
   private val id2 = NodeId.of("node-02").getOrElse(fail())
 
   private val nodeHighPatch = Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Infected, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val nodeLowPatch = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Infected, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val nodeQuarantined =
-    Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Quarantined, 0.0, Set())
+    Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Quarantined, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
 
   private val topologyHighPatch = Topology(
     nodes = Map("node-01" -> nodeHighPatch),
@@ -70,6 +74,7 @@ class CureSuite extends AnyFunSuite:
 
   private val recoveryNodeAtRest =
     Node(recoveryNodeId, NodeType.Server, 0.5, 0.5, NodeState.Infected, restingWorkload, Set())
+      .getOrElse(fail("Failed to create Node"))
 
   private val topologyForRecovery =
     Topology(nodes = Map("node-03" -> recoveryNodeAtRest), edges = Set.empty)

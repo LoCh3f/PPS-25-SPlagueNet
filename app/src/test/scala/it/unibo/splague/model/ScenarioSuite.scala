@@ -21,7 +21,9 @@ final class ScenarioSuite extends AnyFunSuite with Matchers with EitherValues:
   private val id2 = NodeId.of("node-02").getOrElse(fail())
 
   private val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map("node-01" -> nodeValid),

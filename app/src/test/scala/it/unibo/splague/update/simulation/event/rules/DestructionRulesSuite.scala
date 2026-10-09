@@ -40,29 +40,35 @@ class DestructionRulesSuite extends AnyFunSuite:
     Set(PropagationVector.NetworkExploit)
   ).getOrElse(fail())
 
+  val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.2, Set()).getOrElse(
+    fail("Failed to create Node")
+  )
   test("increaseWorkload increases node workload based on footprint and payload severity"):
-    val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.2, Set())
     val newWorkload = DestructionRules.increaseWorkload(node, dummyMalware)
     // Medium severity factor is 0.2, footprint is 0.4 -> increment = 0.4 * 0.2 = 0.08
     newWorkload shouldBe 0.28 +- 1e-9
 
   test("increaseWorkload clamps workload at 1.0 maximum"):
     val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.95, Set())
+      .getOrElse(fail("Failed to create Node"))
     val newWorkload = DestructionRules.increaseWorkload(node, dummyMalware)
     newWorkload shouldBe 1.0
 
   test("destructionProbability equals node workload clamped"):
     val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.75, Set())
+      .getOrElse(fail("Failed to create Node"))
     val prob = DestructionRules.destructionProbability(node)
     prob.value shouldBe 0.75
 
   test("resolveDestruction returns true when roll is less than workload probability"):
     val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.6, Set())
+      .getOrElse(fail("Failed to create Node"))
     DestructionRules.resolveDestruction(node, 0.4) shouldBe true
 
   test(
     "resolveDestruction returns false when roll is greater than or equal to workload probability"
   ):
     val node = Node(nodeId, NodeType.Workstation, 0.0, 0.5, NodeState.Infected, 0.6, Set())
+      .getOrElse(fail("Failed to create Node"))
     DestructionRules.resolveDestruction(node, 0.6) shouldBe false
     DestructionRules.resolveDestruction(node, 0.8) shouldBe false

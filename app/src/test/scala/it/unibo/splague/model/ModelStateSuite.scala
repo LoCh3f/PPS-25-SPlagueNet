@@ -26,7 +26,7 @@ final class ModelStateSuite extends AnyFunSuite with Matchers with EitherValues:
       NodeState.Healthy,
       0.0,
       Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map("node-01" -> node),

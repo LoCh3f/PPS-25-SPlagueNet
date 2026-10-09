@@ -36,8 +36,11 @@ final class DefenseSuite extends AnyFunSuite with Matchers with EitherValues:
     NodeId.of("node-02").fold(err => fail(s"Failed to create NodeId: $err"), identity)
 
   private val workstationNode =
-    Node(id1, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.8, Set())
+    Node(id1, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.8, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val serverNode = Node(id2, NodeType.Server, 0.0, 0.0, NodeState.Infected, 0.1, Set())
+    .getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map("node-01" -> workstationNode, "node-02" -> serverNode),

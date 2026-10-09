@@ -46,7 +46,7 @@ class SimulationStateSuite extends AnyFunSuite:
     state = NodeState.Healthy,
     workload = 0.3,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map(node.nodeId.value -> node),

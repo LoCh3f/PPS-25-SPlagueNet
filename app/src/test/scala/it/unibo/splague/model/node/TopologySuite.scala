@@ -29,20 +29,25 @@ final class TopologySuite extends AnyFunSuite with Matchers with EitherValues:
   private val nodeId4 = NodeId.of("node-04").getOrElse(fail("Failed to create NodeId"))
   private val nodeId5 = NodeId.of("node-05").getOrElse(fail("Failed to create NodeId"))
 
-  private val node1 = Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set())
-  private val node2 = Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1, Set())
-  private val node3 = Node(nodeId3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3, Set())
+  private val node1 =
+    Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set()).getOrElse(fail())
+  private val node2 =
+    Node(nodeId2, NodeType.MobileDevice, 0.0, 0.1, NodeState.Healthy, 0.1, Set()).getOrElse(fail())
+  private val node3 =
+    Node(nodeId3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3, Set()).getOrElse(fail())
 
   private val healthyNode =
-    Node(nodeId1, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+    Node(nodeId1, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set()).getOrElse(fail())
   private val infectedNode =
-    Node(nodeId2, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.0, Set())
+    Node(nodeId2, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.0, Set()).getOrElse(fail())
   private val quarantinedNode =
-    Node(nodeId3, NodeType.Workstation, 0.0, 0.0, NodeState.Quarantined, 0.0, Set())
+    Node(nodeId3, NodeType.Workstation, 0.0, 0.0, NodeState.Quarantined, 0.0, Set()).getOrElse(
+      fail()
+    )
   private val destroyedNode =
-    Node(nodeId4, NodeType.Workstation, 0.0, 0.0, NodeState.Destroyed, 0.0, Set())
+    Node(nodeId4, NodeType.Workstation, 0.0, 0.0, NodeState.Destroyed, 0.0, Set()).getOrElse(fail())
   private val immuneNode =
-    Node(nodeId5, NodeType.Workstation, 0.0, 0.0, NodeState.Immune, 0.0, Set())
+    Node(nodeId5, NodeType.Workstation, 0.0, 0.0, NodeState.Immune, 0.0, Set()).getOrElse(fail())
 
   test("Topology should correctly store nodes and edges"):
     val nodesMap = Map("node-01" -> node1, "node-02" -> node2, "node-03" -> node3)

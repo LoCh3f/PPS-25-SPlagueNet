@@ -146,11 +146,13 @@ final class CodecSuite extends AnyFunSuite with Matchers:
 
   test("Map[Node, Double] should be correctly encoded to JSON list of pairs and decoded back"):
     val nodeId = NodeId.of("node-1").toOption.get
-    val node = Node.test(
-      nodeId = nodeId,
-      nodeType = NodeType.Server,
-      state = NodeState.Healthy
-    )
+    val node = Node
+      .test(
+        nodeId = nodeId,
+        nodeType = NodeType.Server,
+        state = NodeState.Healthy
+      )
+      .getOrElse(fail("Failed to create Node"))
 
     val sampleMap: Map[Node, Double] = Map(node -> 0.75)
 
@@ -175,8 +177,12 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     val id1 = NodeId.of("node-1").toOption.get
     val id2 = NodeId.of("node-2").toOption.get
 
-    val node1 = Node.test(nodeId = id1, nodeType = NodeType.Server, state = NodeState.Healthy)
-    val node2 = Node.test(nodeId = id2, nodeType = NodeType.Workstation, state = NodeState.Healthy)
+    val node1 = Node
+      .test(nodeId = id1, nodeType = NodeType.Server, state = NodeState.Healthy)
+      .getOrElse(fail("Failed to create Node"))
+    val node2 = Node
+      .test(nodeId = id2, nodeType = NodeType.Workstation, state = NodeState.Healthy)
+      .getOrElse(fail("Failed to create Node"))
 
     val channel = Channel.default(ChannelType.LAN)
     val edge = Edge(node1, node2, channel, None)
@@ -222,8 +228,12 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     val id1 = NodeId.of("node-01").getOrElse(fail())
     val id2 = NodeId.of("node-02").getOrElse(fail())
 
-    val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set())
-    val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set())
+    val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
+    val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
 
     val topology = Topology(
       nodes = Map("node-01" -> nodeValid),

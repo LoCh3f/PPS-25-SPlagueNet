@@ -31,7 +31,7 @@ object NodeType:
 enum NodeState:
   case Healthy, Infected, Quarantined, Immune, Destroyed
 
-case class Node(
+case class Node private[splague] (
     nodeId: NodeId,
     nodeType: NodeType,
     patchLevel: Double,
@@ -48,6 +48,14 @@ object Node:
   val defaultWorkload: Double = 0.0
   val defaultVectors: Set[PropagationVector] = Set.empty
 
+  private def fieldIsInRange(field: Double, range: (Double, Double)): Either[String, Double] =
+    val (lower, upper) = range
+    Either.cond(
+      field >= lower && field <= upper,
+      field,
+      s"Field value $field must be in range: [$lower, $upper]"
+    )
+
   def test(
       nodeId: NodeId,
       nodeType: NodeType = defaultNodeType,
@@ -56,5 +64,19 @@ object Node:
       state: NodeState = defaultState,
       workload: Double = defaultWorkload,
       vectors: Set[PropagationVector] = defaultVectors
-  ): Node =
+  ): Either[String, Node] =
     Node(nodeId, nodeType, patchLevel, defenseLevel, state, workload, vectors)
+
+  def apply(
+      nodeId: NodeId,
+      nodeType: NodeType = defaultNodeType,
+      patchLevel: Double = defaultPatchLevel,
+      defenseLevel: Double = defaultDefenseLevel,
+      state: NodeState = defaultState,
+      workload: Double = defaultWorkload,
+      vectors: Set[PropagationVector] = defaultVectors
+  ): Either[String, Node] =
+    for
+      validPatchLevel <- fieldIsInRange(patchLevel, (0.0, 1.0))
+      validDefenseLevel <- fieldIsInRange(defenseLevel, (0.0, 1.0))
+    yield new Node(nodeId, nodeType, validPatchLevel, validDefenseLevel, state, workload, vectors)

@@ -36,6 +36,7 @@ final class ContagionRulesSuite extends AnyFunSuite with Matchers:
   ): Node =
     val id = NodeId.of(idSuffix).getOrElse(fail("Failed to create NodeId"))
     Node(id, nodeType, patchLevel, defenseLevel, NodeState.Healthy, workload = 0.0, Set())
+      .getOrElse(fail("Failed to create Node"))
 
   private def validEdge(
       source: Node,

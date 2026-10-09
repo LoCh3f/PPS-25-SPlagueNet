@@ -65,7 +65,7 @@ class InfectionSuite extends AnyFunSuite:
     NodeState.Infected,
     0.0,
     Set(PropagationVector.NetworkExploit)
-  )
+  ).getOrElse(fail("Failed to create Node"))
   private val nodeHealthy = Node(
     NodeId.of("n-hlth").getOrElse(fail("invalid id")),
     NodeType.Workstation,
@@ -74,7 +74,7 @@ class InfectionSuite extends AnyFunSuite:
     NodeState.Healthy,
     0.0,
     Set(PropagationVector.NetworkExploit)
-  )
+  ).getOrElse(fail("Failed to create Node"))
   private val nodeHealthy1 = Node(
     NodeId.of("n-hlth-2").getOrElse(fail("invalid id")),
     NodeType.Server,
@@ -83,7 +83,7 @@ class InfectionSuite extends AnyFunSuite:
     NodeState.Healthy,
     0.0,
     Set(PropagationVector.NetworkExploit)
-  )
+  ).getOrElse(fail("Failed to create Node"))
   private val nodeHealthyIndirect = Node(
     NodeId.of("n-hlth-3").getOrElse(fail("invalid id")),
     NodeType.MobileDevice,
@@ -92,7 +92,7 @@ class InfectionSuite extends AnyFunSuite:
     NodeState.Healthy,
     0.0,
     Set(PropagationVector.NetworkExploit)
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val baseChannel =
     Connection.Channel(Connection.ChannelType.LAN, 100.0, 1.0, 0.1, Probability.clamped(0.0))
