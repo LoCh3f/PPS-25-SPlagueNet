@@ -31,7 +31,7 @@ object NodeType:
 enum NodeState:
   case Healthy, Infected, Quarantined, Immune, Destroyed
 
-case class Node private[splague] (
+case class Node private (
     nodeId: NodeId,
     nodeType: NodeType,
     patchLevel: Double,
@@ -39,7 +39,19 @@ case class Node private[splague] (
     state: NodeState,
     workload: Double,
     vectors: Set[PropagationVector]
-)
+):
+
+  def copy(
+      nodeId: NodeId = this.nodeId,
+      nodeType: NodeType = this.nodeType,
+      patchLevel: Double = this.patchLevel,
+      defenseLevel: Double = this.defenseLevel,
+      state: NodeState = this.state,
+      workload: Double = this.workload,
+      vectors: Set[PropagationVector] = this.vectors
+  ): Node =
+    new Node(nodeId, nodeType, patchLevel, defenseLevel, state, workload, vectors)
+
 object Node:
   val defaultNodeType: NodeType = NodeType.Server
   val defaultPatchLevel: Double = 0.0
