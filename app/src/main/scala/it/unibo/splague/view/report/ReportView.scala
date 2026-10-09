@@ -3,26 +3,16 @@ package it.unibo.splague.view.report
 import it.unibo.splague.AppState
 import it.unibo.splague.update.Msg
 import it.unibo.splague.update.simulation.report.ScenarioReport
+import it.unibo.splague.view.ViewHelpers.*
 
-import scala.swing.{
-  Alignment,
-  BorderPanel,
-  BoxPanel,
-  Button,
-  Component,
-  FlowPanel,
-  GridPanel,
-  Label,
-  Orientation
-}
+import scala.swing.*
 import scala.swing.event.ButtonClicked
-import javax.swing.BorderFactory
+import javax.swing.{BorderFactory, JFileChooser, JOptionPane}
+import java.awt.Component as AwtComponent
+import javax.swing.SwingUtilities
 import it.unibo.splague.persistence.{ExportPaths, Repository}
 import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
 import it.unibo.splague.persistence.codecs.json.JsonCodec.given
-import javax.swing.{JFileChooser, JOptionPane}
-import java.awt.Component as AwtComponent
-import javax.swing.SwingUtilities
 
 object ReportView:
 
@@ -63,13 +53,11 @@ object ReportView:
       case None         => emptyView(dispatch)
 
   private def reportPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
-    val root = new BorderPanel:
+    new BorderPanel:
       border = BorderFactory.createEmptyBorder(12, 12, 12, 12)
       layout(headerPanel(report)) = BorderPanel.Position.North
       layout(summaryPanel(report)) = BorderPanel.Position.Center
       layout(footerPanel(report, dispatch)) = BorderPanel.Position.South
-
-    root
 
   private def headerPanel(report: ScenarioReport): Component =
     new BoxPanel(Orientation.Vertical):
@@ -86,70 +74,44 @@ object ReportView:
       contents += milestonesPanel(report)
 
   private def finalStatePanel(report: ScenarioReport): Component =
-    val finalTick = report.finalTick
+    val t = report.finalTick
     new BoxPanel(Orientation.Vertical):
       border = BorderFactory.createTitledBorder("Final node states")
-      contents += new GridPanel(3, 2):
-        contents += new Label("Healthy")
-        contents += new Label(finalTick.healthy.toString)
-        contents += new Label("Infected")
-        contents += new Label(finalTick.infected.toString)
-        contents += new Label("Quarantined")
-        contents += new Label(finalTick.quarantined.toString)
-      contents += new GridPanel(3, 2):
-        contents += new Label("Immune")
-        contents += new Label(finalTick.immune.toString)
-        contents += new Label("Destroyed")
-        contents += new Label(finalTick.destroyed.toString)
-        contents += new Label("Final awareness")
-        contents += new Label(f"${finalTick.awareness}%.2f")
+      contents += labelValueRow("Healthy", t.healthy.toString)
+      contents += labelValueRow("Infected", t.infected.toString)
+      contents += labelValueRow("Quarantined", t.quarantined.toString)
+      contents += labelValueRow("Immune", t.immune.toString)
+      contents += labelValueRow("Destroyed", t.destroyed.toString)
+      contents += labelValueRow("Final awareness", f"${t.awareness}%.2f")
 
   private def activationPanel(report: ScenarioReport): Component =
-    val sortedActivations = report.activationTicks.toVector.sortBy(_._2)
+    val sorted = report.activationTicks.toVector.sortBy(_._2)
     new BoxPanel(Orientation.Vertical):
       border = BorderFactory.createTitledBorder("Countermeasures activated")
-      if sortedActivations.isEmpty then
-        contents += new GridPanel(1, 2):
-          contents += new Label("None activated")
-          contents += new Label("")
+      if sorted.isEmpty then contents += labelValueRow("None activated", "")
       else
-        val panels = sortedActivations.map { case (countermeasure, tick) =>
-          new GridPanel(1, 2):
-            contents += new Label(countermeasure.toString)
-            contents += new Label(s"tick $tick")
+        sorted.foreach { case (cm, tick) =>
+          contents += labelValueRow(cm.toString, s"tick $tick")
         }
-        contents ++= panels
 
   private def milestonesPanel(report: ScenarioReport): Component =
-    val milestones = report.milestones
+    val m = report.milestones
     new BoxPanel(Orientation.Vertical):
       border = BorderFactory.createTitledBorder("Key moments")
-      contents += new GridPanel(1, 2):
-        contents += new Label("First spread")
-        contents += new Label(milestones.firstSpreadTick.map(t => s"tick $t").getOrElse("never"))
-      contents += new GridPanel(1, 2):
-        contents += new Label("Peak infected")
-        contents += new Label(
-          s"${milestones.peakInfectedCount} at tick ${milestones.peakInfectedTick}"
-        )
-      contents += new GridPanel(1, 2):
-        contents += new Label("First destruction")
-        contents += new Label(
-          milestones.firstDestructionTick.map(t => s"tick $t").getOrElse("never")
-        )
+      contents += labelValueRow(
+        "First spread",
+        m.firstSpreadTick.map(t => s"tick $t").getOrElse("never")
+      )
+      contents += labelValueRow(
+        "Peak infected",
+        s"${m.peakInfectedCount} at tick ${m.peakInfectedTick}"
+      )
+      contents += labelValueRow(
+        "First destruction",
+        m.firstDestructionTick.map(t => s"tick $t").getOrElse("never")
+      )
 
-  private def backButton(dispatch: Msg => Unit): Button =
-    val button = new Button("Back to simulation")
-    button.listenTo(button)
-    button.reactions += { case ButtonClicked(_) => dispatch(Msg.GoToSimulation) }
-    button
-
-  private def importButton(dispatch: Msg => Unit): Button =
-    val button = new Button("Import report")
-    button.listenTo(button)
-    button.reactions += { case ButtonClicked(_) => importReport(dispatch, button.peer) }
-    button
-
+  // footer buttons — saveButton keeps its peer for the dialog owner, so stays manual
   private def footerPanel(report: ScenarioReport, dispatch: Msg => Unit): Component =
     val saveButton = new Button("Save report")
     saveButton.listenTo(saveButton)
@@ -160,6 +122,15 @@ object ReportView:
       saveButton,
       backButton(dispatch)
     )
+
+  private def backButton(dispatch: Msg => Unit): Button =
+    actionButton("Back to simulation") { dispatch(Msg.GoToSimulation) }
+
+  private def importButton(dispatch: Msg => Unit): Button =
+    val b = new Button("Import report")
+    b.listenTo(b)
+    b.reactions += { case ButtonClicked(_) => importReport(dispatch, b.peer) }
+    b
 
   private def emptyView(dispatch: Msg => Unit): Component =
     new BorderPanel:

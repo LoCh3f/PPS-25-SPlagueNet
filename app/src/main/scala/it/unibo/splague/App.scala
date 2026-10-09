@@ -19,8 +19,6 @@ object App:
 
     runtime.start()
 
-    println(greeting())
   }
 
-  def greeting(): String = "Hello, world!"
 // $COVERAGE-ON$

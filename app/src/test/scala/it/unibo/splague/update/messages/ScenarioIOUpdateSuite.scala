@@ -1,18 +1,14 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
+import it.unibo.splague.model.malware.*
+import it.unibo.splague.model.node.*
 import it.unibo.splague.model.{ModelState, Probability, Scenario}
-import it.unibo.splague.model.malware.{
-  Malware,
-  MalwareKind,
-  MalwareTraits,
-  PayloadSeverityLevel,
-  PropagationVector
-}
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
-import it.unibo.splague.persistence.{ExportPaths, FileFormat, Repository}
 import it.unibo.splague.persistence.codecs.json.CodecCatalog.given
 import it.unibo.splague.persistence.codecs.json.JsonCodec.given
+import it.unibo.splague.persistence.{ExportPaths, FileFormat, Repository}
+import it.unibo.splague.update.Msg
+import it.unibo.splague.update.messages.ScenarioIOUpdate
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers

@@ -1,18 +1,14 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
-import it.unibo.splague.model.{ModelState, Probability, Scenario}
 import it.unibo.splague.model.connection.Connection.{Channel, ChannelType, Edge}
-import it.unibo.splague.model.malware.{
-  Malware,
-  MalwareKind,
-  MalwareTraits,
-  PayloadSeverityLevel,
-  PropagationVector
-}
-import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
+import it.unibo.splague.model.malware.*
+import it.unibo.splague.model.node.*
+import it.unibo.splague.model.{ModelState, Probability, Scenario}
+import it.unibo.splague.update.messages.ScenarioFormUpdate
 import it.unibo.splague.update.simulation.SimulationState
 import it.unibo.splague.update.simulation.event.SimulationEvents.{Event, EventSelector}
+import it.unibo.splague.update.{Msg, TopologyShape}
 import it.unibo.splague.view.form.{AwarenessForm, EdgeForm, NodeForm, ScenarioForm}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

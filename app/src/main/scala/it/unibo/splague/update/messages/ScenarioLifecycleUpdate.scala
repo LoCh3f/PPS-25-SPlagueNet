@@ -1,6 +1,7 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
+import it.unibo.splague.update.Msg
 import it.unibo.splague.view.ValidationError
 import it.unibo.splague.view.form.ScenarioForm
 
@@ -10,7 +11,7 @@ import it.unibo.splague.view.form.ScenarioForm
 // $COVERAGE-OFF$
 object ScenarioLifecycleUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.SelectScenario(name) =>
       if state.simulation.exists(_.running) then

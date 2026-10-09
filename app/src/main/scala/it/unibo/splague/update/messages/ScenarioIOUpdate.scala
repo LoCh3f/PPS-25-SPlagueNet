@@ -1,9 +1,10 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
 import it.unibo.splague.model.Scenario
 import it.unibo.splague.persistence.FileFormat.{Json, Txt}
 import it.unibo.splague.persistence.{ExportPaths, FileFormat}
+import it.unibo.splague.update.Msg
 import it.unibo.splague.view.ValidationError
 import it.unibo.splague.view.form.ScenarioForm
 
@@ -16,7 +17,7 @@ import scala.util.Try
 // $COVERAGE-OFF$
 object ScenarioIOUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.ExportScenario(format) =>
       resolveScenarioToExport(state) match

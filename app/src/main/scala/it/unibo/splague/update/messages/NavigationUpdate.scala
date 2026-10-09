@@ -1,10 +1,11 @@
-package it.unibo.splague.update
+package it.unibo.splague.update.messages
 
 import it.unibo.splague.AppState
+import it.unibo.splague.update.Msg
 import it.unibo.splague.update.simulation.report.ScenarioReport
 import it.unibo.splague.utils.SimpleScenario
-import it.unibo.splague.view.{Screen, ValidationError}
 import it.unibo.splague.view.form.ScenarioForm
+import it.unibo.splague.view.{Screen, ValidationError}
 
 /** Handles screen navigation and report import: [[Msg.GoToMenu]], [[Msg.GoToSimulation]],
   * [[Msg.GoToReport]], [[Msg.ImportReport]].
@@ -12,7 +13,7 @@ import it.unibo.splague.view.form.ScenarioForm
 // $COVERAGE-OFF$
 object NavigationUpdate:
 
-  def update(msg: Msg, state: AppState): AppState = msg match
+  def update(msg: Msg, state: AppState): AppState = (msg: @unchecked) match
 
     case Msg.GoToMenu =>
       state.copy(screen = Screen.Menu)
