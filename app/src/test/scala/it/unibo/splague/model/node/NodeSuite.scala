@@ -38,7 +38,9 @@ class NodeSuite extends AnyFunSuite:
     )
 
   private val node1 =
-    Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set(Phishing))
+    Node(nodeId1, NodeType.Router, 0.1, 0.2, NodeState.Infected, 0.5, Set(Phishing)).getOrElse(
+      fail()
+    )
   private val node2 = Node(
     nodeId2,
     NodeType.MobileDevice,
@@ -47,9 +49,10 @@ class NodeSuite extends AnyFunSuite:
     NodeState.Healthy,
     0.1,
     Set(Phishing, NetworkExploit)
-  )
+  ).getOrElse(fail())
   private val node3 =
     Node(nodeId3, NodeType.Server, 0.4, 0.5, NodeState.Infected, 0.3, Set(NetworkExploit))
+      .getOrElse(fail())
 
   test("NodeType values and coefficients should match expected values"):
     NodeType.IoTDevice.detectionCoefficient shouldBe 0.3
@@ -77,7 +80,7 @@ class NodeSuite extends AnyFunSuite:
       Healthy,
       0.5,
       Set()
-    )
+    ).getOrElse(fail())
 
     node.nodeId shouldBe nodeId
     node.nodeType shouldBe NodeType.Router
@@ -97,7 +100,7 @@ class NodeSuite extends AnyFunSuite:
     )
 
   test("Node.test() should create a Node with default fields for testing"):
-    val node = Node.test(nodeId = nodeId1)
+    val node = Node.test(nodeId = nodeId1).getOrElse(fail("Failed to create Node"))
 
     node.workload shouldBe Node.defaultWorkload
     node.state shouldBe Node.defaultState

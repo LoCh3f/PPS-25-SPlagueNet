@@ -2,7 +2,7 @@ package it.unibo.splague.model.countermeasures
 
 import it.unibo.splague.update.{FirewallPolicy, IsolationCriteria}
 
-case class CountermeasureConfig(
+case class CountermeasureConfig private (
     activeCountermeasures: Set[Countermeasures],
     countermeasureLevels: Map[Double, Countermeasures],
     patchBoostAmount: Double,
@@ -10,7 +10,25 @@ case class CountermeasureConfig(
     patchCureProbability: Double,
     isolationCriteria: IsolationCriteria,
     firewallPolicy: FirewallPolicy
-)
+):
+
+  def copy(
+      activeCountermeasures: Set[Countermeasures] = this.activeCountermeasures,
+      countermeasureLevels: Map[Double, Countermeasures] = this.countermeasureLevels,
+      patchBoostAmount: Double = this.patchBoostAmount,
+      defenseBoostAmount: Double = this.defenseBoostAmount,
+      patchCureProbability: Double = this.patchCureProbability,
+      isolationCriteria: IsolationCriteria = this.isolationCriteria,
+      firewallPolicy: FirewallPolicy = this.firewallPolicy
+  ) = new CountermeasureConfig(
+    activeCountermeasures,
+    countermeasureLevels,
+    patchBoostAmount,
+    defenseBoostAmount,
+    patchCureProbability,
+    isolationCriteria,
+    firewallPolicy
+  )
 object CountermeasureConfig:
   val defaultPatchBoostAmount: Double = 0.05
   val defaultDefenseBoostAmount: Double = 0.05

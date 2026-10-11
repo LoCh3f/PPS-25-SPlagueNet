@@ -25,8 +25,10 @@ class FirewallPolicySuite extends AnyFunSuite:
       err => throw new IllegalStateException(s"Failed to create test NodeId: $err"),
       id => id
     )
-  val dummySource = Node.test(dummySourceId, NodeType.Server)
-  val dummyTarget = Node.test(dummyTargetId, NodeType.Server)
+  val dummySource =
+    Node.test(dummySourceId, NodeType.Server).getOrElse(fail("Failed to create Node"))
+  val dummyTarget =
+    Node.test(dummyTargetId, NodeType.Server).getOrElse(fail("Failed to create Node"))
 
   val lanChannel = Channel(ChannelType.LAN, 1000.0, 5.0, 0.1, Probability.apply(0.0).toOption.get)
   val wanChannel = Channel(ChannelType.WAN, 100.0, 50.0, 2.0, Probability.apply(0.0).toOption.get)

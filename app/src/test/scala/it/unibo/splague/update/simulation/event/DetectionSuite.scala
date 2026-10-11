@@ -43,7 +43,7 @@ final class DetectionSuite extends AnyFunSuite with Matchers:
     NodeState.Healthy,
     workload = 0.6,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(nodes = Map(node.nodeId.value -> node), edges = Set.empty)
 

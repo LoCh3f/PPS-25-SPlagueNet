@@ -35,6 +35,7 @@ class TickBasedSelectorSuite extends AnyFunSuite:
 
   private val node =
     Node(NodeId.of("n").toOption.get, NodeType.Router, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+      .getOrElse(fail("Failed to create Node"))
   private val topo = Topology(nodes = Map(node.nodeId.value -> node), edges = Set.empty)
 
   private def scenarioWithTick(t: Int) =

@@ -74,7 +74,7 @@ private final class TopologyBuilder:
           .of(spec.id)
           .left
           .map(List(_))
-          .map { id =>
+          .flatMap { id =>
             Node(
               id,
               spec.nodeType,
@@ -83,7 +83,7 @@ private final class TopologyBuilder:
               NodeState.Healthy,
               spec.workload,
               spec.vectors
-            )
+            ).left.map(List(_))
           }
       }
 

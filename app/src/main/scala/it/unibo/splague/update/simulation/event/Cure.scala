@@ -19,7 +19,7 @@ object Cure:
 
       if !countermeasureConfig.activeCountermeasures.contains(Patch) then return scenario
 
-      val rng = new Random(scenario.seed + scenario.tick + 1)
+      val rng = new Random(scenario.seed + scenario.tick + "cure".hashCode)
       val targets = scenario.topology.infectedNodes() ++ scenario.topology.quarantinedNodes()
 
       val updatedTopology = targets.foldLeft(scenario.topology) { (currentTopology, node) =>
@@ -43,7 +43,7 @@ object Cure:
 
       val updatedTopology = immuneNodes.foldLeft(scenario.topology) { (currentTopology, node) =>
         updateNode(currentTopology, node.nodeId) { currentNode =>
-          val baseline = scenario.baselineWorkload.getOrElse(node, 0.0)
+          val baseline = scenario.baselineWorkload.getOrElse(node.nodeId.value, 0.0)
 
           val newWorkload = math.max(baseline, currentNode.workload - recoveryRate)
           currentNode.copy(workload = newWorkload)

@@ -46,7 +46,7 @@ final class ScenarioFormUpdateSuite extends AnyFunSuite with Matchers:
     state = NodeState.Healthy,
     workload = 0.3,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val node2 = Node(
     NodeId.of("n2").toOption.get,
@@ -56,7 +56,7 @@ final class ScenarioFormUpdateSuite extends AnyFunSuite with Matchers:
     state = NodeState.Healthy,
     workload = 0.0,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val edge = Edge(node1, node2, Channel.default(ChannelType.LAN), protocol = None)
 
@@ -120,6 +120,7 @@ final class ScenarioFormUpdateSuite extends AnyFunSuite with Matchers:
     val editing = stateWithForm()
     val newNode = NodeForm.fromNode(
       Node(NodeId.of("n3").toOption.get, NodeType.Server, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+        .getOrElse(fail("Failed to create Node"))
     )
 
     val result = ScenarioFormUpdate.update(Msg.AddNode(newNode), editing)

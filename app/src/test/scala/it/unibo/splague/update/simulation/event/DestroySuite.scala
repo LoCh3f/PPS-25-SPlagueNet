@@ -22,8 +22,11 @@ class DestroySuite extends AnyFunSuite:
   private val id2 = NodeId.of("node-02").getOrElse(fail())
 
   private val infectedNode =
-    Node(id1, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.8, Set())
+    Node(id1, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.8, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val healthyNode = Node(id2, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.1, Set())
+    .getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map("node-01" -> infectedNode, "node-02" -> healthyNode),

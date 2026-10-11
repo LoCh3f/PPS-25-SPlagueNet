@@ -5,7 +5,7 @@ import it.unibo.splague.model.countermeasures.CountermeasureConfig
 import it.unibo.splague.model.malware.Malware
 import it.unibo.splague.model.node.{Node, Topology}
 
-final case class Scenario(
+final case class Scenario private (
     name: String,
     topology: Topology,
     virus: Malware,
@@ -15,8 +15,31 @@ final case class Scenario(
     maxIterations: Int,
     awareness: Awareness,
     countermeasureConfig: CountermeasureConfig,
-    baselineWorkload: Map[Node, Double]
-)
+    baselineWorkload: Map[String, Double]
+):
+  def copy(
+      name: String = this.name,
+      topology: Topology = this.topology,
+      virus: Malware = this.virus,
+      startingNode: Node = this.startingNode,
+      tick: Int = this.tick,
+      seed: Int = this.seed,
+      maxIterations: Int = this.maxIterations,
+      awareness: Awareness = this.awareness,
+      countermeasureConfig: CountermeasureConfig = this.countermeasureConfig,
+      baselineWorkload: Map[String, Double] = this.baselineWorkload
+  ) = new Scenario(
+    name,
+    topology,
+    virus,
+    startingNode,
+    tick,
+    seed,
+    maxIterations,
+    awareness,
+    countermeasureConfig,
+    baselineWorkload
+  )
 
 object Scenario:
   private def validateName(name: String): Either[String, String] =
@@ -48,7 +71,6 @@ object Scenario:
       countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty,
       awareness: Awareness = Awareness.none
   ): Either[String, Scenario] =
-    val baseline = topology.nodes.map((id, node) => node -> node.workload)
     for
       validName <- validateName(name)
       validStartingNode <- validateStartingNode(startingNode, topology)
@@ -63,5 +85,5 @@ object Scenario:
       validMaxIter,
       awareness,
       countermeasureConfig,
-      baselineWorkload = baseline
+      baselineWorkload = topology.nodes.map((id, node) => id -> node.workload)
     )

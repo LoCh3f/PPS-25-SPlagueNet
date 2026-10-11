@@ -25,8 +25,12 @@ final class ScenarioPersistenceSuite extends AnyFunSuite with Matchers:
   val id1 = NodeId.of("node-01").getOrElse(fail())
   val id2 = NodeId.of("node-02").getOrElse(fail())
 
-  val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set())
-  val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set())
+  val nodeValid = Node(id1, NodeType.Router, 0.1, 0.2, NodeState.Healthy, 0.0, Set()).getOrElse(
+    fail("Failed to create Node")
+  )
+  val nodeInvalid = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Healthy, 0.0, Set()).getOrElse(
+    fail("Failed to create Node")
+  )
 
   val topology = Topology(
     nodes = Map("node-01" -> nodeValid),
