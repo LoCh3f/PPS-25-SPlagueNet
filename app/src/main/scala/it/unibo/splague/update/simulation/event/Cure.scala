@@ -43,7 +43,7 @@ object Cure:
 
       val updatedTopology = immuneNodes.foldLeft(scenario.topology) { (currentTopology, node) =>
         updateNode(currentTopology, node.nodeId) { currentNode =>
-          val baseline = scenario.baselineWorkload.getOrElse(node, 0.0)
+          val baseline = scenario.baselineWorkload.getOrElse(node.nodeId.value, 0.0)
 
           val newWorkload = math.max(baseline, currentNode.workload - recoveryRate)
           currentNode.copy(workload = newWorkload)

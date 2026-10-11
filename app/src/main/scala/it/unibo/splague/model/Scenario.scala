@@ -15,7 +15,7 @@ final case class Scenario private (
     maxIterations: Int,
     awareness: Awareness,
     countermeasureConfig: CountermeasureConfig,
-    baselineWorkload: Map[Node, Double]
+    baselineWorkload: Map[String, Double]
 ):
   def copy(
       name: String = this.name,
@@ -27,7 +27,7 @@ final case class Scenario private (
       maxIterations: Int = this.maxIterations,
       awareness: Awareness = this.awareness,
       countermeasureConfig: CountermeasureConfig = this.countermeasureConfig,
-      baselineWorkload: Map[Node, Double] = this.baselineWorkload
+      baselineWorkload: Map[String, Double] = this.baselineWorkload
   ) = new Scenario(
     name,
     topology,
@@ -71,7 +71,6 @@ object Scenario:
       countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty,
       awareness: Awareness = Awareness.none
   ): Either[String, Scenario] =
-    val baseline = topology.nodes.map((id, node) => node -> node.workload)
     for
       validName <- validateName(name)
       validStartingNode <- validateStartingNode(startingNode, topology)
@@ -86,5 +85,5 @@ object Scenario:
       validMaxIter,
       awareness,
       countermeasureConfig,
-      baselineWorkload = baseline
+      baselineWorkload = topology.nodes.map((id, node) => id -> node.workload)
     )

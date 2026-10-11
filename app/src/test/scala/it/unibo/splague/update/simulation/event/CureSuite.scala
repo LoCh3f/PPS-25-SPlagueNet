@@ -176,15 +176,18 @@ class CureSuite extends AnyFunSuite:
     updatedWorkload should be < elevatedWorkload
     updatedWorkload should be >= restingWorkload
 
-//  test("LowerWorkloadEvent does not go below the node's baseline workload"):
-//    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
-//
-//    val atBaselineNode = recoveryNodeAtRest.copy(state = NodeState.Immune, workload = restingWorkload)
-//    val scenario = baseScenario.copy(topology = topologyForRecovery.copy(nodes = Map("node-03" -> atBaselineNode)))
-//
-//    val updated = Cure.LowerWorkloadEvent(scenario)
-//
-//    updated.topology.nodes("node-03").workload shouldBe (restingWorkload) +- 0.0001
+  test("LowerWorkloadEvent does not go below the node's baseline workload"):
+    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
+
+    val atBaselineNode =
+      recoveryNodeAtRest.copy(state = NodeState.Immune, workload = restingWorkload)
+    val scenario = baseScenario.copy(topology =
+      topologyForRecovery.copy(nodes = Map("node-03" -> atBaselineNode))
+    )
+
+    val updated = Cure.LowerWorkloadEvent(scenario)
+
+    updated.topology.nodes("node-03").workload shouldBe (restingWorkload) +- 0.0001
 
   test("LowerWorkloadEvent leaves non-Immune nodes untouched"):
     val elevatedInfected = nodeHighPatch.copy(workload = 0.7)

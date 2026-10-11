@@ -154,10 +154,10 @@ final class CodecSuite extends AnyFunSuite with Matchers:
       )
       .getOrElse(fail("Failed to create Node"))
 
-    val sampleMap: Map[Node, Double] = Map(node -> 0.75)
+    val sampleMap: Map[String, Double] = Map(node.nodeId.value -> 0.75)
 
-    val encoder = summon[Encoder[Map[Node, Double], FileFormat.Json.type]]
-    val decoder = summon[Decoder[Map[Node, Double], FileFormat.Json.type]]
+    val encoder = summon[Encoder[Map[String, Double], FileFormat.Json.type]]
+    val decoder = summon[Decoder[Map[String, Double], FileFormat.Json.type]]
 
     // Encoding test
     val jsonString = encoder.encode(sampleMap)
@@ -171,7 +171,7 @@ final class CodecSuite extends AnyFunSuite with Matchers:
     val decodedMap = result.toOption.get
     decodedMap should have size 1
     decodedMap.head._2 shouldBe 0.75
-    decodedMap.head._1.nodeId.value shouldBe "node-1"
+    decodedMap.head._1 shouldBe "node-1"
 
   test("Topology with nodes and edges should be correctly encoded and decoded"):
     val id1 = NodeId.of("node-1").toOption.get
