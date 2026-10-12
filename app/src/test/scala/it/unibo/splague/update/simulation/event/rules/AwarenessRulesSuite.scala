@@ -35,6 +35,7 @@ final class AwarenessRulesSuite extends AnyFunSuite with Matchers:
   ): Node =
     val nodeId = NodeId.of(id).getOrElse(fail("Failed to create NodeId"))
     Node(nodeId, nodeType, patchLevel = 0.0, defenseLevel = 0.0, nodeState, workload, Set())
+      .getOrElse(fail("Failed to create Node"))
 
   private def topologyOf(nodes: Node*): Topology =
     Topology(nodes = nodes.map(n => n.nodeId.value -> n).toMap, edges = Set.empty)

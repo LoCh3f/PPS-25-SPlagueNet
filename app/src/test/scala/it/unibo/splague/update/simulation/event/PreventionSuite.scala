@@ -48,7 +48,7 @@ class PreventionSuite extends AnyFunSuite:
     state = NodeState.Healthy,
     workload = 0.0,
     vectors = Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(Map("n1" -> baseNode), Set())
 

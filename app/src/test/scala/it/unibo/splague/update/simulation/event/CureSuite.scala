@@ -24,9 +24,13 @@ class CureSuite extends AnyFunSuite:
   private val id2 = NodeId.of("node-02").getOrElse(fail())
 
   private val nodeHighPatch = Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Infected, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val nodeLowPatch = Node(id2, NodeType.Server, 0.0, 0.1, NodeState.Infected, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val nodeQuarantined =
-    Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Quarantined, 0.0, Set())
+    Node(id1, NodeType.Router, 0.8, 0.2, NodeState.Quarantined, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
 
   private val topologyHighPatch = Topology(
     nodes = Map("node-01" -> nodeHighPatch),
@@ -70,6 +74,7 @@ class CureSuite extends AnyFunSuite:
 
   private val recoveryNodeAtRest =
     Node(recoveryNodeId, NodeType.Server, 0.5, 0.5, NodeState.Infected, restingWorkload, Set())
+      .getOrElse(fail("Failed to create Node"))
 
   private val topologyForRecovery =
     Topology(nodes = Map("node-03" -> recoveryNodeAtRest), edges = Set.empty)
@@ -171,15 +176,18 @@ class CureSuite extends AnyFunSuite:
     updatedWorkload should be < elevatedWorkload
     updatedWorkload should be >= restingWorkload
 
-//  test("LowerWorkloadEvent does not go below the node's baseline workload"):
-//    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
-//
-//    val atBaselineNode = recoveryNodeAtRest.copy(state = NodeState.Immune, workload = restingWorkload)
-//    val scenario = baseScenario.copy(topology = topologyForRecovery.copy(nodes = Map("node-03" -> atBaselineNode)))
-//
-//    val updated = Cure.LowerWorkloadEvent(scenario)
-//
-//    updated.topology.nodes("node-03").workload shouldBe (restingWorkload) +- 0.0001
+  test("LowerWorkloadEvent does not go below the node's baseline workload"):
+    val baseScenario = scenarioWithNode(recoveryNodeAtRest, topologyForRecovery)
+
+    val atBaselineNode =
+      recoveryNodeAtRest.copy(state = NodeState.Immune, workload = restingWorkload)
+    val scenario = baseScenario.copy(topology =
+      topologyForRecovery.copy(nodes = Map("node-03" -> atBaselineNode))
+    )
+
+    val updated = Cure.LowerWorkloadEvent(scenario)
+
+    updated.topology.nodes("node-03").workload shouldBe (restingWorkload) +- 0.0001
 
   test("LowerWorkloadEvent leaves non-Immune nodes untouched"):
     val elevatedInfected = nodeHighPatch.copy(workload = 0.7)

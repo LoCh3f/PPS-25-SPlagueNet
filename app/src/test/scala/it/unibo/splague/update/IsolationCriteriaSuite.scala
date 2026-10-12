@@ -13,8 +13,13 @@ class IsolationCriteriaSuite extends AnyFunSuite:
   private val id2 = NodeId.of("n2").getOrElse(fail())
 
   private val workstationNode =
-    Node(id1, NodeType.Workstation, 0.2, 0.8, NodeState.Healthy, 0.5, Set())
-  private val serverNode = Node(id2, NodeType.Server, 0.9, 0.1, NodeState.Infected, 0.1, Set())
+    Node(id1, NodeType.Workstation, 0.2, 0.8, NodeState.Healthy, 0.5, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
+  private val serverNode =
+    Node(id2, NodeType.Server, 0.9, 0.1, NodeState.Infected, 0.1, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
 
   test("IsolationCriteria.all matches any node"):
     val criteria = IsolationCriteria.all

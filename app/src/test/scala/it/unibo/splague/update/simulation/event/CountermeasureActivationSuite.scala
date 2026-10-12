@@ -22,6 +22,7 @@ import org.scalatestplus.junit.JUnitRunner
 class CountermeasureActivationSuite extends AnyFunSuite:
   private val nodeId = NodeId.of("node-1").getOrElse(fail())
   private val node = Node(nodeId, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+    .getOrElse(fail("Failed to create Node"))
   private val topology = Topology(Map("node-1" -> node), Set.empty)
 
   private val validTraits = (for

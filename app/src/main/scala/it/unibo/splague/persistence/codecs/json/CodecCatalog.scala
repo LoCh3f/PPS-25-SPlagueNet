@@ -182,11 +182,11 @@ object CodecCatalog:
     )
 
   // Complex Maps (serialized as lists of tuples to support non-string keys)
-  given mapNodeDoubleEncoder: CirceEncoder[Map[Node, Double]] =
-    CirceEncoder.encodeList[(Node, Double)].contramap(_.toList)
-
-  given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
-    CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
+//  given mapNodeDoubleEncoder: CirceEncoder[Map[Node, Double]] =
+//    CirceEncoder.encodeList[(Node, Double)].contramap(_.toList)
+//
+//  given mapNodeDoubleDecoder: CirceDecoder[Map[Node, Double]] =
+//    CirceDecoder.decodeList[(Node, Double)].map(_.toMap)
 
   given mapDoubleCountermeasuresEncoder: CirceEncoder[Map[Double, Countermeasures]] =
     CirceEncoder.encodeList[(Double, Countermeasures)].contramap(_.toList)

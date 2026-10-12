@@ -21,7 +21,7 @@ class ConnectionSuite extends AnyFunSuite:
     NodeState.Healthy,
     0.2,
     Set()
-  )
+  ).getOrElse(fail())
 
   private val targetNode = Node(
     NodeId.of("node-02").getOrElse(fail("target NodeId should be valid")),
@@ -31,7 +31,7 @@ class ConnectionSuite extends AnyFunSuite:
     NodeState.Infected,
     0.9,
     Set()
-  )
+  ).getOrElse(fail())
 
   private val httpProtocol: Protocol.ApplicationProtocol = new Protocol.ApplicationProtocol:
     override def kind: Protocol.ApplicationProtocolType = Protocol.ApplicationProtocolType.HTTP

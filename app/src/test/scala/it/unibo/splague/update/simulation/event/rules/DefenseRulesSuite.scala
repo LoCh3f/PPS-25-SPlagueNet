@@ -22,7 +22,7 @@ class DefenseRulesSuite extends AnyFunSuite:
       state = NodeState.Infected,
       workload = 0.0,
       vectors = Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
   private val countermeasureConfig: CountermeasureConfig = CountermeasureConfig.empty
 
@@ -35,7 +35,7 @@ class DefenseRulesSuite extends AnyFunSuite:
       state = NodeState.Healthy,
       workload = 0.0,
       vectors = Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
     val boostedNode = DefenseRules.boostDefense(node, countermeasureConfig)
 
@@ -50,7 +50,7 @@ class DefenseRulesSuite extends AnyFunSuite:
       state = NodeState.Healthy,
       workload = 0.0,
       vectors = Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
     val boostedNode = DefenseRules.boostDefense(node, countermeasureConfig)
     boostedNode.defenseLevel shouldBe 0.95 +- 0.0001
@@ -64,7 +64,7 @@ class DefenseRulesSuite extends AnyFunSuite:
       state = NodeState.Healthy,
       workload = 0.0,
       vectors = Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
     val boostedNode = DefenseRules.boostPatch(node, countermeasureConfig)
 
@@ -79,7 +79,7 @@ class DefenseRulesSuite extends AnyFunSuite:
       state = NodeState.Healthy,
       workload = 0.0,
       vectors = Set()
-    )
+    ).getOrElse(fail("Failed to create Node"))
 
     val boostedNode = DefenseRules.boostPatch(node, countermeasureConfig)
     boostedNode.patchLevel shouldBe 0.05 +- 0.0001

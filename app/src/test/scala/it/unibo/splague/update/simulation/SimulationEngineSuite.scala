@@ -46,7 +46,7 @@ class SimulationEngineSuite extends AnyFunSuite:
     state = NodeState.Healthy,
     workload = 0.3,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val nodeB = Node(
     NodeId.of("node-B").toOption.get,
@@ -56,7 +56,7 @@ class SimulationEngineSuite extends AnyFunSuite:
     state = NodeState.Infected,
     workload = 0.8,
     Set()
-  )
+  ).getOrElse(fail("Failed to create Node"))
 
   private val topology = Topology(
     nodes = Map(nodeA.nodeId.value -> nodeA, nodeB.nodeId.value -> nodeB),

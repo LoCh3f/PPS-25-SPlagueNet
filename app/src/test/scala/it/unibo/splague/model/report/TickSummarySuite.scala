@@ -27,17 +27,29 @@ final class TickSummarySuite extends AnyFunSuite with Matchers with EitherValues
   private val nodeId6 = NodeId.of("node-06").getOrElse(fail("Failed to create NodeId"))
 
   private val healthyNode1 =
-    Node(nodeId1, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+    Node(nodeId1, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val healthyNode2 =
-    Node(nodeId2, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set())
+    Node(nodeId2, NodeType.Workstation, 0.0, 0.0, NodeState.Healthy, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val infectedNode =
-    Node(nodeId3, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.0, Set())
+    Node(nodeId3, NodeType.Workstation, 0.0, 0.0, NodeState.Infected, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val quarantinedNode =
-    Node(nodeId4, NodeType.Workstation, 0.0, 0.0, NodeState.Quarantined, 0.0, Set())
+    Node(nodeId4, NodeType.Workstation, 0.0, 0.0, NodeState.Quarantined, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val immuneNode =
-    Node(nodeId5, NodeType.Workstation, 0.0, 0.0, NodeState.Immune, 0.0, Set())
+    Node(nodeId5, NodeType.Workstation, 0.0, 0.0, NodeState.Immune, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
   private val destroyedNode =
-    Node(nodeId6, NodeType.Workstation, 0.0, 0.0, NodeState.Destroyed, 0.0, Set())
+    Node(nodeId6, NodeType.Workstation, 0.0, 0.0, NodeState.Destroyed, 0.0, Set()).getOrElse(
+      fail("Failed to create Node")
+    )
 
   private val topology = Topology(
     nodes = Map(

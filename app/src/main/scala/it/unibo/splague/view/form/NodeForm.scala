@@ -33,12 +33,13 @@ object NodeForm:
       patch <- parseDouble(form.patchLevel, "patchLevel")
       defense <- parseDouble(form.defenseLevel, "defenseLevel")
       workload <- parseDouble(form.workload, "workload")
-    yield Node(
-      nodeId = nodeId,
-      nodeType = form.nodeType,
-      patchLevel = patch,
-      defenseLevel = defense,
-      state = form.state,
-      workload = workload,
-      vectors = form.vectors
-    )
+      node <- Node(
+        nodeId = nodeId,
+        nodeType = form.nodeType,
+        patchLevel = patch,
+        defenseLevel = defense,
+        state = form.state,
+        workload = workload,
+        vectors = form.vectors
+      )
+    yield node
