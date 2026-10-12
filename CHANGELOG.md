@@ -1,3 +1,13 @@
+## [2.0.1](https://github.com/LoCh3f/PPS-25-SPlagueNet/compare/v2.0.0...v2.0.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **CountermeasureConfig:** make constructor private and define copy() method ([96311d5](https://github.com/LoCh3f/PPS-25-SPlagueNet/commit/96311d52bddde54fcecbe4c86d069e85a81268fe))
+* **Node:** change constructor visibility to private and define public copy() function ([3425d08](https://github.com/LoCh3f/PPS-25-SPlagueNet/commit/3425d087902e3f8335419f4c6dbbfb4f6e930a1e))
+* **Scenario:** change constructor visibility to private and define public copy() function ([9f10a3f](https://github.com/LoCh3f/PPS-25-SPlagueNet/commit/9f10a3ff3697546db3ea5998fbcda99908e6d4ff))
+* **Topology:** remove useless copy() in edgesOf() ([c8c8598](https://github.com/LoCh3f/PPS-25-SPlagueNet/commit/c8c859806b24e69665544333626b1ee71cd83b29))
+
 # [2.0.0](https://github.com/LoCh3f/PPS-25-SPlagueNet/compare/v1.0.0...v2.0.0) (2026-10-06)
 
 
