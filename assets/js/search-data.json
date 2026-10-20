@@ -190,7 +190,7 @@
   },"27": {
     "doc": "Processo di Sviluppo",
     "title": "Strumenti",
-    "content": "| . | Strumento | Utilizzo | . | Git + GitHub | Versionamento del codice | . | Gradle | Build tool e gestione dipendenze | . | GitHub Actions | CI/CD | . | ScalaTest | Testing unitario e di integrazione | . | Scalafmt | Formatter per sorgenti | . | Scoverage | Report test coverage | . | IntelliJ IDEA | IDE di sviluppo | . ",
+    "content": "| . | Strumento | Utilizzo | . | Git + GitHub | Versionamento del codice | . | Gradle | Build tool e gestione dipendenze | . | GitHub Actions | CI/CD | . | ScalaTest | Testing unitario e di integrazione | . | IntelliJ IDEA | IDE di sviluppo | . ",
     "url": "/PPS-25-SPlagueNet/report/processo_di_sviluppo.html#strumenti",
     
     "relUrl": "/report/processo_di_sviluppo.html#strumenti"
