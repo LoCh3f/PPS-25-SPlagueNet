@@ -2,6 +2,7 @@ package it.unibo.splague.update.simulation.event.rules
 
 import it.unibo.splague.model.malware.Malware
 import it.unibo.splague.model.node.{Node, Topology}
+import it.unibo.splague.utils.config.SimulationConfig.{Bounds, DetectionFormula}
 
 /** Rules for computing malware detection signals in the network. Detection is based on node
   * workload, node type characteristics, and malware stealth level.
@@ -19,7 +20,8 @@ object AwarenessRules:
     *   detection signal strength for this node
     */
   private def nodeSignal(node: Node, malware: Malware): Double =
-    node.workload * node.nodeType.detectionCoefficient * (1 - malware.traits.stealth.value)
+    node.workload * node.nodeType.detectionCoefficient *
+      (DetectionFormula.STEALTH_INVERSION_FACTOR - malware.traits.stealth.value)
 
   /** Calculates overall detection signal across the entire network. Returns the average detection
     * signal from all nodes.
@@ -32,5 +34,5 @@ object AwarenessRules:
     *   average detection signal (0.0 if no nodes exist)
     */
   def detectionSignal(topology: Topology, malware: Malware): Double =
-    if topology.nodes.isEmpty then 0.0
+    if topology.nodes.isEmpty then Bounds.DEFAULT_DETECTION_SIGNAL
     else topology.infectedNodes().map(nodeSignal(_, malware)).sum / topology.nodes.size

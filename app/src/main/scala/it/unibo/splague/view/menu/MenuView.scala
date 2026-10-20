@@ -2,21 +2,22 @@ package it.unibo.splague.view.menu
 
 import it.unibo.splague.update.Msg
 import it.unibo.splague.view.ViewHelpers.*
+import it.unibo.splague.utils.config.UIConfig.{Display, Strings}
 
 import scala.swing.*
 
 object MenuView:
   def render(dispatch: Msg => Unit): Component =
     val panel = new GridBagPanel
-    panel.preferredSize = new Dimension(800, 600)
+    panel.preferredSize = new Dimension(Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT)
 
-    val label = new Label("Welcome to SPlagueNet"):
+    val label = new Label(Strings.MENU_WELCOME):
       horizontalAlignment = Alignment.Center
       verticalAlignment = Alignment.Center
       maximumSize = new Dimension(Short.MaxValue, Short.MaxValue)
 
-    val simulationButton = actionButton("Go to Simulation") { dispatch(Msg.GoToSimulation) }
-    val exitButton = actionButton("Exit") { sys.exit(0) }
+    val simulationButton = actionButton(Strings.GO_TO_SIMULATION) { dispatch(Msg.GoToSimulation) }
+    val exitButton = actionButton(Strings.EXIT_BUTTON) { sys.exit(0) }
 
     val labelConstraints = new panel.Constraints:
       gridx = 0; gridy = 0; weightx = 1; weighty = 1

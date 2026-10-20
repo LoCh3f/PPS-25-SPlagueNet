@@ -1,5 +1,8 @@
 package it.unibo.splague.model
 
+import it.unibo.splague.utils.config.SimulationConfig.Bounds
+import it.unibo.splague.utils.config.UIConfig.ErrorMessages
+
 /** A probability value constrained to the range [0.0, 1.0].
   *
   * This is an opaque type: outside this file, `Probability` is a distinct, unrelated type to
@@ -13,8 +16,13 @@ object Probability:
 
   /** Validates that `value` lies in [0.0, 1.0]; fails otherwise. */
   def apply(value: Double): Either[String, Probability] =
-    Either.cond(value >= 0.0 && value <= 1.0, value, s"Probability must be in [0,1], got $value")
+    Either.cond(
+      value >= Bounds.MIN_PROBABILITY && value <= Bounds.MAX_PROBABILITY,
+      value,
+      ErrorMessages.probabilityOutOfBounds(value)
+    )
 
-  def clamped(value: Double): Probability = value.max(0.0).min(1.0)
+  def clamped(value: Double): Probability =
+    value.max(Bounds.MIN_PROBABILITY).min(Bounds.MAX_PROBABILITY)
 
   extension (p: Probability) def value: Double = p

@@ -7,6 +7,7 @@ import it.unibo.splague.model.malware.PropagationVector.{NetworkExploit, Phishin
 import it.unibo.splague.model.node.NodeState.{Healthy, Immune}
 import it.unibo.splague.model.node.NodeType.Router
 import it.unibo.splague.model.node.{Node, NodeId, NodeState, NodeType, Topology}
+import it.unibo.splague.utils.config.SimulationConfig.{Detection, Vulnerability}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
@@ -55,20 +56,20 @@ class NodeSuite extends AnyFunSuite:
       .getOrElse(fail())
 
   test("NodeType values and coefficients should match expected values"):
-    NodeType.IoTDevice.detectionCoefficient shouldBe 0.3
-    NodeType.IoTDevice.structuralVulnerability shouldBe 1.3
+    NodeType.IoTDevice.detectionCoefficient shouldBe Detection.IOT_DEVICE_COEFFICIENT
+    NodeType.IoTDevice.structuralVulnerability shouldBe Vulnerability.IOT_DEVICE_FACTOR
 
-    NodeType.Workstation.detectionCoefficient shouldBe 1.0
-    NodeType.Workstation.structuralVulnerability shouldBe 1.0
+    NodeType.Workstation.detectionCoefficient shouldBe Detection.WORKSTATION_COEFFICIENT
+    NodeType.Workstation.structuralVulnerability shouldBe Vulnerability.WORKSTATION_FACTOR
 
-    NodeType.Router.detectionCoefficient shouldBe 0.8
-    NodeType.Router.structuralVulnerability shouldBe 1.0
+    NodeType.Router.detectionCoefficient shouldBe Detection.ROUTER_COEFFICIENT
+    NodeType.Router.structuralVulnerability shouldBe Vulnerability.ROUTER_FACTOR
 
-    NodeType.Server.detectionCoefficient shouldBe 1.5
-    NodeType.Server.structuralVulnerability shouldBe 0.8
+    NodeType.Server.detectionCoefficient shouldBe Detection.SERVER_COEFFICIENT
+    NodeType.Server.structuralVulnerability shouldBe Vulnerability.SERVER_FACTOR
 
-    NodeType.MobileDevice.detectionCoefficient shouldBe 0.9
-    NodeType.MobileDevice.structuralVulnerability shouldBe 1.0
+    NodeType.MobileDevice.detectionCoefficient shouldBe Detection.MOBILE_DEVICE_COEFFICIENT
+    NodeType.MobileDevice.structuralVulnerability shouldBe Vulnerability.MOBILE_DEVICE_FACTOR
 
   test("Node instance should be created with correct properties"):
     val nodeId = NodeId.of("node-01").getOrElse(fail("Failed to create NodeId"))

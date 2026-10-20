@@ -1,5 +1,6 @@
 package it.unibo.splague.model.node
 
+import it.unibo.splague.utils.config.UIConfig.ErrorMessages
 import org.junit.runner.RunWith
 import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuite
@@ -14,8 +15,8 @@ final class NodeIdSuite extends AnyFunSuite with Matchers with EitherValues:
     result.map(_.value) shouldBe Right("node-01")
 
   test("NodeId.of should fail if the id is empty or blank"):
-    NodeId.of("") shouldBe Left("The ID cannot be empty")
-    NodeId.of("  ") shouldBe Left("The ID cannot be empty")
+    NodeId.of("") shouldBe Left(ErrorMessages.EMPTY_NODE_ID)
+    NodeId.of("  ") shouldBe Left(ErrorMessages.EMPTY_NODE_ID)
 
   test("NodeId.of should fail if it contains whitespace"):
-    NodeId.of("node 01") shouldBe Left("The ID cannot contain white space")
+    NodeId.of("node 01") shouldBe Left(ErrorMessages.NODE_ID_WHITESPACE)

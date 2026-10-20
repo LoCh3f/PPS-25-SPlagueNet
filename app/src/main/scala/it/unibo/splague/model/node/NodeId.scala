@@ -1,5 +1,7 @@
 package it.unibo.splague.model.node
 
+import it.unibo.splague.utils.config.UIConfig.ErrorMessages
+
 object NodeId:
   opaque type NodeId = String
 
@@ -12,8 +14,8 @@ object NodeId:
   def of(rawId: String): Either[String, NodeId] =
     val normalized = normalize(rawId)
 
-    if normalized.isEmpty then Left("The ID cannot be empty")
-    else if normalized.exists(_.isWhitespace) then Left("The ID cannot contain white space")
+    if normalized.isEmpty then Left(ErrorMessages.EMPTY_NODE_ID)
+    else if normalized.exists(_.isWhitespace) then Left(ErrorMessages.NODE_ID_WHITESPACE)
     else Right(normalized)
 
   extension (id: NodeId) def value: String = id

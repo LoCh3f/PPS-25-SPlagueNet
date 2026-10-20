@@ -59,7 +59,7 @@ object SimulationConfig:
   /** Simulation timing parameters. Controls the frequency of simulation steps and UI updates.
     */
   object Timing:
-    val TIMER_INTERVAL_MS: Long = 200
+    val TIMER_INTERVAL_MS: Int = 2500
 
   /** Malware behavior flags. Determines whether malware requires explicit trigger to propagate.
     */
