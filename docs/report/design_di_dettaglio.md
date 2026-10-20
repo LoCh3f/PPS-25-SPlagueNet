@@ -7,10 +7,7 @@ parent: Report
 
 ## Struttura dei package
 
-La struttura dei package rispecchia la stessa separazione in sottosistemi dell'architettura descritta nel capitolo precedente: il
-dominio applicativo (`model`) non dipende da nient'altro, mentre `view`, `update`, `persistence` e
-`dsl` lo usano come base comune.
-
+La struttura dei package rispecchia la stessa separazione in sottosistemi dell'architettura descritta nel capitolo precedente.
 ```mermaid
 flowchart TB
     dsl["dsl"]
@@ -81,8 +78,8 @@ Al termine della nostra modellazione abbiamo individuato le seguenti entità pri
 
 **Node** rappresenta un singolo host della rete. Oltre all'identificativo, è descritto dal proprio tipo (`Workstation`, `Server`, `Router`, `IoTDevice`, `MobileDevice`),
 ciascuno con una propria vulnerabilità strutturale  che differenziano come il nodo reagisce
-all'infezione, lo stato nel ciclo epidemico (`Healthy`, `Infected`, `Quarantined`, `Immune`, `Destroyed`) e
-l'insieme dei vettori di propagazione (`vectors`) a cui è esposto.
+all'infezione, lo stato nel ciclo epidemico e
+l'insieme dei vettori di propagazione a cui è esposto.
 
 **Connection** modella un collegamento diretto fra due nodi (`Edge`, con `source`, `target`, un
 `channel` e un protocollo applicativo opzionale). Il `Channel` porta banda, latenza, jitter e
@@ -92,8 +89,7 @@ non dover specificare da zero un canale "tipico" ogni volta.
 
 **Malware**: con nome e tipo (`Worm` o
 `Virus`, il virus richiede un innesco esplicito per propagarsi,
-mentre il worm si diffonde autonomamente), un insieme di caratteristiche (`MalwareTraits`:
-infettività, furtività, gravità del payload, persistenza, footprint) e l'insieme dei vettori di
+mentre il worm si diffonde autonomamente), un insieme di caratteristiche e l'insieme dei vettori di
 propagazione che sa sfruttare ( `NetworkExploit`, `Phishing`, `Usb`,
 `SupplyChain`), è proprio l'intersezione fra i vettori del malware e quelli esposti da un nodo a
 determinare se l'infezione può propagarsi lungo una connessione.
@@ -171,7 +167,7 @@ classDiagram
 ### ModelState
 
 Mentre `Scenario` descrive una singola configurazione, `ModelState` è lo stato *persistente* che
-`AppState` tiene distinto da quello di sessione (schermata attiva, form in editing, ...): è la
+`AppState` tiene distinto da quello di sessione: è la
 libreria delle configurazioni salvate, scenari e malware, più il riferimento a quale scenario sia attualmente
 correntemente aperto.
 
@@ -204,7 +200,7 @@ Il package `it.unibo.splague.update` ospita sia il ciclo MVU sia, nel sotto-pack
 
 
 `Mvu.update(msg: Msg, state: AppState): AppState` è il punto unico di smistamento: un singolo
-pattern match che raggruppa i casi di `Msg` per categoria (con pattern `|`) e inoltra a uno dei
+pattern match che raggruppa i casi di `Msg` per categoria e inoltra a uno dei
 cinque handler di `update.messages`, ciascuno responsabile di un'unica categoria:
 
 | Handler                    | Categoria                                   | Casi `Msg` gestiti |
@@ -423,11 +419,10 @@ direttamente.
 
 ### Il pattern form-adapter
 
-Swing lavora con testo (`TextField`), mentre il dominio usa tipi specifici (`Int`, `Double`, `ADT`). Per questo ogni aggregato/entità rilevante ha un "form" gemello in `view.form` (`ScenarioForm`,
+Swing lavora con testo, mentre il dominio usa tipi specifici. Per questo ogni aggregato/entità rilevante ha un "form" gemello in `view.form` (`ScenarioForm`,
 `NodeForm`, `EdgeForm`, `ChannelForm`, `MalwareForm`, `AwarenessForm`, `CountermeasureForm`) con
 campi numerici rappresentati come `String` e due conversioni simmetriche: `fromX(domain): Form`
-(sempre valida, per popolare i campi) e `toDomain(form): Either[String, Domain]` (valida e fa il
-parsing). `ScenarioForm` è il caso rappresentativo, perché compone ricorsivamente gli altri form:
+e `toDomain(form): Either[String, Domain]`. `ScenarioForm` è il caso rappresentativo, perché compone ricorsivamente gli altri form:
 
 ```scala
 def toDomain(form: ScenarioForm): Either[String, Scenario] =
@@ -447,11 +442,6 @@ def toDomain(form: ScenarioForm): Either[String, Scenario] =
   yield scenario
 ```
 
-Le utilità di parsing condivise (`FormParsing.parseDouble`, `parseInt`, `parseProbability`, oltre a
-helper come `foldEither` e `checkDuplicateNodeIds`) restituiscono sempre un `Either[String, A]` con
-un messaggio che nomina il campo in errore, in modo che ogni form possa comporre le proprie
-validazioni con la stessa `for`-comprehension vista sopra.
-
 ### Lo screen `Simulation`
 
 `SimulationView` è lo screen più complesso: a differenza delle altre viste, non ricostruisce tutto
@@ -463,10 +453,9 @@ limita a richiamare `session.update(...)` per risincronizzare testo/enabled dei 
 dialog modali a ogni tick di simulazione.
 
 `ScenarioWorkspacePanel` è il canvas: un `scala.swing.Component` che possiede uno stato
-*esclusivamente di vista* (zoom, offset di pan, nodo/edge selezionato, spostamento di component, ...) che non
-entra mai in `AppState`. Gestione di mouse/tastiera e conversione in `Msg` (`AddNode`, `UpdateNode`,
-`RemoveNode`, `AddEdge`, `RemoveEdge`, apertura dei dialog editor) restano qui; sono invece delegate
-a due oggetti puri, privi di stato proprio:
+*esclusivamente di vista*  che non
+entra mai in `AppState`. Gestione di mouse/tastiera e conversione in `Msg`  restano qui; sono invece delegate
+a due oggetti:
 
 - `WorkspaceGeometry`, conversioni schermo↔modello e hit-testing (`screenToModel`, `pickNode`,
   `pickEdge`, `connectionExists`).
