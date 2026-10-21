@@ -10,25 +10,25 @@ sealed trait NodeType:
 
 object NodeType:
   case object Workstation extends NodeType:
-    def detectionCoefficient = Detection.WORKSTATION_COEFFICIENT
-    def structuralVulnerability = Vulnerability.WORKSTATION_FACTOR
+    def detectionCoefficient: Double = Detection.WORKSTATION_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.WORKSTATION_FACTOR
 
   case object Server extends NodeType:
-    def detectionCoefficient = Detection.SERVER_COEFFICIENT // better monitoring(log/SIEM)
-    def structuralVulnerability = Vulnerability.SERVER_FACTOR // typical hardening
+    def detectionCoefficient: Double = Detection.SERVER_COEFFICIENT // better monitoring(log/SIEM)
+    def structuralVulnerability: Double = Vulnerability.SERVER_FACTOR // typical hardening
 
   case object Router extends NodeType:
-    def detectionCoefficient = Detection.ROUTER_COEFFICIENT
-    def structuralVulnerability = Vulnerability.ROUTER_FACTOR
+    def detectionCoefficient: Double = Detection.ROUTER_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.ROUTER_FACTOR
 
   case object IoTDevice extends NodeType:
-    def detectionCoefficient = Detection.IOT_DEVICE_COEFFICIENT // logging absent
-    def structuralVulnerability =
+    def detectionCoefficient: Double = Detection.IOT_DEVICE_COEFFICIENT // logging absent
+    def structuralVulnerability: Double =
       Vulnerability.IOT_DEVICE_FACTOR // intrinsic vulnerability of the firmware
 
   case object MobileDevice extends NodeType:
-    def detectionCoefficient = Detection.MOBILE_DEVICE_COEFFICIENT
-    def structuralVulnerability = Vulnerability.MOBILE_DEVICE_FACTOR
+    def detectionCoefficient: Double = Detection.MOBILE_DEVICE_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.MOBILE_DEVICE_FACTOR
 
 enum NodeState:
   case Healthy, Infected, Quarantined, Immune, Destroyed
