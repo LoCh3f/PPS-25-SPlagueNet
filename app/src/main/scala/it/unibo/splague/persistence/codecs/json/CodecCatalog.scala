@@ -17,6 +17,7 @@ import it.unibo.splague.persistence.*
 import it.unibo.splague.update.IsolationCriteria
 import it.unibo.splague.update.simulation.report.ScenarioReport
 
+// $COVERAGE-OFF$
 case class TestApplicationProtocol(
     kind: ApplicationProtocolType,
     underlying: TransportProtocol = TcpTransport
@@ -231,3 +232,4 @@ object CodecCatalog:
 
   given scenarioCirceCodec: CirceCodec[Scenario] =
     deriveCodec[Scenario]
+// $COVERAGE-ON$

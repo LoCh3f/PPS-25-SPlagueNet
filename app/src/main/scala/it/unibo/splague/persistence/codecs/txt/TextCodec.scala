@@ -5,6 +5,7 @@ import it.unibo.splague.model.connection.Connection.Edge
 import it.unibo.splague.persistence.FileFormat
 import it.unibo.splague.persistence.codecs.Encoder
 
+// $COVERAGE-OFF$
 trait TextEncoder[A]:
   def encode(a: A): String
 
@@ -25,3 +26,4 @@ object TextCodec:
     */
   given [A](using tEncoder: TextEncoder[A]): Encoder[A, FileFormat.Txt.type] with
     override def encode(a: A): String = tEncoder.encode(a)
+// $COVERAGE-ON$

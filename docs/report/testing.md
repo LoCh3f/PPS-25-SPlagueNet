@@ -39,18 +39,33 @@ Il package `it.unibo.splague.view.*` è escluso dal calcolo perché le classi Sw
 eseguibili in ambiente headless. Tutto il resto — dominio, DSL, motore di simulazione,
 persistenza, layer MVU — è coperto dai test automatici.
 
-| Package | Copertura |
-|---------|-----------|
-| `model` | alta |
-| `model.report` | alta |
-| `dsl` | alta |
-| `update.simulation.event` | alta |
-| `update.simulation.report` | alta |
-| `update.simulation` | alta |
-| `update` | alta |
-| `persistence` | alta |
-| `view.form` | parziale |
-| `view.*` | escluso |
+| Metrica | Valore | Metrica | Valore | Metrica | Valore | Metrica | Valore |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Lines of code:** | 2349 | **Files:** | 45 | **Classes:** | 74 | **Methods:** | 291 |
+| **Lines per file:** | 52.20 | **Packages:** | 16 | **Classes per package:** | 4.62 | **Methods per class:** | 3.93 |
+| **Total statements:** | 1105 | **Invoked statements:** | 1041 | **Total branches:** | 106 | **Invoked branches:** | 96 |
+| **Ignored statements:** | 0 | | | | | | |
+| **Statement coverage:** | 94.21 % | | | **Branch coverage:** | 90.57 % | | |
+
+Una vista più dettagliata, contenente la coverage per ogni singolo package:
+
+| All packages | 94.21% |
+| :--- | ---: |
+| it.unibo.splague.dsl | 98.39% |
+| it.unibo.splague.model | 100.00% |
+| it.unibo.splague.model.connection | 100.00% |
+| it.unibo.splague.model.countermeasures | 95.92% |
+| it.unibo.splague.model.malware | 100.00% |
+| it.unibo.splague.model.node | 93.13% |
+| it.unibo.splague.model.report | 100.00% |
+| it.unibo.splague.persistence | 81.58% |
+| it.unibo.splague.persistence.codecs.json | 100.00% |
+| it.unibo.splague.persistence.codecs.txt | 100.00% |
+| it.unibo.splague.update | 100.00% |
+| it.unibo.splague.update.simulation | 100.00% |
+| it.unibo.splague.update.simulation.event | 91.41% |
+| it.unibo.splague.update.simulation.event.rules | 96.00% |
+| it.unibo.splague.update.simulation.report | 100.00% |
 
 ---
 
