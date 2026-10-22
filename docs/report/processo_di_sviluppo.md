@@ -43,7 +43,9 @@ Un task si considera completato quando:
 | Gradle | Build tool e gestione dipendenze   | 
 | GitHub Actions | CI/CD                              | 
 | ScalaTest | Testing unitario e di integrazione | 
-| IntelliJ IDEA | IDE di sviluppo                    | 
+| IntelliJ IDEA | IDE di sviluppo                    |
+| Scalafmt| Code formatter per Scala|
+|Scoverage | Code coverage |
 
 ## Versionamento e Strategia di Branching
 

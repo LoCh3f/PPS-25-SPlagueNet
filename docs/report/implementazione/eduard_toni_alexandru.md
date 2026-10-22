@@ -53,7 +53,7 @@ oppure un `IoTDevice` (vulnerabilità del firmware più elevata e scarse capacit
 ### `NodeId` come Opaque Type
 Per prevenire errori di scambio di variabili (ad esempio, passare una banale stringa di log al posto dell'identificativo di un nodo), l'ID del nodo è implementato usando un opaque type di Scala 3:
 
-```Scala
+```scala
 object NodeId:
   opaque type NodeId = String
 
