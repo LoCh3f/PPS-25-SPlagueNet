@@ -93,6 +93,7 @@ case object UdpTransport extends TransportProtocol:
 
 ## Canali di rete
 Dopo aver definito i protocolli, è stato necessario modellare i canali di rete, che rappresentano le connessioni tra i nodi della topologia.
+
 ```mermaid
 classDiagram
     class ChannelType {
@@ -122,11 +123,13 @@ classDiagram
     Edge *-- Channel
     Edge *-- ApplicationProtocol 
 ```
+
 La classe Channel accentra e modella in modo coerente tutte le metriche fondamentali che caratterizzano la qualità di un canale di comunicazione (Quality of Service - QoS),
 raggruppa proprietà fisiche e dinamiche interdipendenti (bandwidth, latency, jitter, packetLoss).
 Invece di usare generici numeri reali, l'uso del tipo `Probability` garantisce la validazione dei valori nel range $[0, 1]$ per la perdita di pacchetti.
 
 Vista la necessità di avere valori di default per i canali, sono stati implementati due metodi `default` all'interno del companion object, che permettono di ottenere un canale con valori predefiniti per un determinato tipo di canale, oppure di creare un canale con valori personalizzati, mantenendo comunque la validazione dei valori.
+
 
 ```scala
 
@@ -171,7 +174,7 @@ espressione sia il caso "nessun override" (si usa `base.packetLoss`, già una `P
 valida) sia il caso "override presente" (si valida il nuovo valore), evitando un `if/else`
 esplicito.
 
----
+
 
 ## Motore di Simulazione
 
@@ -213,6 +216,7 @@ rende `run` adatto sia a un consumo "a run completo" (il report, che piega l'int
 sequenza con `foldLeft`) sia a un consumo "un tick alla volta" guidato dall'interfaccia,
 senza che le due modalità richiedano due motori diversi o duplichino la logica di step.
 
+
 |  | Componente Coinvolto | Giustificazione Architetturale |
 | :--- | :--- | :--- |
 | **S - Single Responsibility** | Tutti e 3 | Separazione netta tra trasformazione dello stato (`Event`), selezione dell'azione (`EventSelector`) ed orchestrazione (`SimulationEngine`). |
@@ -230,6 +234,7 @@ senza che le due modalità richiedano due motori diversi o duplichino la logica 
 ### Event Mixin: `TopologyUpdateMixin`
 
 Durante la progettazione dei vari eventi, si è notato che molti di essi condividono la logica di aggiornamento della topologia, in particolare l'aggiornamento dello stato di un nodo dato il suo `NodeId`. Per evitare duplicazioni e promuovere la riusabilità del codice, ho creato il trait `TopologyUpdateMixin`, che fornisce un metodo protetto `updateNode` per aggiornare un nodo specifico nella topologia.
+
 
 ```scala
 trait TopologyUpdateMixin:
@@ -296,8 +301,9 @@ classDiagram
     Event <|.. InfectionEvent
     TopologyUpdateMixin <|.. InfectionEvent
     InfectionMixin <|.. InfectionEvent
-
 ```
+
+
 Il modulo `Infection` definisce la logica con cui un malware si propaga all'interno della rete durante la simulazione.
 Il file è organizzato attorno a due componenti principali:
 
@@ -438,7 +444,7 @@ sequenceDiagram
     IE-->>Eng: scenario.copy(topology = newTopology)
 ```
 
----
+
 
 ## Controllo e gestione della Simulazione
 
@@ -552,6 +558,7 @@ Il diagramma seguente separa le due fasi, costruzione iniziale e avanzamento rip
 e rende esplicito che, dentro al ciclo, è il *pattern match su `#::`* a innescare
 l'esecuzione di `step` (la funzione catturata da `run` al momento della creazione della
 `LazyList`), non una chiamata diretta a un metodo di `SimulationEngine`.
+
 
 ```mermaid
 sequenceDiagram
