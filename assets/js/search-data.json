@@ -286,83 +286,132 @@
     
     "relUrl": "/report/retrospettiva.html"
   },"41": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 1: Avvio e Regole Base",
+    "content": "Descrizione dell’andamento dello sviluppo . Questo primo sprint è servito ad avviare il progetto. Abbiamo creato la repository, preparato i sistemi per compilarlo e configurato i test automatici. Inoltre, abbiamo definito le entità base della simulazione: come si comportano i nodi, i tipi di connessioni e le caratteristiche del virus. Il lavoro si è concluso con un ambiente pronto per la programmazione. Backlog . Il backlog conteneva le attività per iniziare: . | Create Repo (completato in 2 ore da AV). | Set Up build system (completato in 4 ore da AV). | Definition of connections and their types (completato in 6 ore da AV). | Definition of malware traits and behavior (completato in 8 ore da GP). | Docs (completato in 5 ore da GP). | CI/CD (completato in 10 ore da EA). | Definition of nodes and behavior (completato in 7 ore da EA). | . Iterazioni . Abbiamo lavorato rapidamente per risolvere i blocchi iniziali, soprattutto su repository e test automatici. Dividere i compiti tecnici da quelli teorici ha permesso a tutti di lavorare contemporaneamente senza ostacolarsi. Commenti sprint . Sprint utile per preparare il terreno. Le stime di tempo per le configurazioni erano corrette, permettendoci di passare allo sviluppo vero e proprio nello sprint successivo. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-1-avvio-e-regole-base",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-1-avvio-e-regole-base"
+  },"42": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 2: Motore di Simulazione e Struttura Dati",
+    "content": "Descrizione dell’andamento dello sviluppo . In questo sprint abbiamo costruito il motore principale del simulatore e il sistema per aggiornare i dati. Abbiamo aggiunto le regole per le infezioni e definito la classe Probability. Infine, abbiamo inserito funzioni per controllare la “salute” dei nodi. Backlog . Le attività riguardavano la logica centrale: . | Simulation Engine (completato in 12 ore da AV). | Define the Update function(MVU) and Scenario (completato in 10 ore da EA). | Simulation Logic (func for infection, probability) (completato in 14 ore da GP). | Introduce the awareness (works with healthy checker) (completato in 8 ore da GP). | Healthy Checker Event (completato in 6 ore da GP). | . Iterazioni . Abbiamo affrontato compiti difficili. La funzione di aggiornamento ha richiesto molte verifiche per funzionare bene con il motore principale. I test fatti in corso d’opera hanno confermato che le regole di infezione erano corrette. Commenti sprint . Uno sprint impegnativo. L’uso della nuova struttura per i dati ha richiesto tempo all’inizio, ma ora le informazioni sono gestite in modo più sicuro e chiaro. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-2-motore-di-simulazione-e-struttura-dati",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-2-motore-di-simulazione-e-struttura-dati"
+  },"43": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 3: Eventi, Impostazioni e Prima Schermata",
+    "content": "Descrizione dell’andamento dello sviluppo . Abbiamo creato i file per le impostazioni generali, gestito le difese (contromisure) e realizzato una prima schermata visibile del simulatore. Abbiamo anche migliorato i controlli, aggiungendo un firewall, test per verificare che tutto funzioni insieme, segnalazioni per i nodi infetti e la test coverage. Backlog . Il backlog includeva grafiche di base, regole di difesa e controlli: . | Basic View for simulation (completato in 10 ore da AV). | Create a Config file with constants (completato in 4 ore da GP). | Define Countermeasure Event with rules (completato in 12 ore da EA). | Firewall + integration test (completato in 8 ore da EA). | Infected nodes for detection signal (completato in 6 ore da EA). | Add code coverage (completato in 4 ore da EA). | . Iterazioni . Abbiamo alternato la scrittura di nuove regole con la creazione di test per verificarle. Lavorando in questo modo, siamo riusciti a collegare la schermata visiva senza bloccare lo sviluppo delle regole della simulazione. Commenti sprint . Un buon equilibrio tra grafica e logica. Avere più test ci ha dato maggiore sicurezza nel modificare il codice e aggiungere regole. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-3-eventi-impostazioni-e-prima-schermata",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-3-eventi-impostazioni-e-prima-schermata"
+  },"44": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 4: Mappe, Comandi Semplificati e Salvataggio",
+    "content": "Descrizione dell’andamento dello sviluppo . Questo sprint è servito a rendere il simulatore più pratico da usare. Abbiamo creato dei comandi testuali semplificati per descrivere facilmente le mappe e gli scenari. Abbiamo aggiunto la possibilità di salvare e caricare la simulazione su file e migliorato il modo in cui il virus si diffonde. Backlog . Le attività coprivano comandi personalizzati, salvataggi e mappe: . | Default topologies con DSL (completato in 8 ore da AV). | Default scenarios (completato in 6 ore da AV). | DSL (completato in 12 ore da GP). | Add topology shapes (DSL) (completato in 8 ore da GP). | Refactor propagation (completato in 1 ora da EA). | save/load scenario da/a file (completato in 10 ore da EA). | Modifica test-coverage (completato in 4 ore da EA). | . Iterazioni . Costruire i comandi personalizzati ha richiesto diverse prove per renderli semplici da scrivere. I problemi tecnici ci hanno rallentato un po’, ma abbiamo recuperato organizzando meglio il tempo. Commenti sprint . Nonostante gli intoppi tecnici, abbiamo completato funzioni importanti. Il salvataggio e le mappe predefinite permettono finalmente di provare il simulatore comodamente. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-4-mappe-comandi-semplificati-e-salvataggio",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-4-mappe-comandi-semplificati-e-salvataggio"
+  },"45": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 5: Nuova Grafica e Moduli",
+    "content": "Descrizione dell’andamento dello sviluppo . Abbiamo cambiato la grafica, passando a una nuova libreria. Insieme a questo, abbiamo creato i menu a schermo per inserire le difese e controllare le probabilità dei virus. Abbiamo anche ampliato i comandi semplificati per gestire scenari interi e permesso di salvare le partite mentre sono in corso. Backlog . Il backlog si concentrava su menu, grafica e comandi: . | save/load scenario a runtime (completato in 6 ore da AV). | report per scenario (completato in 5 ore da GP). | Validate the malware probability (form) (completato in 8 ore da GP). | DSL for scenario (completato in 10 ore da GP). | Scala Swing migration (completato in 15 ore da GP). | Countermeasure form (UI) (completato in 12 ore da EA). | Countermeasure DSL (completato in 8 ore da EA). | modifica regola awareness (completato in 4 ore da EA). | . Iterazioni . Il cambio di grafica è stato il lavoro principale. Le altre attività sono state modificate per funzionare con i nuovi menu. Abbiamo provato la schermata più volte per renderla comoda da usare. Commenti sprint . Uno sprint faticoso per via del cambio di grafica. Tuttavia, il risultato ha migliorato molto l’aspetto del programma e la facilità di utilizzo. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-5-nuova-grafica-e-moduli",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-5-nuova-grafica-e-moduli"
+  },"46": {
+    "doc": "Retrospettiva",
+    "title": "Sprint 6: Correzioni e Conclusione",
+    "content": "Descrizione dell’andamento dello sviluppo . L’ultimo sprint è stato usato per pulire il codice, sistemare l’interfaccia visiva e scrivere i documenti finali. Abbiamo riordinato la struttura dei dati, uniformato le view a schermo e risolto piccoli errori sui menu. Abbiamo anche aggiunto il tasto per fermare la simulazione e sistemato i livelli di difesa per i nuovi nodi inseriti. Backlog . Le attività coprivano pulizia del codice, risoluzione di errori e documenti: . | refactor mvu (completato in 10 ore da AV). | First infected node (completato in 4 ore da AV). | Stop Button (completato in 3 ore da AV). | Organize all the config values (completato in 5 ore da GP). | Extract shared UI helpers and unify editor dialogs (completato in 10 ore da GP). | Fix CountermeasureForm (completato in 6 ore da EA). | New nodes get defenseLevel = 1.0 (completato in 2 ore da EA). | activeCMs are parsed but not used (completato in 4 ore da EA). | Doc processo di sviluppo (completato in 8 ore da EA). | . Iterazioni . Ci siamo concentrati sul trovare e correggere velocemente gli ultimi errori. Le modifiche al codice sono state fatte con molta attenzione per non rompere nulla a fine progetto. Commenti sprint . La cura per i dettagli ci ha permesso di consegnare un prodotto completo. Mettere in ordine il codice e le impostazioni rende il programma più facile da aggiornare in futuro. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#sprint-6-correzioni-e-conclusione",
+    
+    "relUrl": "/report/retrospettiva.html#sprint-6-correzioni-e-conclusione"
+  },"47": {
+    "doc": "Retrospettiva",
+    "title": "Commenti finali",
+    "content": "Il gruppo ha lavorato con costanza, rispettando le circa 15 ore settimanali previste per ogni persona in tutti i 6 sprint. Gestendo bene i compiti, siamo passati da un’impostazione vuota a un simulatore completo, dotato di salvataggio dati e di una buona grafica interattiva. Abbiamo trovato il giusto equilibrio tra l’aggiunta di nuove funzioni e il mantenimento di un codice ordinato, ottenendo un risultato finale solido e facile da usare. ",
+    "url": "/PPS-25-SPlagueNet/report/retrospettiva.html#commenti-finali",
+    
+    "relUrl": "/report/retrospettiva.html#commenti-finali"
+  },"48": {
     "doc": "Specifica dei requisiti",
     "title": "Specifica dei requisiti",
     "content": "Il presente capitolo definisce i requisiti di business, il modello di dominio, le dinamiche di simulazione e l’insieme dei requisiti funzionali, non funzionali e di implementazione che guidano lo sviluppo e la validazione del sistema SplagueNet. ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html",
     
     "relUrl": "/report/specifica_dei_requisiti.html"
-  },"42": {
+  },"49": {
     "doc": "Specifica dei requisiti",
     "title": "Requisiti di business",
     "content": "SplagueNet nasce come un simulatore desktop pensato per esplorare in modo interattivo e rigoroso la dinamica epidemica all’interno di infrastrutture di rete configurabili. L’intento principale è offrire uno strumento d’analisi flessibile, capace di mettere a confronto le strategie offensive (rappresentate dai tratti evolutivi del malware) e quelle difensive (tradotte in contromisure reattive automatiche), valutando se un’infezione conduca alla compromissione totale del sistema o se venga efficacemente contenuta. I requisiti di business fondamentali individuati per il progetto comprendono: . | Simulazione e analisi: il sistema deve permettere di valutare l’esito di un’epidemia in funzione della topologia di rete, dei tratti del malware e delle policy di difesa adottate. | Ripetibilità: gli esperimenti devono poter essere replicati e confrontati con assoluta precisione; a parità di scenario e di seed, la simulazione deve produrre sempre la medesima sequenza di stati. | Sintesi dei risultati: al termine di ogni esperimento, il sistema deve generare un report chiaro, sintetico e conservabile che riassuma l’andamento e le metriche chiave dell’epidemia. | Modularità ed estendibilità: l’architettura deve essere progettata secondo criteri di netta separazione delle responsabilità, in modo da consentire l’aggiunta di nuove tipologie di nodi, vettori di propagazione o contromisure senza richiedere modifiche al motore di simulazione di base. | . ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html#requisiti-di-business",
     
     "relUrl": "/report/specifica_dei_requisiti.html#requisiti-di-business"
-  },"43": {
+  },"50": {
     "doc": "Specifica dei requisiti",
     "title": "Modello di dominio",
     "content": ". | Topology: rappresenta la struttura della rete come un grafo non orientato composto da nodi e connessioni. Ciascun Node identifica un dispositivo specifico: workstation, server, router, dispositivo IoT o mobile. Le Connection collegano coppie di nodi distinti (al più una connessione per coppia) mediante canali differenziati (LAN, WAN o VPN) caratterizzati da parametri propri. | Malware: l’entità minacciosa che guida l’infezione. È caratterizzata da un tipo (worm o virus), da almeno un vettore di propagazione e da un insieme di tratti distintivi che determinano la sua aggressività, la difficoltà di individuazione e l’impatto distruttivo sui dispositivi compromessi. | Countermeasures e Awareness: la risposta difensiva della rete si attiva dinamicamente quando il livello di Awareness (una metrica normalizzata in $[0,1]$ che misura la consapevolezza globale del rischio) supera determinate soglie. Le contromisure disponibili sono quattro: Patch, DefenseBoost, Isolation e Firewall. | Scenario e Report: lo scenario costituisce l’aggregatore globale che raccoglie la topologia, il malware configurato, il nodo di partenza, il seed casuale e i limiti di iterazione. Il Report, generato al termine della simulazione, aggrega le serie temporali per tick, i momenti di attivazione delle contromisure e le milestone critiche dell’epidemia, come il primo punto di diffusione o il picco massimo delle infezioni. | . ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html#modello-di-dominio",
     
     "relUrl": "/report/specifica_dei_requisiti.html#modello-di-dominio"
-  },"44": {
+  },"51": {
     "doc": "Specifica dei requisiti",
     "title": "Requisiti funzionali",
     "content": "Requisiti utente . | L’utente deve poter scegliere uno scenario all’interno di un insieme precaricato (quali “Linear chain” e “Complex enterprise mesh”) o procedere alla creazione e al salvataggio di nuove configurazioni. | L’utente deve poter costruire e modificare interattivamente la topologia di rete, aggiungendo, spostando o rimuovendo nodi e connessioni, con la facoltà di generare rapidamente topologie strutturate predefinite (star, ring o mesh). | L’utente deve poter configurare parametricamente lo scenario, le proprietà del malware e le regole delle contromisure. | L’utente deve disporre di comandi completi per gestire il ciclo di vita della simulazione, potendola avviare, mettere in pausa, riprendere o azzerare. | L’utente deve poter monitorare in tempo reale l’evoluzione visiva dello stato dei nodi, il contatore dei tick e il livello di awareness, navigando agevolmente nel workspace grafico. | L’utente deve poter consultare il report riepilogativo di una simulazione completata, salvarlo su supporto persistente o importare report precedentemente archiviati. | L’utente deve poter esportare gli scenari in formati standard (JSON o TXT) e reimportarli agevolmente nel sistema. | . Requisiti di sistema . | Il sistema deve validare rigorosamente identificativi, probabilità, soglie e vincoli strutturali dello scenario, rifiutando i valori scorretti senza applicare correzioni silenziose. | Il sistema deve eseguire la logica di simulazione attenendosi strettamente alla sequenza delle fasi previste, avanzando a intervalli regolari e sospendendo l’elaborazione qualora la simulazione si trovi in pausa o abbia raggiunto il termine. | Il sistema deve garantire la coerenza e l’identicità dei risultati ottenuti a parità di condizioni di input (scenario e seed). | Il sistema deve rendere accessibile la generazione e consultazione del report esclusivamente al di fuori dei momenti di esecuzione attiva della simulazione, calcolandolo tramite una riesecuzione deterministica basata sullo scenario iniziale. | Il sistema deve gestire la persistenza salvando esportazioni e report all’interno di una cartella dedicata (splagnet) nella home directory dell’utente, gestendo eventuali anomalie di I/O o di parsing in modo sicuro e senza causare interruzioni anomale dell’applicazione. | . ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html#requisiti-funzionali",
     
     "relUrl": "/report/specifica_dei_requisiti.html#requisiti-funzionali"
-  },"45": {
+  },"52": {
     "doc": "Specifica dei requisiti",
     "title": "Requisiti non funzionali",
     "content": "I requisiti non funzionali del sistema sono associati a specifici criteri di verifica e misurazione: . | Riproducibilità: due esecuzioni consecutive condotte con lo stesso scenario e lo stesso seed devono produrre una sequenza identica di stati. Misurazione: esecuzione di test automatici mirati sul motore di simulazione e sui report. | Correttezza dei dati: nessun valore di probabilità, awareness o livello di protezione può fuoriuscire dall’intervallo normalizzato $[0,1]$. Misurazione: test unitari a copertura delle regole di dominio. | Usabilità: la costruzione di una topologia e l’avvio di una simulazione devono poter essere compiuti interamente attraverso l’interfaccia grafica. Misurazione: sessioni di prova manuale condotte con il supporto dell’esperto di dominio. | Reattività: l’interfaccia utente deve preservare la propria fluidità e usabilità anche durante l’elaborazione di reti complesse. Misurazione: verifica manuale basata sullo scenario stress “Complex enterprise mesh”. | Qualità del codice: l’esecuzione del comando di build ./gradlew check deve concludersi senza segnalazioni di errore, superando compilazione, test unitari, analisi statica con SpotBugs e formattazione con scalafmt. Misurazione: esecuzione automatica nella pipeline di Continuous Integration a ogni push. | Testabilità: la logica di dominio e di aggiornamento deve essere rigorosamente disaccoppiata dalla vista grafica e verificabile in modo indipendente. Misurazione: generazione di report di code coverage tramite Scoverage (escludendo unicamente il package della vista). | Estendibilità: l’introduzione di un nuovo evento di simulazione o di una nuova tipologia di nodo non deve imporre modifiche strutturali al motore core. Misurazione: revisione periodica del design architetturale. | . ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html#requisiti-non-funzionali",
     
     "relUrl": "/report/specifica_dei_requisiti.html#requisiti-non-funzionali"
-  },"46": {
+  },"53": {
     "doc": "Specifica dei requisiti",
     "title": "Requisiti di implementazione",
     "content": "SplagueNet è scritto in Scala 3, con uno stile funzionale: i dati non vengono modificati ma sostituiti con nuove copie, la logica di dominio è fatta di funzioni senza effetti collaterali e gli errori sono restituiti esplicitamente con il tipo Either, senza lanciare eccezioni. La build e le dipendenze sono gestite con Gradle. I test sono scritti con ScalaTest e vengono eseguiti automaticamente dalla CI a ogni push. L’interfaccia grafica usa Scala Swing. Per salvare e caricare i dati si usa Circe per il formato JSON, oltre a un formato testuale semplice. I codec sono tenuti separati dal modello di dominio, che quindi non dipende dal formato dei file. ",
     "url": "/PPS-25-SPlagueNet/report/specifica_dei_requisiti.html#requisiti-di-implementazione",
     
     "relUrl": "/report/specifica_dei_requisiti.html#requisiti-di-implementazione"
-  },"47": {
+  },"54": {
     "doc": "Testing",
     "title": "Testing",
     "content": " ",
     "url": "/PPS-25-SPlagueNet/report/testing.html",
     
     "relUrl": "/report/testing.html"
-  },"48": {
+  },"55": {
     "doc": "Testing",
     "title": "Tecnologie utilizzate",
     "content": "I test sono scritti con ScalaTest (versione 3.2.19), stile AnyFunSuite with Matchers, con EitherValues per i risultati di tipo Either. Ogni suite è annotata con @RunWith(classOf[JUnitRunner]) per essere eseguita dal runner JUnit 4 integrato in Gradle. La misurazione della copertura è affidata a Scoverage (plugin Gradle 9.1). Il report viene generato con ./gradlew reportScoverage e caricato come artefatto dalla pipeline CI. L’analisi statica con SpotBugs è parte del task check: i warning sono trattati come errori di build. ",
     "url": "/PPS-25-SPlagueNet/report/testing.html#tecnologie-utilizzate",
     
     "relUrl": "/report/testing.html#tecnologie-utilizzate"
-  },"49": {
+  },"56": {
     "doc": "Testing",
     "title": "Approccio e evoluzione della strategia",
     "content": "Il progetto adotta TDD (Test-Driven Development) come metodologia principale: ogni componente è stato sviluppato scrivendo prima il test che ne esprimeva il comportamento atteso, poi l’implementazione minima sufficiente a farlo passare. Inizialmente i test verificavano dettagli interni molto specifici (tramite metodi ausiliari). Questa pratica è stata presto superata per concentrarsi esclusivamente sulle API pubbliche: in questo modo i test non risentono dei cambiamenti di implementazione e rimangono stabili durante i refactoring. Nel layer MVU (Mvu.update), ad esempio, si è scelto di verificare i cambiamenti di stato complessivi prodotti da ogni messaggio, piuttosto che le singole operazioni interne. Questo ha reso i test robusti rispetto ai refactoring e ha evidenziato invarianti di dominio non sempre ovvi, come il fatto che ResetSimulation debba correttamente ripristinare lo scenario pre-seed e non quello già infetto. ",
     "url": "/PPS-25-SPlagueNet/report/testing.html#approccio-e-evoluzione-della-strategia",
     
     "relUrl": "/report/testing.html#approccio-e-evoluzione-della-strategia"
-  },"50": {
+  },"57": {
     "doc": "Testing",
     "title": "Copertura",
     "content": "Il package it.unibo.splague.view.* è escluso dal calcolo perché le classi Swing non sono eseguibili in ambiente headless. Tutto il resto — dominio, DSL, motore di simulazione, persistenza, layer MVU — è coperto dai test automatici. | Metrica | Valore | Metrica | Valore | Metrica | Valore | Metrica | Valore | . | Lines of code: | 2349 | Files: | 45 | Classes: | 74 | Methods: | 291 | . | Lines per file: | 52.20 | Packages: | 16 | Classes per package: | 4.62 | Methods per class: | 3.93 | . | Total statements: | 1105 | Invoked statements: | 1041 | Total branches: | 106 | Invoked branches: | 96 | . | Ignored statements: | 0 |   |   |   |   |   |   | . | Statement coverage: | 94.21 % |   |   | Branch coverage: | 90.57 % |   |   | . Una vista più dettagliata, contenente la coverage per ogni singolo package: . | All packages | 94.21% | . | it.unibo.splague.dsl | 98.39% | . | it.unibo.splague.model | 100.00% | . | it.unibo.splague.model.connection | 100.00% | . | it.unibo.splague.model.countermeasures | 95.92% | . | it.unibo.splague.model.malware | 100.00% | . | it.unibo.splague.model.node | 93.13% | . | it.unibo.splague.model.report | 100.00% | . | it.unibo.splague.persistence | 81.58% | . | it.unibo.splague.persistence.codecs.json | 100.00% | . | it.unibo.splague.persistence.codecs.txt | 100.00% | . | it.unibo.splague.update | 100.00% | . | it.unibo.splague.update.simulation | 100.00% | . | it.unibo.splague.update.simulation.event | 91.41% | . | it.unibo.splague.update.simulation.event.rules | 96.00% | . | it.unibo.splague.update.simulation.report | 100.00% | . ",
     "url": "/PPS-25-SPlagueNet/report/testing.html#copertura",
     
     "relUrl": "/report/testing.html#copertura"
-  },"51": {
+  },"58": {
     "doc": "Testing",
     "title": "Esempi rilevanti",
     "content": "Accumulazione degli errori nella DSL . La DSL raccoglie tutti gli errori di una dichiarazione invece di fermarsi al primo. Il test verifica che problemi indipendenti — un ID malformato e un riferimento a nodo inesistente — vengano riportati insieme nello stesso Left: . test(\"errors from nodes and edges accumulate together in the same result\"): val result = topology: node(\"bad id\", Workstation) node(\"A\", Workstation) \"bad id\" &lt;-&gt; \"ghost\" via LAN val errors = result.left.value errors should contain(\"The ID cannot contain white space\") errors should contain(\"Edge references unknown node id: ghost\") . Convergenza dell’awareness . Verifica che trackTowards abbia il segnale come punto fisso, e non accumuli linearmente verso 1.0: . test(\"con un segnale costante, l'awareness converge vicino al segnale\"): val result = (1 to 100).foldLeft(Awareness.none)( (a, _) =&gt; a.trackTowards(signal, rate.value) ) result.value shouldBe signal +- 0.01 result.value should be &lt; 0.9 . Invariante del reset . Verifica che ResetSimulation ripristini lo scenario pre-seed da model.currentScenario, non lo scenario già infetto conservato in simulation.initial. Questo distingue l’identità dello scenario dalla sua istanza in esecuzione: . test(\"ResetSimulation restores model.currentScenario, which stays Healthy\"): val result = Mvu.update(Msg.ResetSimulation, finished) result.simulation shouldBe None result.model.currentScenario shouldBe Some(baseline) result.scenarioForm.get.topology.nodes.map(_.state) shouldBe Vector(NodeState.Healthy) . ",
     "url": "/PPS-25-SPlagueNet/report/testing.html#esempi-rilevanti",
     
     "relUrl": "/report/testing.html#esempi-rilevanti"
-  },"52": {
+  },"59": {
     "doc": "Testing",
     "title": "Integrazione continua",
     "content": "./gradlew check esegue in sequenza: compilazione, test, verifica formattazione scalafmt e analisi SpotBugs. Il fallimento di uno qualsiasi blocca il merge della Pull Request. Il report Scoverage è generato separatamente con ./gradlew reportScoverage per non rallentare il feedback loop principale del check. ",
