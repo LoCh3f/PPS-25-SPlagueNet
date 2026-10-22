@@ -66,7 +66,7 @@
         VPN
     }
 
-    class Channel["Channel"] {
+    class Channel {
         +channelType: ChannelType
         +bandwidth: Double
         +latency: Double
@@ -159,14 +159,12 @@
         &lt;&lt;trait&gt;&gt;
         #updateNode(topology, nodeId)(f) Topology
     }
-    note for TopologyUpdateMixin "self-type: self: Event =&gt;"
 
     class InfectionMixin {
         &lt;&lt;trait&gt;&gt;
         #infectedNodes(topology) Iterable~Node~
         #propagateFrom(topology, source, malware, roll) Topology
     }
-    note for InfectionMixin "self-type: self: Event &amp; TopologyUpdateMixin =&gt;"
 
     class InfectionEvent {
         &lt;&lt;object&gt;&gt;
