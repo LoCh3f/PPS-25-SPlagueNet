@@ -19,7 +19,7 @@ Il backlog conteneva le attività per iniziare:
 * Definition of connections and their types (completato in 6 ore da AV).
 * Definition of malware traits and behavior (completato in 8 ore da GP).
 * Docs (completato in 5 ore da GP).
-* CI/CD (completato in 10 ore da EA).
+* CI/CD (completato in 8 ore da EA).
 * Definition of nodes and behavior (completato in 7 ore da EA).
 
 ### Iterazioni
@@ -49,24 +49,24 @@ Abbiamo affrontato compiti difficili. La funzione di aggiornamento ha richiesto 
 il motore principale. I test fatti in corso d'opera hanno confermato che le regole di infezione erano corrette.
 
 ### Commenti sprint
-Uno sprint impegnativo. L'uso della nuova struttura per i dati ha richiesto tempo all'inizio, ma ora le informazioni sono
-gestite in modo più sicuro e chiaro.
+Uno sprint impegnativo. Il design del simulation engine e del MVU ha richiesto più tempo del previsto. E' stato necessario
+fare una standup più lunga del solito per chiarire bene le idee.
 
 ## Sprint 3: Eventi, Impostazioni e Prima Schermata
 
 ### Descrizione dell’andamento dello sviluppo
-Abbiamo creato i file per le impostazioni generali, gestito le difese (contromisure) e realizzato una prima schermata 
+Abbiamo creato i file per le impostazioni generali, gestito le contromisure e realizzato una prima schermata 
 visibile del simulatore. Abbiamo anche migliorato i controlli, aggiungendo un firewall, test per verificare che tutto 
-funzioni insieme, segnalazioni per i nodi infetti e la test coverage.
+funzioni insieme, detection per i nodi infetti e la test coverage.
 
 ### Backlog
 Il backlog includeva grafiche di base, regole di difesa e controlli:
 * Basic View for simulation (completato in 10 ore da AV).
 * Create a Config file with constants (completato in 4 ore da GP).
-* Define Countermeasure Event with rules (completato in 12 ore da EA).
-* Firewall + integration test (completato in 8 ore da EA).
-* Infected nodes for detection signal (completato in 6 ore da EA).
-* Add code coverage (completato in 4 ore da EA).
+* Define Countermeasure Event with rules (completato in 6 ore da EA).
+* Firewall + integration test (completato in 4 ore da EA).
+* Infected nodes for detection signal (completato in 3 ore da EA).
+* Add code coverage (completato in 1 ore da EA).
 
 ### Iterazioni
 Abbiamo alternato la scrittura di nuove regole con la creazione di test per 
@@ -76,29 +76,28 @@ della simulazione.
 ### Commenti sprint
 Un buon equilibrio tra grafica e logica. Avere più test ci ha dato maggiore sicurezza nel modificare il codice e aggiungere regole.
 
-## Sprint 4: Mappe, Comandi Semplificati e Salvataggio
+## Sprint 4: Topologie di default, DSL e Salvataggio
 
 ### Descrizione dell’andamento dello sviluppo
-Questo sprint è servito a rendere il simulatore più pratico da usare. Abbiamo creato dei comandi testuali semplificati
-per descrivere facilmente le mappe e gli scenari. Abbiamo aggiunto la possibilità di salvare e caricare la simulazione su 
-file e migliorato il modo in cui il virus si diffonde.
+Questo sprint è servito a rendere il simulatore più pratico da usare. Abbiamo creato una DSL per definire topologie e scenari in modo più semplice.
+Abbiamo aggiunto la possibilità di salvare e caricare topologie, scenari su file e migliorato il modo in cui il virus si diffonde.
 
 ### Backlog
-Le attività coprivano comandi personalizzati, salvataggi e mappe:
+Le attività coprivano DSL, salvataggi e default topologies:
 * Default topologies con DSL (completato in 8 ore da AV).
 * Default scenarios (completato in 6 ore da AV).
-* DSL (completato in 12 ore da GP).
+* DSL (completato in 8 ore da GP).
 * Add topology shapes (DSL) (completato in 8 ore da GP).
 * Refactor propagation (completato in 1 ora da EA).
 * save/load scenario da/a file (completato in 10 ore da EA).
 * Modifica test-coverage (completato in 4 ore da EA).
 
 ### Iterazioni
-Costruire i comandi personalizzati ha richiesto diverse prove per renderli semplici da scrivere. I problemi tecnici ci 
+Costruire la DSL ha richiesto diverse prove per renderli semplici da scrivere. I problemi tecnici ci 
 hanno rallentato un po', ma abbiamo recuperato organizzando meglio il tempo.
 
 ### Commenti sprint
-Nonostante gli intoppi tecnici, abbiamo completato funzioni importanti. Il salvataggio e le mappe predefinite permettono
+Nonostante gli intoppi tecnici, abbiamo completato funzioni importanti. Il salvataggio e le topologie predefinite permettono
 finalmente di provare il simulatore comodamente.
 
 ## Sprint 5: Nuova Grafica e Moduli
@@ -110,14 +109,14 @@ e permesso di salvare le partite mentre sono in corso.
 
 ### Backlog
 Il backlog si concentrava su menu, grafica e comandi:
-* save/load scenario a runtime (completato in 6 ore da AV).
+* save/load scenario a runtime (completato in 6 ore da EA).
 * report per scenario (completato in 5 ore da GP).
-* Validate the malware probability (form) (completato in 8 ore da GP).
-* DSL for scenario (completato in 10 ore da GP).
-* Scala Swing migration (completato in 15 ore da GP).
-* Countermeasure form (UI) (completato in 12 ore da EA).
-* Countermeasure DSL (completato in 8 ore da EA).
-* modifica regola awareness (completato in 4 ore da EA).
+* Validate the malware probability (form) (completato in 3 ore da GP).
+* DSL for scenario (completato in 2 ore da GP).
+* Scala Swing migration (completato in 15 ore da AV).
+* Countermeasure form (UI) (completato in 3 ore da EA).
+* Countermeasure DSL (completato in 3 ore da EA).
+* modifica regola awareness (completato in 1 ore da EA).
 
 ### Iterazioni
 Il cambio di grafica è stato il lavoro principale. Le altre attività sono state modificate per funzionare con i nuovi menu.
@@ -136,15 +135,15 @@ Abbiamo anche aggiunto il tasto per fermare la simulazione e sistemato i livelli
 
 ### Backlog
 Le attività coprivano pulizia del codice, risoluzione di errori e documenti:
-* refactor mvu (completato in 10 ore da AV).
-* First infected node (completato in 4 ore da AV).
-* Stop Button (completato in 3 ore da AV).
+* refactor mvu (completato in 6 ore da AV).
+* First infected node (completato in 2 ore da AV).
+* Stop Button (completato in 1 ore da AV).
 * Organize all the config values (completato in 5 ore da GP).
-* Extract shared UI helpers and unify editor dialogs (completato in 10 ore da GP).
-* Fix CountermeasureForm (completato in 6 ore da EA).
-* New nodes get defenseLevel = 1.0 (completato in 2 ore da EA).
-* activeCMs are parsed but not used (completato in 4 ore da EA).
-* Doc processo di sviluppo (completato in 8 ore da EA).
+* Extract shared UI helpers and unify editor dialogs (completato in 6 ore da AV).
+* Fix CountermeasureForm (completato in 4 ore da EA).
+* New nodes get defenseLevel = 1.0 (completato in 1 ore da EA).
+* activeCMs are parsed but not used (completato in 2 ore da EA).
+* Doc processo di sviluppo (completato in 4 ore da EA).
 
 ### Iterazioni
 Ci siamo concentrati sul trovare e correggere velocemente gli ultimi errori. Le modifiche al codice sono state fatte con
