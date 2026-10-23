@@ -158,3 +158,32 @@ Il gruppo ha lavorato con costanza, rispettando le circa 15 ore settimanali prev
 Gestendo bene i compiti, siamo passati da un'impostazione vuota a un simulatore completo, dotato di salvataggio dati e di
 una buona grafica interattiva. Abbiamo trovato il giusto equilibrio tra l'aggiunta di nuove funzioni e il mantenimento
 di un codice ordinato, ottenendo un risultato finale solido e facile da usare.
+
+## Sviluppi Futuri
+
+### Migliorare UI/UX
+
+L'interfaccia attuale copre l'intero ciclo di utilizzo, ma ci sono margini di miglioramento
+sia nella chiarezza sia nella comodità d'uso. Un primo intervento riguarda la leggibilità
+del workspace: una legenda dei colori associati agli stati dei nodi e un'indicazione visiva
+più esplicita delle connessioni bloccate o tagliate dalle contromisure aiuterebbero a
+seguire l'evoluzione dell'epidemia.
+
+### Comparare più Report
+
+Il report è già salvabile e importabile, ma può essere consultato solo uno alla volta.
+Poiché a parità di scenario e di seed la simulazione è riproducibile, un'evoluzione naturale
+è il confronto affiancato di più report: ad esempio lo stesso scenario con policy di
+contromisure diverse, oppure lo stesso malware su topologie differenti. Il confronto
+potrebbe sovrapporre le timeline dei nodi infetti e mostrare le differenze nei tick di
+attivazione delle contromisure e nelle milestone, rendendo più immediata la valutazione
+di quale strategia difensiva sia più efficace.
+
+### Applicare la differenza tra Virus/Malware
+
+Nel modello la distinzione tra `Worm` e `Virus` è già presente (il tipo `MalwareKind`
+espone `requiresTrigger`), ma oggi non viene sfruttata dal motore di simulazione: i due
+tipi si propagano allo stesso modo. Un'estensione possibile è far rispettare la differenza
+nelle regole di contagio: il worm continuerebbe a diffondersi autonomamente attraverso la
+rete, mentre il virus avrebbe bisogno di un'attivazione (ad esempio l'interazione di un
+utente o un supporto esterno) prima di infettare i nodi vicini.

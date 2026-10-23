@@ -84,9 +84,7 @@ rimane pura e il determinismo della simulazione è garantito dal seed dello scen
 
 ## `Probability` e `Awareness` come opaque types
 
-Molti valori del dominio sono probabilità o livelli normalizzati in [0,1]. Modellare
-questi valori come semplici `Double` renderebbe il compilatore cieco rispetto agli
-errori di unità: un `Double` grezzo potrebbe essere passato dove è attesa una
+Molti valori del dominio sono probabilità o livelli normalizzati in [0,1], così che un `Double` grezzo non possa essere passato dove è attesa una
 probabilità già validata, e viceversa.
 
 La soluzione adottata è l'**opaque type** di Scala 3:
