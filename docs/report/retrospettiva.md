@@ -14,9 +14,9 @@ i tipi di connessioni e le caratteristiche del virus. Il lavoro si è concluso c
 
 ### Backlog
 Il backlog conteneva le attività per iniziare:
-* Create Repo (completato in 2 ore da AV).
+* Set Up Repo and Git Hooks (completato in 2 ore da AV).
 * Set Up build system (completato in 4 ore da AV).
-* Definition of connections and their types (completato in 6 ore da AV).
+* Definition of connections, channel and protocols (completato in 6 ore da AV).
 * Definition of malware traits and behavior (completato in 8 ore da GP).
 * Docs (completato in 5 ore da GP).
 * CI/CD (completato in 8 ore da EA).
@@ -38,7 +38,7 @@ aggiunto le regole per le infezioni e definito la classe Probability. Infine, ab
 
 ### Backlog
 Le attività riguardavano la logica centrale:
-* Simulation Engine (completato in 12 ore da AV).
+* Controllo e gestione della simulazione, Engine e State (completato in 12 ore da AV).
 * Define the Update function(MVU) and Scenario (completato in 10 ore da EA).
 * Simulation Logic (func for infection, probability) (completato in 14 ore da GP).
 * Introduce the awareness (works with healthy checker) (completato in 8 ore da GP).
@@ -114,7 +114,7 @@ Il backlog si concentrava su menu, grafica e comandi:
 * Validate the malware probability (form) (completato in 3 ore da GP).
 * DSL for scenario (completato in 2 ore da GP).
 * Scala Swing migration (completato in 15 ore da AV).
-* Countermeasure form (UI) (completato in 3 ore da EA).
+* Countermeasure form (UI) (completheir types tato in 3 ore da EA).
 * Countermeasure DSL (completato in 3 ore da EA).
 * modifica regola awareness (completato in 1 ore da EA).
 
@@ -137,9 +137,9 @@ Abbiamo anche aggiunto il tasto per fermare la simulazione e sistemato i livelli
 Le attività coprivano pulizia del codice, risoluzione di errori e documenti:
 * refactor mvu (completato in 6 ore da AV).
 * First infected node (completato in 2 ore da AV).
+* Extract shared UI helpers and unify editor dialogs (completato in 6 ore da AV).
 * Stop Button (completato in 1 ore da AV).
 * Organize all the config values (completato in 5 ore da GP).
-* Extract shared UI helpers and unify editor dialogs (completato in 6 ore da AV).
 * Fix CountermeasureForm (completato in 4 ore da EA).
 * New nodes get defenseLevel = 1.0 (completato in 1 ore da EA).
 * activeCMs are parsed but not used (completato in 2 ore da EA).
