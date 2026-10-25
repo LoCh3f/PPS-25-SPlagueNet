@@ -3,6 +3,7 @@ package it.unibo.splague.update
 import it.unibo.splague.AppState
 import it.unibo.splague.update.Msg
 import it.unibo.splague.update.Mvu.update
+import it.unibo.splague.utils.config.SimulationConfig.Timing
 import it.unibo.splague.view.Renderer
 
 import javax.swing.Timer
@@ -15,11 +16,9 @@ final class Runtime(
 
   private var state: AppState = initialState
 
-  private val tickIntervalMillis = 2500
-
   private val timer =
     new Timer(
-      tickIntervalMillis,
+      Timing.TIMER_INTERVAL_MS,
       _ => dispatch(Msg.SimulationStep)
     )
 

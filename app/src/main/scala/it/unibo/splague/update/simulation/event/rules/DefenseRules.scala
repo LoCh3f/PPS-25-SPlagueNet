@@ -3,14 +3,19 @@ package it.unibo.splague.update.simulation.event.rules
 import it.unibo.splague.model.Probability
 import it.unibo.splague.model.countermeasures.{CountermeasureConfig, Countermeasures}
 import it.unibo.splague.model.node.Node
+import it.unibo.splague.utils.config.SimulationConfig.Bounds
 
 object DefenseRules:
 
   def boostDefense(node: Node, config: CountermeasureConfig): Node =
-    node.copy(defenseLevel = math.min(1.0, node.defenseLevel + config.defenseBoostAmount))
+    node.copy(defenseLevel =
+      math.min(Bounds.MAX_PROBABILITY, node.defenseLevel + config.defenseBoostAmount)
+    )
 
   def boostPatch(node: Node, config: CountermeasureConfig): Node =
-    node.copy(patchLevel = math.min(1.0, node.patchLevel + config.patchBoostAmount))
+    node.copy(patchLevel =
+      math.min(Bounds.MAX_PROBABILITY, node.patchLevel + config.patchBoostAmount)
+    )
 
   /** @param node
     *   to try to cure
@@ -23,8 +28,9 @@ object DefenseRules:
   def cureProbability(node: Node, config: CountermeasureConfig): Probability =
     if Countermeasures.Patch.isApplicableTo(node.nodeType) then
       Probability.clamped(
-        config.patchCureProbability + (1.0 - config.patchCureProbability) * node.patchLevel
+        config.patchCureProbability +
+          (Bounds.MAX_PROBABILITY - config.patchCureProbability) * node.patchLevel
       )
-    else Probability.clamped(0.0)
+    else Probability.clamped(Bounds.MIN_PROBABILITY)
 
   def resolveCure(p: Probability, roll: Double): Boolean = roll < p.value

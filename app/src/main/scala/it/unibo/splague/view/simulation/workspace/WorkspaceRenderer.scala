@@ -149,25 +149,21 @@ object WorkspaceRenderer:
           nodeRadius * 2
         )
 
-      g2.setColor(
-        colorFor(nodeView.form.state)
-      )
-
+      g2.setColor(colorFor(nodeView.form.state))
       g2.fill(shape)
 
       g2.setColor(
         if selected then Color.BLACK
         else Color.WHITE
       )
-
       g2.setStroke(
         new BasicStroke(
           if selected then 3.0f else 2.0f
         )
       )
-
       g2.draw(shape)
 
+      g2.setColor(Color.BLACK)
       g2.drawString(
         nodeView.form.id,
         (nodeView.x + nodeRadius + 4).toFloat,

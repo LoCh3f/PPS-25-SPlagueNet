@@ -4,6 +4,7 @@ import it.unibo.splague.model.Probability
 import it.unibo.splague.model.connection.Connection.Edge
 import it.unibo.splague.model.malware.Malware
 import it.unibo.splague.model.node.Node
+import it.unibo.splague.utils.config.SimulationConfig.InfectionFormula
 
 object ContagionRules:
 
@@ -13,10 +14,12 @@ object ContagionRules:
     malware.traits.infectivity
 
   private def withDefense: Modifier =
-    (base, _, node, edge) => Probability.clamped(base.value * (1 - node.defenseLevel))
+    (base, _, node, edge) =>
+      Probability.clamped(base.value * (InfectionFormula.DEFENSE_MODIFIER - node.defenseLevel))
 
   private def withPatch: Modifier =
-    (base, _, node, edge) => Probability.clamped(base.value * (1 - node.patchLevel))
+    (base, _, node, edge) =>
+      Probability.clamped(base.value * (InfectionFormula.PATCH_MODIFIER - node.patchLevel))
 
   private def withStructuralVulnerability: Modifier =
     (base, _, node, edge) => Probability.clamped(base.value * node.nodeType.structuralVulnerability)

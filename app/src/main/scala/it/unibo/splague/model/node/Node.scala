@@ -2,6 +2,7 @@ package it.unibo.splague.model.node
 
 import it.unibo.splague.model.malware.PropagationVector
 import it.unibo.splague.model.node.NodeId.NodeId
+import it.unibo.splague.utils.config.SimulationConfig.{Bounds, Detection, Vulnerability}
 
 sealed trait NodeType:
   def detectionCoefficient: Double
@@ -9,24 +10,25 @@ sealed trait NodeType:
 
 object NodeType:
   case object Workstation extends NodeType:
-    def detectionCoefficient = 1.0
-    def structuralVulnerability = 1.0
+    def detectionCoefficient: Double = Detection.WORKSTATION_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.WORKSTATION_FACTOR
 
   case object Server extends NodeType:
-    def detectionCoefficient = 1.5 // better monitoring(log/SIEM)
-    def structuralVulnerability = 0.8 // typical hardening
+    def detectionCoefficient: Double = Detection.SERVER_COEFFICIENT // better monitoring(log/SIEM)
+    def structuralVulnerability: Double = Vulnerability.SERVER_FACTOR // typical hardening
 
   case object Router extends NodeType:
-    def detectionCoefficient = 0.8
-    def structuralVulnerability = 1.0
+    def detectionCoefficient: Double = Detection.ROUTER_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.ROUTER_FACTOR
 
   case object IoTDevice extends NodeType:
-    def detectionCoefficient = 0.3 // logging absent
-    def structuralVulnerability = 1.3 // intrinsic vulnerability of the firmware
+    def detectionCoefficient: Double = Detection.IOT_DEVICE_COEFFICIENT // logging absent
+    def structuralVulnerability: Double =
+      Vulnerability.IOT_DEVICE_FACTOR // intrinsic vulnerability of the firmware
 
   case object MobileDevice extends NodeType:
-    def detectionCoefficient = 0.9
-    def structuralVulnerability = 1.0
+    def detectionCoefficient: Double = Detection.MOBILE_DEVICE_COEFFICIENT
+    def structuralVulnerability: Double = Vulnerability.MOBILE_DEVICE_FACTOR
 
 enum NodeState:
   case Healthy, Infected, Quarantined, Immune, Destroyed
@@ -89,6 +91,12 @@ object Node:
       vectors: Set[PropagationVector] = defaultVectors
   ): Either[String, Node] =
     for
-      validPatchLevel <- fieldIsInRange(patchLevel, (0.0, 1.0))
-      validDefenseLevel <- fieldIsInRange(defenseLevel, (0.0, 1.0))
+      validPatchLevel <- fieldIsInRange(
+        patchLevel,
+        (Bounds.MIN_PROBABILITY, Bounds.MAX_PROBABILITY)
+      )
+      validDefenseLevel <- fieldIsInRange(
+        defenseLevel,
+        (Bounds.MIN_PROBABILITY, Bounds.MAX_PROBABILITY)
+      )
     yield new Node(nodeId, nodeType, validPatchLevel, validDefenseLevel, state, workload, vectors)

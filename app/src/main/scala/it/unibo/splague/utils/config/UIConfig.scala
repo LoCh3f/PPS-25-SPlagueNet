@@ -25,8 +25,8 @@ object UIConfig:
   /** Validation error messages. User-friendly error descriptions for invalid inputs.
     */
   object ErrorMessages:
-    val AWARENESS_OUT_OF_BOUNDS: String = "Awareness must be in [0,1], got $value"
-    val PROBABILITY_OUT_OF_BOUNDS: String = "Probability must be in [0,1], got $value"
+    def awarenessOutOfBounds(value: Double): String = s"Awareness must be in [0,1], got $value"
+    def probabilityOutOfBounds(value: Double): String = s"Probability must be in [0,1], got $value"
     val EMPTY_SCENARIO_NAME: String = "The scenario name can't be empty"
     val NODE_NOT_IN_TOPOLOGY: String = "The starting node is not part of the topology"
     val INVALID_ITERATION_COUNT: String =

@@ -1,5 +1,6 @@
 package it.unibo.splague.model.connection
 
+import it.unibo.splague.utils.config.SimulationConfig.Protocols.{TCP_RELIABILITY, UDP_RELIABILITY}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.shouldBe
@@ -26,11 +27,11 @@ class ProtocolSuite extends AnyFunSuite:
 
   test("TCP transport should expose the expected kind and valid reliability"):
     Protocol.TcpTransport.kind shouldBe Protocol.TransportProtocolType.TCP
-    Protocol.TcpTransport.reliability.value shouldBe 0.99
+    Protocol.TcpTransport.reliability.value shouldBe TCP_RELIABILITY
 
   test("UDP transport should expose the expected kind and valid reliability"):
     Protocol.UdpTransport.kind shouldBe Protocol.TransportProtocolType.UDP
-    Protocol.UdpTransport.reliability.value shouldBe 0.90
+    Protocol.UdpTransport.reliability.value shouldBe UDP_RELIABILITY
 
   test("transport reliability should stay within the valid probability range"):
     (Protocol.TcpTransport.reliability.value >= 0.0 && Protocol.TcpTransport.reliability.value <= 1.0) shouldBe true

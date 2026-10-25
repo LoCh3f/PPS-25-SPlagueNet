@@ -6,6 +6,7 @@ import it.unibo.splague.update.Msg
 import it.unibo.splague.view.menu.MenuView
 import it.unibo.splague.view.report.ReportView
 import it.unibo.splague.view.simulation.SimulationView
+import it.unibo.splague.utils.config.UIConfig.{Display, Strings}
 
 import scala.swing.{BoxPanel, Component, MainFrame, Orientation}
 import java.awt.Dimension
@@ -13,7 +14,7 @@ import javax.imageio.ImageIO
 
 final class MainView extends MainFrame with Renderer:
 
-  title = "SPlagueNet"
+  title = Strings.APP_TITLE
 
   Option(getClass.getResource("/images/logo.jpg")).foreach { logo =>
     iconImage = ImageIO.read(logo)
@@ -23,9 +24,9 @@ final class MainView extends MainFrame with Renderer:
     new BoxPanel(Orientation.Vertical)
 
   contents = contentPanel
-  size = new Dimension(800, 600)
-  minimumSize = new Dimension(800, 600)
-  visible = true
+  size = new Dimension(Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT)
+  minimumSize = new Dimension(Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT)
+  visible = Display.WINDOW_VISIBLE
 
   override def showView(state: AppState, dispatch: Msg => Unit): Component =
     viewFor(state, dispatch)
