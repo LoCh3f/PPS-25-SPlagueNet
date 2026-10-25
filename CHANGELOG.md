@@ -1,3 +1,15 @@
+# [3.0.0](https://github.com/LoCh3f/PPS-25-SPlagueNet/compare/v2.0.1...v3.0.0) (2026-10-25)
+
+
+### Bug Fixes
+
+* change node id color and export only initial scenario ([749196d](https://github.com/LoCh3f/PPS-25-SPlagueNet/commit/749196d92dbf141a82736c6d031a31c3c72b0f1d))
+
+
+### BREAKING CHANGES
+
+* changed view and export
+
 ## [2.0.1](https://github.com/LoCh3f/PPS-25-SPlagueNet/compare/v2.0.0...v2.0.1) (2026-10-12)
 
 
