@@ -225,7 +225,6 @@ senza che le due modalità richiedano due motori diversi o duplichino la logica 
 | **I - Interface Segregation** | Tratti `Event` e `EventSelector` | Interfacce minimali e coese composte da un singolo metodo. |
 | **D - Dependency Inversion** | `SimulationEngine` | Il motore dipende esclusivamente da astrazioni (`EventSelector`, `Event`) e non da classi concrete. |
 | **Strategy Pattern**  | `EventSelector`, `Event` | Permette di variare ed estendere le politiche di selezione degli eventi senza modificare la classe `SimulationEngine`. |
-| **Command Pattern**  | `Event` | Incapsula ciascuna operazione di modifica dello stato in un oggetto autonomo, disaccoppiando il motore di simulazione dalla logica specifica dei singoli eventi. |
 | **Pure Function / First-Class Function**  | `Event.apply` (`Scenario => Scenario`) | Garantisce immutabilità, trasparenza referenziale e assenza di *side-effects*, rendendo l'esecuzione della simulazione puramente deterministica e riproducibile. |
 | **Lazy Stream / Iterator**  | `LazyList` in `SimulationEngine.run` | Abilita *lazy evaluation*, ottimizzando l'uso della memoria e disaccoppiando la generazione dei passi di simulazione dalle condizioni di terminazione. |
 
